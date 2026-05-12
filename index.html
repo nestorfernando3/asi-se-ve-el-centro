@@ -730,19 +730,6 @@
       scene.add(warmLight);
 
       // ===== Artisitic globe texture (canvas-generated) =====
-      function drawContinent(ctx, points, w, h) {
-        if (points.length < 3) return;
-        ctx.beginPath();
-        points.forEach((p, i) => {
-          const x = (p.lng + 180) / 360 * w;
-          const y = (90 - p.lat) / 180 * h;
-          i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-        });
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-      }
-
       function generateArtisticTexture(w, h) {
         const c = document.createElement('canvas');
         c.width = w; c.height = h;
@@ -755,9 +742,72 @@
         ctx.fillStyle = bg;
         ctx.fillRect(0, 0, w, h);
 
+        // Soft continent blobs — artistic, watercolor style
+        const blobs = [
+          // South America
+          {lng:-65, lat:-15, r:10}, {lng:-60, lat:-2, r:7}, {lng:-50, lat:-20, r:6},
+          {lng:-68, lat:-40, r:5}, {lng:-75, lat:-8, r:5}, {lng:-58, lat:-50, r:4},
+          // North America
+          {lng:-100, lat:48, r:11}, {lng:-80, lat:40, r:8}, {lng:-120, lat:40, r:8},
+          {lng:-90, lat:58, r:7}, {lng:-110, lat:55, r:6}, {lng:-130, lat:55, r:5},
+          {lng:-150, lat:60, r:5}, {lng:-165, lat:62, r:4},
+          // Europe
+          {lng:10, lat:50, r:6}, {lng:0, lat:45, r:5}, {lng:20, lat:55, r:5},
+          {lng:5, lat:55, r:4}, {lng:25, lat:58, r:4}, {lng:-5, lat:48, r:3},
+          // Africa
+          {lng:20, lat:5, r:9}, {lng:0, lat:5, r:6}, {lng:30, lat:-8, r:6},
+          {lng:35, lat:-20, r:5}, {lng:15, lat:-25, r:5}, {lng:-10, lat:10, r:4},
+          {lng:45, lat:5, r:4}, {lng:10, lat:-30, r:4},
+          // Asia
+          {lng:80, lat:50, r:13}, {lng:60, lat:35, r:9}, {lng:90, lat:30, r:8},
+          {lng:110, lat:25, r:7}, {lng:70, lat:50, r:6}, {lng:120, lat:45, r:6},
+          {lng:100, lat:60, r:6}, {lng:130, lat:40, r:5}, {lng:40, lat:45, r:5},
+          {lng:95, lat:10, r:5}, {lng:80, lat:10, r:5}, {lng:60, lat:20, r:4},
+          // Australia / Oceania
+          {lng:135, lat:-25, r:6}, {lng:145, lat:-30, r:4}, {lng:130, lat:-30, r:3},
+          {lng:150, lat:-22, r:3}, {lng:120, lat:-28, r:3},
+          // Greenland
+          {lng:-42, lat:72, r:4},
+          // Antarctica (just a hint)
+          {lng:0, lat:-85, r:12}, {lng:90, lat:-85, r:10}, {lng:-90, lat:-85, r:10},
+          {lng:180, lat:-85, r:8}
+        ];
+
+        // Draw soft glowing blobs — multiple passes for depth
+        [0.12, 0.08, 0.05].forEach((baseOpacity, pass) => {
+          blobs.forEach(b => {
+            const px = (b.lng + 180) / 360 * w;
+            const py = (90 - b.lat) / 180 * h;
+            const pr = b.r * w / 320;
+            const grad = ctx.createRadialGradient(px, py, 0, px, py, pr);
+            const innerOpacity = baseOpacity * (pass === 0 ? 1.3 : pass === 1 ? 0.8 : 0.5);
+            grad.addColorStop(0, `rgba(214,74,40,${innerOpacity})`);
+            grad.addColorStop(0.4, `rgba(214,74,40,${innerOpacity * 0.6})`);
+            grad.addColorStop(1, 'rgba(214,74,40,0)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(px - pr, py - pr, pr * 2, pr * 2);
+          });
+        });
+
+        // Atmospheric scattered dots around blobs
+        blobs.forEach(b => {
+          const px = (b.lng + 180) / 360 * w;
+          const py = (90 - b.lat) / 180 * h;
+          for (let i = 0; i < 8; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const dist = Math.random() * b.r * w / 200 + b.r * w / 320;
+            const dx = px + Math.cos(angle) * dist;
+            const dy = py + Math.sin(angle) * dist;
+            ctx.fillStyle = `rgba(214,74,40,${0.02 + Math.random() * 0.04})`;
+            ctx.beginPath();
+            ctx.arc(dx, dy, 1 + Math.random() * 2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        });
+
         // Graticule — lat/lng lines in warm accent
-        ctx.strokeStyle = 'rgba(214,74,40,0.07)';
-        ctx.lineWidth = 1;
+        ctx.strokeStyle = 'rgba(214,74,40,0.06)';
+        ctx.lineWidth = 0.8;
         for (let lat = -75; lat <= 75; lat += 15) {
           const y = (90 - lat) / 180 * h;
           ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
@@ -766,45 +816,38 @@
           const x = (lng + 180) / 360 * w;
           ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
         }
-        ctx.strokeStyle = 'rgba(214,74,40,0.16)';
-        ctx.lineWidth = 1.2;
+
+        // Equator brighter
+        ctx.strokeStyle = 'rgba(214,74,40,0.15)';
+        ctx.lineWidth = 1.1;
         const eqY = (90 - 0) / 180 * h;
         ctx.beginPath(); ctx.moveTo(0, eqY); ctx.lineTo(w, eqY); ctx.stroke();
 
-        // Simplified continent polygons
-        const continents = [
-          // South America
-          [{lng:-81,lat:10},{lng:-75,lat:7},{lng:-60,lat:0},{lng:-50,lat:-3},{lng:-35,lat:-5},{lng:-35,lat:-10},{lng:-37,lat:-15},{lng:-40,lat:-22},{lng:-48,lat:-28},{lng:-55,lat:-34},{lng:-58,lat:-38},{lng:-63,lat:-42},{lng:-65,lat:-46},{lng:-67,lat:-50},{lng:-68,lat:-54},{lng:-72,lat:-52},{lng:-74,lat:-46},{lng:-75,lat:-40},{lng:-76,lat:-36},{lng:-78,lat:-30},{lng:-80,lat:-22},{lng:-79,lat:-15},{lng:-77,lat:-10},{lng:-76,lat:-5},{lng:-76,lat:0},{lng:-78,lat:2},{lng:-80,lat:5},{lng:-81,lat:10}],
-          // North America
-          [{lng:-135,lat:58},{lng:-140,lat:60},{lng:-150,lat:60},{lng:-165,lat:62},{lng:-162,lat:65},{lng:-150,lat:70},{lng:-140,lat:68},{lng:-130,lat:60},{lng:-125,lat:55},{lng:-125,lat:50},{lng:-123,lat:45},{lng:-120,lat:40},{lng:-118,lat:34},{lng:-115,lat:32},{lng:-110,lat:30},{lng:-105,lat:28},{lng:-100,lat:26},{lng:-97,lat:25},{lng:-95,lat:21},{lng:-90,lat:19},{lng:-88,lat:22},{lng:-85,lat:22},{lng:-82,lat:25},{lng:-80,lat:28},{lng:-78,lat:32},{lng:-75,lat:36},{lng:-73,lat:40},{lng:-70,lat:44},{lng:-68,lat:44},{lng:-65,lat:47},{lng:-58,lat:50},{lng:-58,lat:52},{lng:-60,lat:55},{lng:-65,lat:58},{lng:-70,lat:60},{lng:-75,lat:62},{lng:-80,lat:60},{lng:-85,lat:62},{lng:-90,lat:64},{lng:-95,lat:67},{lng:-100,lat:68},{lng:-105,lat:67},{lng:-110,lat:65},{lng:-115,lat:68},{lng:-120,lat:68},{lng:-125,lat:65},{lng:-130,lat:62},{lng:-135,lat:58}],
-          // Europe
-          [{lng:-10,lat:36},{lng:-8,lat:42},{lng:-9,lat:44},{lng:-5,lat:48},{lng:-6,lat:50},{lng:-5,lat:52},{lng:-2,lat:54},{lng:0,lat:52},{lng:3,lat:52},{lng:5,lat:54},{lng:8,lat:56},{lng:10,lat:56},{lng:12,lat:54},{lng:15,lat:55},{lng:18,lat:56},{lng:20,lat:58},{lng:22,lat:60},{lng:25,lat:60},{lng:28,lat:58},{lng:30,lat:56},{lng:28,lat:54},{lng:24,lat:52},{lng:22,lat:48},{lng:20,lat:44},{lng:16,lat:42},{lng:12,lat:40},{lng:8,lat:40},{lng:5,lat:38},{lng:0,lat:36},{lng:-5,lat:36},{lng:-10,lat:36}],
-          // Africa
-          [{lng:-17,lat:15},{lng:-17,lat:20},{lng:-16,lat:28},{lng:-13,lat:32},{lng:-10,lat:35},{lng:-5,lat:36},{lng:0,lat:36},{lng:5,lat:36},{lng:8,lat:36},{lng:10,lat:35},{lng:12,lat:34},{lng:15,lat:33},{lng:18,lat:33},{lng:22,lat:35},{lng:25,lat:33},{lng:28,lat:32},{lng:30,lat:30},{lng:32,lat:28},{lng:34,lat:30},{lng:36,lat:28},{lng:38,lat:25},{lng:40,lat:20},{lng:42,lat:12},{lng:45,lat:5},{lng:48,lat:0},{lng:50,lat:-5},{lng:50,lat:-10},{lng:48,lat:-14},{lng:44,lat:-16},{lng:42,lat:-20},{lng:40,lat:-26},{lng:36,lat:-30},{lng:32,lat:-30},{lng:28,lat:-32},{lng:24,lat:-34},{lng:20,lat:-35},{lng:16,lat:-34},{lng:12,lat:-34},{lng:10,lat:-30},{lng:12,lat:-22},{lng:12,lat:-16},{lng:10,lat:-10},{lng:8,lat:-5},{lng:5,lat:0},{lng:0,lat:2},{lng:-5,lat:2},{lng:-10,lat:5},{lng:-15,lat:10},{lng:-15,lat:15},{lng:-17,lat:15}],
-          // Asia (simplified)
-          [{lng:28,lat:56},{lng:32,lat:58},{lng:38,lat:58},{lng:42,lat:56},{lng:48,lat:55},{lng:52,lat:58},{lng:56,lat:60},{lng:60,lat:60},{lng:65,lat:58},{lng:70,lat:57},{lng:75,lat:58},{lng:80,lat:60},{lng:85,lat:62},{lng:90,lat:65},{lng:95,lat:68},{lng:100,lat:70},{lng:110,lat:70},{lng:120,lat:70},{lng:128,lat:68},{lng:130,lat:65},{lng:135,lat:60},{lng:138,lat:58},{lng:140,lat:52},{lng:142,lat:48},{lng:140,lat:44},{lng:138,lat:40},{lng:135,lat:36},{lng:132,lat:34},{lng:130,lat:30},{lng:128,lat:28},{lng:125,lat:26},{lng:122,lat:24},{lng:120,lat:22},{lng:115,lat:18},{lng:110,lat:12},{lng:108,lat:8},{lng:105,lat:4},{lng:100,lat:0},{lng:95,lat:-5},{lng:90,lat:-8},{lng:85,lat:-8},{lng:80,lat:-5},{lng:75,lat:-5},{lng:70,lat:-5},{lng:65,lat:-5},{lng:60,lat:-5},{lng:55,lat:-5},{lng:50,lat:-5},{lng:45,lat:-5},{lng:40,lat:-5},{lng:36,lat:-5},{lng:32,lat:-5},{lng:28,lat:0},{lng:28,lat:5},{lng:28,lat:10},{lng:28,lat:15},{lng:30,lat:20},{lng:30,lat:25},{lng:30,lat:30},{lng:28,lat:35},{lng:28,lat:40},{lng:28,lat:45},{lng:28,lat:50},{lng:28,lat:56}],
-          // Australia
-          [{lng:115,lat:-15},{lng:120,lat:-15},{lng:128,lat:-14},{lng:135,lat:-12},{lng:140,lat:-12},{lng:145,lat:-15},{lng:148,lat:-20},{lng:150,lat:-24},{lng:150,lat:-30},{lng:148,lat:-35},{lng:145,lat:-38},{lng:140,lat:-38},{lng:135,lat:-35},{lng:130,lat:-32},{lng:125,lat:-32},{lng:120,lat:-30},{lng:115,lat:-28},{lng:114,lat:-24},{lng:114,lat:-20},{lng:115,lat:-15}]
-        ];
-
-        // Land fill
-        ctx.fillStyle = 'rgba(214,74,40,0.22)';
-        ctx.strokeStyle = 'rgba(214,74,40,0.5)';
-        ctx.lineWidth = 1.2;
-        continents.forEach(poly => drawContinent(ctx, poly, w, h));
-
-        // Second pass: brighter fill for some warmth
-        ctx.fillStyle = 'rgba(200,170,130,0.06)';
-        ctx.strokeStyle = 'rgba(214,74,40,0.22)';
+        // Tropics lines
+        ctx.strokeStyle = 'rgba(214,74,40,0.08)';
         ctx.lineWidth = 0.8;
-        continents.forEach(poly => drawContinent(ctx, poly, w, h));
+        [23.4, -23.4].forEach(lat => {
+          const y = (90 - lat) / 180 * h;
+          ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+        });
 
-        // Subtle inner glow / vignette
-        const vig = ctx.createRadialGradient(w/2, h/2, w*0.05, w/2, h/2, w*0.55);
+        // Subtle vignette
+        const vig = ctx.createRadialGradient(w/2, h/2, w*0.03, w/2, h/2, w*0.6);
         vig.addColorStop(0, 'rgba(255,200,150,0.0)');
-        vig.addColorStop(1, 'rgba(0,0,0,0.35)');
+        vig.addColorStop(1, 'rgba(0,0,0,0.4)');
         ctx.fillStyle = vig;
         ctx.fillRect(0, 0, w, h);
+
+        // Tiny scattered stars/sparkles
+        for (let i = 0; i < 200; i++) {
+          const sx = Math.random() * w;
+          const sy = Math.random() * h;
+          const sr = 0.3 + Math.random() * 0.8;
+          ctx.fillStyle = `rgba(214,74,40,${0.02 + Math.random() * 0.05})`;
+          ctx.beginPath();
+          ctx.arc(sx, sy, sr, 0, Math.PI * 2);
+          ctx.fill();
+        }
 
         return c;
       }
