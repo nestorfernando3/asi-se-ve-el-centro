@@ -1,0 +1,515 @@
+
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>Así se ve el centro. — Cinematic</title>
+  <style>
+    :root {
+      --loop: 12s;
+      --ink: #110d0b;
+      --surface: #1a1512;
+      --fg: #e6ded2;
+      --muted: #948878;
+      --accent: #d44a28;
+      --matte: #050302;
+
+      --font-display: 'Iowan Old Style', 'Charter', Georgia, serif;
+      --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --font-mono: ui-monospace, 'IBM Plex Mono', 'JetBrains Mono', Menlo, monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; }
+    body {
+      overflow: hidden;
+      background: var(--matte);
+      color: var(--fg);
+      font-family: var(--font-body);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: geometricPrecision;
+    }
+
+    main {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background:
+        radial-gradient(ellipse at 50% 45%, rgba(230, 222, 212, 0.035) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, transparent 25%, rgba(5, 3, 2, 0.75) 92%),
+        linear-gradient(180deg, rgba(5,3,2,0.45), transparent 18%, transparent 82%, rgba(5,3,2,0.55)),
+        var(--ink);
+    }
+
+    .matte-top,
+    .matte-bottom {
+      position: absolute;
+      left: 0; right: 0;
+      height: clamp(22px, 4.2vh, 52px);
+      background: var(--matte);
+      z-index: 30;
+      pointer-events: none;
+    }
+    .matte-top { top: 0; border-bottom: 1px solid rgba(230, 222, 212, 0.06); }
+    .matte-bottom { bottom: 0; border-top: 1px solid rgba(230, 222, 212, 0.06); }
+
+    .grain {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 20;
+      opacity: 0.09;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      background-size: 180px 180px;
+      animation: grain 0.24s steps(3) infinite;
+    }
+
+    .scanlines {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 19;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 3px,
+        rgba(0,0,0,0.14) 3px,
+        rgba(0,0,0,0.14) 4px
+      );
+      background-size: 100% 8px;
+      animation: scanDrift var(--loop) linear infinite;
+      opacity: 0.25;
+    }
+
+    .corner {
+      position: absolute;
+      width: 18px; height: 18px;
+      border-color: rgba(230, 222, 212, 0.22);
+      border-style: solid;
+      z-index: 25;
+      pointer-events: none;
+    }
+    .corner.tl { top: clamp(28px, 4.8vh, 58px); left: clamp(18px, 2.8vw, 36px); border-width: 1px 0 0 1px; }
+    .corner.tr { top: clamp(28px, 4.8vh, 58px); right: clamp(18px, 2.8vw, 36px); border-width: 1px 1px 0 0; }
+    .corner.bl { bottom: clamp(28px, 4.8vh, 58px); left: clamp(18px, 2.8vw, 36px); border-width: 0 0 1px 1px; }
+    .corner.br { bottom: clamp(28px, 4.8vh, 58px); right: clamp(18px, 2.8vw, 36px); border-width: 0 1px 1px 0; }
+
+    .timecode {
+      position: absolute;
+      right: clamp(18px, 2.8vw, 36px);
+      bottom: clamp(28px, 4.8vh, 58px);
+      z-index: 25;
+      font: 10px/1 var(--font-mono);
+      letter-spacing: 0.16em;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      pointer-events: none;
+    }
+    .timecode .rec {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: blink 1.2s steps(1) infinite;
+    }
+
+    .chrome {
+      position: absolute;
+      left: clamp(18px, 2.8vw, 36px);
+      right: clamp(18px, 2.8vw, 36px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      z-index: 4;
+      font: 10px/1.45 var(--font-mono);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .chrome.top { top: clamp(14px, 2.2vw, 26px); }
+    .chrome.bottom { bottom: clamp(14px, 2.2vw, 24px); }
+    .chrome strong {
+      color: var(--fg);
+      font-weight: 500;
+      letter-spacing: 0.14em;
+    }
+    .chrome .rule {
+      flex: 1;
+      height: 1px;
+      margin: 0 14px;
+      background: rgba(230, 222, 212, 0.14);
+    }
+
+    .hero {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+    }
+
+    .gate {
+      position: relative;
+      width: min(68vw, 68vh);
+      aspect-ratio: 1;
+      transform: translateY(-2.5vh);
+      animation: gateWeave var(--loop) ease-in-out infinite;
+    }
+
+    .composition {
+      position: relative;
+      width: 100%; height: 100%;
+    }
+
+    .rings,
+    .labels {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      transform-origin: 50% 50%;
+    }
+
+    .rings { animation: spin var(--loop) linear infinite; }
+    .rings .ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 1px solid rgba(230, 222, 212, 0.18);
+      opacity: 0.9;
+      transform-origin: 50% 50%;
+      filter: drop-shadow(0 0 0.5px rgba(230, 222, 212, 0.1));
+    }
+    .rings .ring:nth-child(1) {
+      inset: 0;
+      border-style: solid;
+      border-color: rgba(230, 222, 212, 0.18);
+      border-top-color: rgba(230, 222, 212, 0.03);
+      border-left-color: rgba(230, 222, 212, 0.05);
+    }
+    .rings .ring:nth-child(2) {
+      inset: 7%;
+      border-style: dashed;
+      border-color: rgba(230, 222, 212, 0.12);
+      animation: spinReverse 6s linear infinite;
+    }
+    .rings .ring:nth-child(3) {
+      inset: 14%;
+      border-style: solid;
+      border-color: rgba(230, 222, 212, 0.08);
+      border-bottom-color: rgba(230, 222, 212, 0.02);
+      animation: spin 4s linear infinite;
+    }
+
+    .labels {
+      animation: spin var(--loop) linear infinite;
+      z-index: 2;
+    }
+    .label {
+      position: absolute;
+      left: 50%; top: 50%;
+      transform:
+        rotate(var(--angle))
+        translateY(calc(var(--radius) * -1))
+        rotate(calc(var(--angle) * -1));
+      transform-origin: 0 0;
+      white-space: nowrap;
+      font: 10px/1 var(--font-mono);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(230, 222, 212, 0.5);
+    }
+    .label i {
+      display: block;
+      font-style: normal;
+      transform-origin: center;
+      animation: counterSpin var(--loop) linear infinite;
+    }
+    .label.is-origin { color: var(--fg); }
+    .label.is-origin i { color: var(--fg); letter-spacing: 0.2em; }
+
+    .globe {
+      position: absolute;
+      inset: 24%;
+      z-index: 3;
+      display: grid;
+      place-items: center;
+      transform-origin: 50% 50%;
+      animation: spin var(--loop) linear infinite;
+    }
+    .globe svg {
+      width: 100%; height: 100%;
+      overflow: visible;
+      display: block;
+    }
+    .globe .shell {
+      fill: rgba(230, 222, 212, 0.035);
+      stroke: rgba(230, 222, 212, 0.22);
+      stroke-width: 0.9;
+    }
+    .globe .grid-slow,
+    .globe .grid-fast,
+    .globe .coast {
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transform-origin: 50% 50%;
+      transform-box: fill-box;
+    }
+    .globe .grid-slow {
+      stroke: rgba(230, 222, 212, 0.16);
+      stroke-width: 0.8;
+      animation: spinReverse 6s linear infinite;
+    }
+    .globe .grid-fast {
+      stroke: rgba(230, 222, 212, 0.09);
+      stroke-width: 0.65;
+      animation: spin 4s linear infinite;
+    }
+    .globe .coast {
+      fill: rgba(230, 222, 212, 0.07);
+      stroke: rgba(230, 222, 212, 0.28);
+      stroke-width: 0.8;
+      animation: spinReverse var(--loop) linear infinite;
+    }
+    .globe .horizon {
+      fill: none;
+      stroke: rgba(230, 222, 212, 0.14);
+      stroke-width: 0.7;
+    }
+    .globe .pulse {
+      position: absolute;
+      left: 50%; top: 50%;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 0 0 color-mix(in oklch, var(--accent) 35%, transparent);
+      animation: pulse 3s ease-in-out infinite;
+    }
+
+    .headline {
+      position: absolute;
+      left: clamp(18px, 2.8vw, 36px);
+      bottom: clamp(68px, 7.5vw, 92px);
+      z-index: 4;
+      max-width: min(56vw, 880px);
+      color: var(--fg);
+      font-family: var(--font-display);
+      line-height: 0.92;
+      letter-spacing: -0.03em;
+      text-wrap: balance;
+      animation: headlineFloat var(--loop) ease-in-out infinite;
+    }
+    .headline .line {
+      display: block;
+      opacity: 0;
+      transform: translateY(0.35em);
+      animation: titleIn var(--loop) cubic-bezier(.2,.7,.2,1) infinite;
+    }
+    .headline .line:first-child {
+      font-size: clamp(2rem, 4.6vw, 5.4rem);
+      font-style: italic;
+      animation-delay: 0s;
+    }
+    .headline .line:last-child {
+      margin-top: 0.08em;
+      font-size: clamp(2.8rem, 6.6vw, 8.4rem);
+      font-weight: 500;
+      animation-delay: 0.14s;
+    }
+    .headline em {
+      color: var(--accent);
+      font-style: italic;
+    }
+
+    .baseline {
+      position: absolute;
+      left: clamp(18px, 2.8vw, 36px);
+      right: clamp(18px, 2.8vw, 36px);
+      bottom: clamp(50px, 5.6vw, 64px);
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(230, 222, 212, 0.22) 10%, rgba(230, 222, 212, 0.14) 90%, transparent);
+      z-index: 3;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes spinReverse { to { transform: rotate(-360deg); } }
+    @keyframes counterSpin { to { transform: rotate(-360deg); } }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklch, var(--accent) 35%, transparent); transform: translate(-50%, -50%) scale(1); }
+      50% { box-shadow: 0 0 0 18px color-mix(in oklch, var(--accent) 0%, transparent); transform: translate(-50%, -50%) scale(1.24); }
+    }
+    @keyframes titleIn {
+      0%, 8% { opacity: 0; transform: translateY(0.42em); filter: blur(2px); }
+      16%, 84% { opacity: 1; transform: translateY(0); filter: blur(0); }
+      100% { opacity: 0; transform: translateY(-0.04em); filter: blur(1px); }
+    }
+    @keyframes headlineFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-1.5px); }
+    }
+    @keyframes grain {
+      0%, 100% { opacity: 0.08; }
+      33% { opacity: 0.11; }
+      66% { opacity: 0.09; }
+    }
+    @keyframes scanDrift {
+      0% { background-position: 0 0; }
+      100% { background-position: 0 24px; }
+    }
+    @keyframes gateWeave {
+      0%, 100% { transform: translateY(-2.5vh) translate(0, 0); }
+      11% { transform: translateY(-2.5vh) translate(0.4px, -0.3px); }
+      22% { transform: translateY(-2.5vh) translate(-0.3px, 0.4px); }
+      33% { transform: translateY(-2.5vh) translate(0.2px, 0.2px); }
+      44% { transform: translateY(-2.5vh) translate(-0.2px, -0.4px); }
+      55% { transform: translateY(-2.5vh) translate(0.3px, -0.1px); }
+      66% { transform: translateY(-2.5vh) translate(-0.4px, 0.3px); }
+      77% { transform: translateY(-2.5vh) translate(0.1px, -0.2px); }
+      88% { transform: translateY(-2.5vh) translate(-0.1px, 0.1px); }
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    @media (max-width: 900px) {
+      .gate { width: min(90vw, 90vh); transform: translateY(-1vh); }
+      .headline { max-width: 86vw; bottom: 82px; }
+      .headline .line:first-child { font-size: clamp(1.7rem, 6.5vw, 2.8rem); }
+      .headline .line:last-child { font-size: clamp(2.2rem, 10vw, 4rem); }
+      .chrome { font-size: 9px; letter-spacing: 0.14em; }
+      .label { font-size: 9px; letter-spacing: 0.14em; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .grain, .scanlines, .gate, .rings, .labels, .label i,
+      .globe, .globe .grid-slow, .globe .grid-fast, .globe .coast,
+      .globe .pulse, .headline, .headline .line, .rec {
+        animation: none !important;
+      }
+      .headline .line { opacity: 1; transform: none; filter: none; }
+      .gate { transform: translateY(-2.5vh); }
+      .grain { opacity: 0.06; }
+    }
+  </style>
+</head>
+<body>
+  <main data-od-id="stage">
+    <div class="matte-top" aria-hidden="true"></div>
+    <div class="matte-bottom" aria-hidden="true"></div>
+
+    <div class="grain" aria-hidden="true"></div>
+    <div class="scanlines" aria-hidden="true"></div>
+
+    <div class="corner tl" aria-hidden="true"></div>
+    <div class="corner tr" aria-hidden="true"></div>
+    <div class="corner bl" aria-hidden="true"></div>
+    <div class="corner br" aria-hidden="true"></div>
+
+    <div class="timecode" aria-hidden="true">
+      <span class="rec"></span>
+      <span>00:00:00:00</span>
+    </div>
+
+    <div class="chrome top" data-od-id="chrome">
+      <div><strong>Así se ve el centro.</strong> — Archivo en expansión</div>
+      <div class="rule" aria-hidden="true"></div>
+      <div>Barranquilla as origin / Colombia</div>
+    </div>
+
+    <section class="hero" aria-label="Animated hero">
+      <div class="gate">
+        <div class="composition">
+          <div class="rings" data-od-id="ring" aria-hidden="true">
+            <div class="ring"></div>
+            <div class="ring"></div>
+            <div class="ring"></div>
+          </div>
+
+          <div class="labels" data-od-id="ring" aria-hidden="true">
+            <span class="label is-origin" style="--angle: 0deg; --radius: 44%;"><i>Barranquilla</i></span>
+            <span class="label" style="--angle: 30deg; --radius: 44%;"><i>Bogotá</i></span>
+            <span class="label" style="--angle: 60deg; --radius: 44%;"><i>Medellín</i></span>
+            <span class="label" style="--angle: 90deg; --radius: 44%;"><i>Ciudad de México</i></span>
+            <span class="label" style="--angle: 120deg; --radius: 44%;"><i>Nueva York</i></span>
+            <span class="label" style="--angle: 150deg; --radius: 44%;"><i>Londres</i></span>
+            <span class="label" style="--angle: 180deg; --radius: 44%;"><i>París</i></span>
+            <span class="label" style="--angle: 210deg; --radius: 44%;"><i>Dakar</i></span>
+            <span class="label" style="--angle: 240deg; --radius: 44%;"><i>Mumbai</i></span>
+            <span class="label" style="--angle: 270deg; --radius: 44%;"><i>Tokio</i></span>
+            <span class="label" style="--angle: 300deg; --radius: 44%;"><i>Sídney</i></span>
+            <span class="label" style="--angle: 330deg; --radius: 44%;"><i>Buenos Aires</i></span>
+          </div>
+
+          <div class="globe" data-od-id="focal" aria-hidden="true">
+            <svg viewBox="0 0 300 300" role="img" aria-label="Wireframe globe">
+              <defs>
+                <radialGradient id="globeFill" cx="34%" cy="30%" r="72%">
+                  <stop offset="0%" stop-color="#e6ded2" stop-opacity="0.06" />
+                  <stop offset="62%" stop-color="#e6ded2" stop-opacity="0.02" />
+                  <stop offset="100%" stop-color="#e6ded2" stop-opacity="0" />
+                </radialGradient>
+                <clipPath id="globeClip">
+                  <circle cx="150" cy="150" r="120"/>
+                </clipPath>
+              </defs>
+
+              <circle class="shell" cx="150" cy="150" r="120" fill="url(#globeFill)" />
+
+              <g clip-path="url(#globeClip)">
+                <g class="coast">
+                  <path d="M 65,75 C 80,60 110,58 130,68 C 142,76 145,90 140,105 C 136,118 128,128 120,134 C 114,138 108,136 102,130 C 94,122 88,112 82,100 C 76,88 70,80 65,75 Z M 118,132 C 122,140 120,150 116,158 C 112,164 106,162 104,156 C 102,150 106,142 110,136 C 114,132 116,132 118,132 Z" />
+                  <path d="M 112,162 C 128,156 144,164 150,178 C 156,194 154,214 146,232 C 140,244 132,248 126,244 C 118,238 116,226 116,210 C 116,194 114,176 112,162 Z" />
+                  <path d="M 138,84 C 146,78 156,80 162,86 C 166,92 164,98 158,102 C 152,104 146,102 142,98 C 138,92 138,88 138,84 Z" />
+                  <path d="M 144,110 C 162,104 178,112 186,128 C 192,146 190,168 184,186 C 178,202 170,210 162,208 C 152,204 148,194 146,178 C 144,160 144,140 144,126 C 144,116 144,110 144,110 Z" />
+                  <path d="M 166,74 C 188,68 214,72 232,82 C 246,92 250,108 246,122 C 242,136 232,144 220,142 C 208,140 198,132 190,122 C 182,110 176,98 170,88 C 166,80 166,76 166,74 Z" />
+                  <path d="M 202,168 C 218,164 230,170 236,180 C 240,190 238,200 230,206 C 222,210 212,210 206,204 C 200,196 200,186 202,178 C 204,172 202,168 202,168 Z" />
+                  <path d="M 80,244 C 110,238 150,236 190,238 C 220,240 230,244 226,248 C 210,252 150,254 100,252 C 76,250 74,246 80,244 Z" />
+                </g>
+              </g>
+
+              <g class="grid-slow">
+                <ellipse cx="150" cy="150" rx="120" ry="28" />
+                <ellipse cx="150" cy="150" rx="120" ry="56" />
+                <ellipse cx="150" cy="150" rx="120" ry="86" />
+                <ellipse cx="150" cy="150" rx="120" ry="110" />
+                <ellipse cx="150" cy="150" rx="28" ry="120" />
+                <ellipse cx="150" cy="150" rx="56" ry="120" />
+                <ellipse cx="150" cy="150" rx="86" ry="120" />
+              </g>
+
+              <g class="grid-fast">
+                <ellipse cx="150" cy="150" rx="108" ry="38" />
+                <ellipse cx="150" cy="150" rx="108" ry="70" />
+                <ellipse cx="150" cy="150" rx="40" ry="108" />
+                <ellipse cx="150" cy="150" rx="72" ry="108" />
+              </g>
+
+              <circle class="horizon" cx="150" cy="150" r="120" />
+            </svg>
+            <span class="pulse"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="headline" data-od-id="headline">
+      <span class="line">Así se ve</span>
+      <span class="line">el <em>centro.</em></span>
+    </div>
+
+    <div class="baseline" aria-hidden="true"></div>
+
+    <div class="chrome bottom" data-od-id="chrome">
+      <div>Transmedia atlas / 12s loop</div>
+      <div class="rule" aria-hidden="true"></div>
+      <div>HyperFrames-ready export</div>
+    </div>
+  </main>
+</body>
+</html>

@@ -1,0 +1,752 @@
+
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="description" content="Mapa audiovisual interactivo para Así se ve el centro: pines de ciudad y visor de video de Barranquilla." />
+  <title>Así se ve el centro. — Hover Map</title>
+  <style>
+    :root {
+      --loop: 12s;
+      --matte: #030201;
+      --ink: #0e0a08;
+      --surface: #17110e;
+      --fg: #eadfd0;
+      --muted: #9a8d7c;
+      --dim: rgba(234, 223, 208, 0.22);
+      --line: rgba(234, 223, 208, 0.14);
+      --accent: #d64a28;
+      --accent-soft: rgba(214, 74, 40, 0.22);
+
+      --font-display: 'Iowan Old Style', 'Charter', Georgia, serif;
+      --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --font-mono: ui-monospace, 'IBM Plex Mono', 'JetBrains Mono', Menlo, monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; }
+    body {
+      overflow: hidden;
+      background: var(--matte);
+      color: var(--fg);
+      font-family: var(--font-body);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: geometricPrecision;
+    }
+
+    main {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      isolation: isolate;
+      background:
+        radial-gradient(ellipse at 50% 44%, rgba(234, 223, 208, 0.045) 0%, transparent 48%),
+        radial-gradient(ellipse at 50% 50%, transparent 28%, rgba(3, 2, 1, 0.82) 94%),
+        linear-gradient(180deg, rgba(3,2,1,0.62), transparent 18%, transparent 78%, rgba(3,2,1,0.7)),
+        var(--ink);
+    }
+
+    .matte-top, .matte-bottom {
+      position: absolute;
+      left: 0; right: 0;
+      height: clamp(24px, 4.4vh, 54px);
+      background: var(--matte);
+      z-index: 40;
+      pointer-events: none;
+    }
+    .matte-top { top: 0; border-bottom: 1px solid rgba(234, 223, 208, 0.06); }
+    .matte-bottom { bottom: 0; border-top: 1px solid rgba(234, 223, 208, 0.06); }
+
+    .grain, .scanlines, .vignette {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    .grain {
+      z-index: 28;
+      opacity: 0.095;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 190px 190px;
+      animation: grain 0.24s steps(3) infinite;
+      mix-blend-mode: screen;
+    }
+    .scanlines {
+      z-index: 27;
+      opacity: 0.28;
+      background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.18) 3px, rgba(0,0,0,0.18) 4px);
+      animation: scanDrift var(--loop) linear infinite;
+    }
+    .vignette {
+      z-index: 26;
+      background:
+        linear-gradient(90deg, rgba(3,2,1,0.72), transparent 16%, transparent 84%, rgba(3,2,1,0.72)),
+        radial-gradient(circle at 50% 48%, transparent 24%, rgba(3,2,1,0.7) 96%);
+    }
+
+    .audio-wave {
+      position: absolute;
+      left: 50%;
+      bottom: clamp(20px, 3vh, 40px);
+      width: 280px;
+      height: 1px;
+      transform: translateX(-50%);
+      z-index: 14;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 2s ease 3s;
+      background: linear-gradient(90deg,
+        transparent 0%, rgba(214,74,40,0.5) 8%, transparent 12%,
+        rgba(214,74,40,0.35) 28%, transparent 34%,
+        rgba(234,223,208,0.3) 48%, transparent 52%,
+        rgba(214,74,40,0.25) 68%, transparent 74%,
+        rgba(234,223,208,0.3) 88%, transparent 94%, transparent 100%);
+      animation: wavePulse 4s ease-in-out infinite;
+    }
+    .audio-wave.is-active { opacity: 0.6; }
+
+    .chrome {
+      position: absolute;
+      left: clamp(18px, 2.8vw, 38px);
+      right: clamp(18px, 2.8vw, 38px);
+      z-index: 35;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      font: 10px/1.45 var(--font-mono);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      pointer-events: none;
+    }
+    .chrome.top { top: clamp(14px, 2.2vw, 26px); }
+    .chrome.bottom { bottom: clamp(14px, 2.2vw, 24px); }
+    .chrome strong { color: var(--fg); font-weight: 500; letter-spacing: 0.14em; }
+    .chrome .rule { flex: 1; height: 1px; margin: 0 14px; background: rgba(234, 223, 208, 0.14); }
+
+    .audio-indicator {
+      font: 9px var(--font-mono);
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      opacity: 0;
+      transition: opacity 400ms ease;
+    }
+    .audio-indicator.is-active { opacity: 0.7; }
+
+    .audio-toggle {
+      background: none;
+      border: 1px solid rgba(234,223,208,0.2);
+      color: var(--muted);
+      font: 9px var(--font-mono);
+      padding: 2px 6px;
+      cursor: pointer;
+      pointer-events: auto;
+    }
+    .audio-toggle .off { display: none; }
+    .audio-toggle.muted .on { display: none; }
+    .audio-toggle.muted .off { display: inline; }
+
+    .corner {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      z-index: 36;
+      border-color: rgba(234, 223, 208, 0.24);
+      border-style: solid;
+      pointer-events: none;
+    }
+    .corner.tl { top: clamp(30px, 5vh, 60px); left: clamp(18px, 2.8vw, 38px); border-width: 1px 0 0 1px; }
+    .corner.tr { top: clamp(30px, 5vh, 60px); right: clamp(18px, 2.8vw, 38px); border-width: 1px 1px 0 0; }
+    .corner.bl { bottom: clamp(30px, 5vh, 60px); left: clamp(18px, 2.8vw, 38px); border-width: 0 0 1px 1px; }
+    .corner.br { bottom: clamp(30px, 5vh, 60px); right: clamp(18px, 2.8vw, 38px); border-width: 0 1px 1px 0; }
+
+    .timecode {
+      position: absolute;
+      right: clamp(18px, 2.8vw, 38px);
+      bottom: clamp(30px, 5vh, 60px);
+      z-index: 36;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font: 10px/1 var(--font-mono);
+      letter-spacing: 0.16em;
+      color: var(--muted);
+      pointer-events: none;
+    }
+    .timecode .rec { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); animation: blink 1.2s steps(1) infinite; }
+
+    .stage {
+      position: absolute;
+      inset: clamp(54px, 8vh, 86px) clamp(20px, 4vw, 62px) clamp(70px, 10vh, 104px);
+      z-index: 5;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(260px, 34vw);
+      gap: clamp(20px, 3.8vw, 58px);
+      align-items: center;
+    }
+
+    .atlas {
+      position: relative;
+      width: 100%;
+      min-height: min(76vh, 760px);
+      container-type: inline-size;
+    }
+
+    .rings {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: min(76vh, 62vw);
+      aspect-ratio: 1;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      pointer-events: none;
+      animation: spin var(--loop) linear infinite;
+    }
+    .rings .ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 1px solid rgba(234, 223, 208, 0.12);
+      transform-origin: 50% 50%;
+    }
+    .rings .ring:nth-child(1) { border-top-color: rgba(234,223,208,0.03); border-left-color: rgba(234,223,208,0.04); }
+    .rings .ring:nth-child(2) { inset: 8%; border-style: dashed; border-color: rgba(234,223,208,0.1); animation: spinReverse 6s linear infinite; }
+    .rings .ring:nth-child(3) { inset: 17%; border-color: rgba(234,223,208,0.065); border-bottom-color: rgba(234,223,208,0.02); animation-duration: 4s; }
+
+    .map-wrap {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      animation: mapBreath var(--loop) ease-in-out infinite;
+    }
+
+    .world-map {
+      width: min(92vw, 980px);
+      max-width: 100%;
+      height: auto;
+      display: block;
+      filter: drop-shadow(0 0 32px rgba(211,74,40,0.08));
+    }
+    .graticule { fill: none; stroke: rgba(234,223,208,0.06); stroke-width: .8; }
+    .land {
+      fill: rgba(234,223,208,0.09);
+      stroke: rgba(234,223,208,0.28);
+      stroke-width: 1.05;
+      vector-effect: non-scaling-stroke;
+    }
+    .colombia {
+      fill: rgba(214,74,40,0.26);
+      stroke: rgba(214,74,40,0.68);
+    }
+
+    .pin-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    .city-pin {
+      --x: 50%;
+      --y: 50%;
+      position: absolute;
+      left: var(--x);
+      top: var(--y);
+      width: 18px;
+      height: 18px;
+      padding: 0;
+      border: 0;
+      border-radius: 50%;
+      background: transparent;
+      transform: translate(-50%, -50%);
+      pointer-events: auto;
+      cursor: pointer;
+      isolation: isolate;
+    }
+    .city-pin::before, .city-pin::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .city-pin::before {
+      width: 9px;
+      height: 9px;
+      background: rgba(234,223,208,0.78);
+      box-shadow: 0 0 0 1px rgba(3,2,1,0.85), 0 0 18px rgba(234,223,208,0.18);
+    }
+    .city-pin::after {
+      width: 24px;
+      height: 24px;
+      border: 1px solid rgba(234,223,208,0.26);
+      opacity: 0.7;
+      animation: pinPulse 3s ease-in-out infinite;
+    }
+    .city-pin.is-live::before {
+      background: var(--accent);
+      box-shadow: 0 0 0 1px rgba(3,2,1,0.9), 0 0 26px rgba(214,74,40,0.52);
+    }
+    .city-pin.is-live::after { border-color: rgba(214,74,40,0.58); }
+    .city-pin.is-future { opacity: 0.58; cursor: default; }
+
+    .pin-name {
+      position: absolute;
+      left: 16px;
+      top: -6px;
+      padding: 3px 6px;
+      color: rgba(234,223,208,0.74);
+      background: rgba(3,2,1,0.58);
+      border: 1px solid rgba(234,223,208,0.12);
+      font: 9px/1 var(--font-mono);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      opacity: 0;
+      transform: translateY(4px);
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+    .city-pin:hover .pin-name,
+    .city-pin:focus-visible .pin-name,
+    .city-pin.is-live .pin-name { opacity: 1; transform: translateY(0); }
+
+    .routes {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.62;
+    }
+    .routes svg { width: 100%; height: 100%; display: block; }
+    .route {
+      fill: none;
+      stroke: rgba(211,74,40,0.28);
+      stroke-width: 1;
+      stroke-dasharray: 3 9;
+      animation: routeFlow 6s linear infinite;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .headline {
+      position: absolute;
+      left: clamp(0px, 1vw, 18px);
+      bottom: clamp(8px, 3vh, 38px);
+      z-index: 8;
+      max-width: min(680px, 64vw);
+      font-family: var(--font-display);
+      line-height: 0.92;
+      letter-spacing: -0.035em;
+      text-wrap: balance;
+      pointer-events: none;
+    }
+    .headline .line {
+      display: block;
+      opacity: 0;
+      transform: translateY(0.35em);
+      animation: titleIn var(--loop) cubic-bezier(.2,.7,.2,1) infinite;
+    }
+    .headline .line:first-child { font-size: clamp(2rem, 4.4vw, 5.3rem); font-style: italic; }
+    .headline .line:last-child { margin-top: .08em; font-size: clamp(2.7rem, 6.4vw, 8rem); animation-delay: .14s; }
+    .headline em { color: var(--accent); font-style: italic; }
+
+    .viewer {
+      position: relative;
+      align-self: stretch;
+      min-height: min(70vh, 720px);
+      display: grid;
+      align-content: center;
+      gap: 16px;
+    }
+    .viewer-frame {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 9 / 14;
+      min-height: 420px;
+      border: 1px solid rgba(234,223,208,0.20);
+      background:
+        linear-gradient(180deg, rgba(234,223,208,0.04), rgba(234,223,208,0.01)),
+        rgba(9,6,4,0.92);
+      box-shadow: 0 18px 60px rgba(0,0,0,0.38), inset 0 0 0 1px rgba(255,255,255,0.02);
+      overflow: hidden;
+    }
+    .viewer-frame::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 8;
+      pointer-events: none;
+      background:
+        linear-gradient(180deg, rgba(5,3,2,0.72), transparent 18%, transparent 76%, rgba(5,3,2,0.66)),
+        radial-gradient(circle at 50% 38%, transparent 28%, rgba(5,3,2,0.38));
+    }
+
+    .slate {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      display: grid;
+      align-content: end;
+      padding: 18px;
+      background:
+        linear-gradient(180deg, rgba(5,3,2,0.16), rgba(5,3,2,0.92)),
+        repeating-linear-gradient(90deg, rgba(231,222,208,0.04), rgba(231,222,208,0.04) 1px, transparent 1px, transparent 32px);
+      color: var(--fg);
+      transition: opacity 260ms ease;
+    }
+    .slate-title {
+      font: italic clamp(30px, 4.2vw, 54px)/.92 var(--font-display);
+      letter-spacing: -.02em;
+      max-width: 9ch;
+    }
+    .slate-meta {
+      margin-top: 14px;
+      color: var(--muted);
+      font: 10px/1.5 var(--font-mono);
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+    .video-stack {
+      position: absolute;
+      inset: 12px;
+      z-index: 4;
+      display: grid;
+      grid-template-rows: 1fr 1.55fr;
+      gap: 10px;
+      opacity: 0;
+      transform: scale(1.03);
+      transition: opacity 260ms ease, transform 600ms cubic-bezier(.22,1,.36,1);
+    }
+    .clip {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(231,222,208,0.12);
+      background: #060403;
+    }
+    .clip iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+    .viewer-frame:hover .video-stack,
+    .viewer-frame:focus-within .video-stack,
+    main:has(.city-pin.is-live:hover) .viewer-frame .video-stack,
+    main:has(.city-pin.is-live:focus-visible) .viewer-frame .video-stack,
+    main.is-touch-revealed .viewer-frame .video-stack {
+      opacity: 1;
+      transform: scale(1);
+    }
+    .viewer-frame:hover .slate,
+    .viewer-frame:focus-within .slate,
+    main:has(.city-pin.is-live:hover) .viewer-frame .slate,
+    main:has(.city-pin.is-live:focus-visible) .viewer-frame .slate,
+    main.is-touch-revealed .viewer-frame .slate { opacity: 0; }
+
+    .reel-switch {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .reel {
+      position: relative;
+      border: 1px solid rgba(231,222,208,0.16);
+      color: rgba(231,222,208,0.72);
+      font: 10px/1.4 var(--font-mono);
+      letter-spacing: .13em;
+      text-transform: uppercase;
+      padding: 10px;
+      background: rgba(231,222,208,0.035);
+      text-decoration: none;
+    }
+    .reel:first-child { color: var(--fg); border-color: rgba(211,74,40,0.44); }
+
+    .atlas-note {
+      color: var(--muted);
+      font: 10px/1.55 var(--font-mono);
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes spinReverse { to { transform: rotate(-360deg); } }
+    @keyframes counterSpin { to { transform: rotate(-360deg); } }
+    @keyframes grain { 0%,100% { opacity: 0.08; } 33% { opacity: 0.115; } 66% { opacity: 0.095; } }
+    @keyframes scanDrift { to { background-position: 0 24px; } }
+    @keyframes mapBreath { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-2px) scale(1.006); } }
+    @keyframes routeFlow { to { stroke-dashoffset: -48; } }
+    @keyframes pinPulse { 0%,100% { transform: translate(-50%, -50%) scale(0.78); opacity: 0.38; } 50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.84; } }
+    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+    @keyframes headlineFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-1.5px); } }
+    @keyframes titleIn {
+      0%, 8% { opacity: 0; transform: translateY(0.42em); filter: blur(2px); }
+      16%, 84% { opacity: 1; transform: translateY(0); filter: blur(0); }
+      100% { opacity: 0; transform: translateY(-0.04em); filter: blur(1px); }
+    }
+    @keyframes wavePulse {
+      0%,100% { transform: translateX(-50%) scaleX(0.8); opacity: 0.3; }
+      50% { transform: translateX(-50%) scaleX(1.15); opacity: 0.7; }
+    }
+
+    @media (max-width: 920px) {
+      .stage { grid-template-columns: 1fr; inset: 56px 18px 72px; gap: 12px; }
+      .atlas { min-height: 54vh; }
+      .rings { width: min(86vw, 54vh); }
+      .headline { bottom: 2vh; max-width: 82vw; }
+      .viewer { position: absolute; right: 0; bottom: 0; width: min(36vw, 180px); min-height: 0; z-index: 20; }
+      .viewer-frame { min-height: 230px; }
+      .reel-switch, .atlas-note { display: none; }
+      .chrome { font-size: 8.5px; letter-spacing: .12em; }
+      .pin-name { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .grain, .scanlines, .vignette, .rings, .rings .ring, .city-pin::after,
+      .headline, .headline .line, .rec, .map-wrap { animation: none !important; }
+      .headline .line { opacity: 1; transform: none; filter: none; }
+      .grain { opacity: 0.06; }
+    }
+  </style>
+</head>
+<body>
+  <main data-od-id="stage">
+    <div class="matte-top" aria-hidden="true"></div>
+    <div class="matte-bottom" aria-hidden="true"></div>
+    <div class="grain" aria-hidden="true"></div>
+    <div class="scanlines" aria-hidden="true"></div>
+    <div class="vignette" aria-hidden="true"></div>
+    <div class="audio-wave" aria-hidden="true"></div>
+
+    <div class="corner tl" aria-hidden="true"></div>
+    <div class="corner tr" aria-hidden="true"></div>
+    <div class="corner bl" aria-hidden="true"></div>
+    <div class="corner br" aria-hidden="true"></div>
+
+    <div class="timecode" aria-hidden="true"><span class="rec"></span><span>00:00:00:00</span></div>
+
+    <div class="chrome top" data-od-id="chrome">
+      <div><strong>Así se ve el centro.</strong> — Atlas transmedia</div>
+      <div class="rule" aria-hidden="true"></div>
+      <div>Barranquilla / ciudad origen</div>
+    </div>
+
+    <section class="stage" aria-label="Mapa transmedia con video por ciudad">
+      <div class="atlas" data-od-id="map-atlas">
+        <div class="rings" aria-hidden="true"><div class="ring"></div><div class="ring"></div><div class="ring"></div></div>
+
+        <div class="map-wrap">
+          <svg class="world-map" viewBox="0 0 1000 560" role="img" aria-label="Mapa del mundo con ciudades separadas">
+            <g class="graticule">
+              <path d="M80 280H920M500 70V490M140 110H860M140 450H860M220 70V490M780 70V490" />
+              <ellipse cx="500" cy="280" rx="420" ry="210" />
+              <ellipse cx="500" cy="280" rx="300" ry="210" />
+              <ellipse cx="500" cy="280" rx="155" ry="210" />
+            </g>
+            <g>
+              <path class="land" d="M176 174c34-42 90-58 145-48 42 7 68 25 92 55 20 25 21 55 4 77-16 21-46 26-68 15-19-10-31-29-53-30-24-1-42 20-65 18-34-3-57-27-72-55-6-12 2-22 17-32Z" />
+              <path class="land" d="M300 278c33 12 54 39 62 74 8 37-8 76-32 110-20 28-42 36-56 20-18-20-9-55-25-82-13-22-39-34-45-59-7-32 33-77 96-63Z" />
+              <path class="colombia" d="M304 312c12-8 26-4 30 9 4 14-6 27-13 39-7 11-5 25-14 31-12 7-24-6-22-19 2-14 12-23 10-37-1-9 2-17 9-23Z" />
+              <path class="land" d="M445 145c62-34 133-33 202-10 42 14 76 42 102 77 20 27 19 55-4 75-20 17-52 12-76-1-35-19-70-31-109-19-33 10-59 38-94 30-41-9-68-49-76-88-5-25 14-47 55-64Z" />
+              <path class="land" d="M600 268c52 4 112 23 145 65 23 29 23 64-5 86-28 23-78 19-106-2-27-20-34-55-63-71-28-16-68-12-82-39-14-28 39-45 111-39Z" />
+              <path class="land" d="M773 366c40-10 80-2 101 18 18 17 12 41-12 55-35 19-94 12-125-9-20-14-10-50 36-64Z" />
+              <path class="land" d="M418 98c16-20 40-25 62-20 16 4 21 17 10 29-18 20-58 24-76 8-5-5-3-11 4-17Z" />
+            </g>
+          </svg>
+        </div>
+
+        <div class="routes" aria-hidden="true">
+          <svg viewBox="0 0 1000 560" preserveAspectRatio="none">
+            <path class="route" d="M316 333 C390 270 496 245 592 245" />
+            <path class="route" d="M316 333 C446 218 625 190 716 206" />
+            <path class="route" d="M316 333 C520 358 650 385 784 396" />
+            <path class="route" d="M316 333 Q304 364 295 395" />
+            <path class="route" d="M316 333 Q312 324 315 315" />
+            <path class="route" d="M316 333 Q308 384 300 435" />
+            <path class="route" d="M316 333 Q270 309 225 285" />
+            <path class="route" d="M316 333 Q290 274 265 215" />
+            <path class="route" d="M316 333 Q440 270 565 208" />
+            <path class="route" d="M316 333 Q430 278 545 223" />
+            <path class="route" d="M316 333 Q383 324 450 315" />
+            <path class="route" d="M316 333 Q500 321 685 310" />
+          </svg>
+        </div>
+
+        <div class="pin-layer" aria-label="Ciudades">
+          <button class="city-pin is-live" style="--x:31.6%; --y:59.2%;" aria-label="Barranquilla: ver videos"><span class="pin-name">Barranquilla</span></button>
+          <button class="city-pin is-future" style="--x:32.8%; --y:64%;" aria-label="Bogotá: próximamente"><span class="pin-name">Bogotá · próximo</span></button>
+          <button class="city-pin is-future" style="--x:31.1%; --y:63%;" aria-label="Medellín: próximamente"><span class="pin-name">Medellín · próximo</span></button>
+          <button class="city-pin is-future" style="--x:59.2%; --y:43.8%;" aria-label="Londres: futura ruta"><span class="pin-name">Londres · futura</span></button>
+          <button class="city-pin is-future" style="--x:71.6%; --y:36.9%;" aria-label="Tokio: futura ruta"><span class="pin-name">Tokio · futura</span></button>
+          <button class="city-pin is-future" style="--x:78.4%; --y:70.7%;" aria-label="Sídney: futura ruta"><span class="pin-name">Sídney · futura</span></button>
+          <button class="city-pin is-future" style="--x:29.5%; --y:70.5%;" aria-label="Cali: próximamente"><span class="pin-name">Cali · próximo</span></button>
+          <button class="city-pin is-future" style="--x:31.5%; --y:56.3%;" aria-label="Cartagena: próximamente"><span class="pin-name">Cartagena · próximo</span></button>
+          <button class="city-pin is-future" style="--x:30%; --y:77.7%;" aria-label="Lima: futura ruta"><span class="pin-name">Lima · futura</span></button>
+          <button class="city-pin is-future" style="--x:22.5%; --y:50.9%;" aria-label="Ciudad de México: futura ruta"><span class="pin-name">CDMX · futura</span></button>
+          <button class="city-pin is-future" style="--x:26.5%; --y:38.4%;" aria-label="Nueva York: futura ruta"><span class="pin-name">NYC · futura</span></button>
+          <button class="city-pin is-future" style="--x:56.5%; --y:37.1%;" aria-label="París: futura ruta"><span class="pin-name">París · futura</span></button>
+          <button class="city-pin is-future" style="--x:54.5%; --y:39.8%;" aria-label="Barcelona: futura ruta"><span class="pin-name">Barcelona · futura</span></button>
+          <button class="city-pin is-future" style="--x:45%; --y:56.3%;" aria-label="Dakar: futura ruta"><span class="pin-name">Dakar · futura</span></button>
+          <button class="city-pin is-future" style="--x:68.5%; --y:55.4%;" aria-label="Mumbai: futura ruta"><span class="pin-name">Mumbai · futura</span></button>
+        </div>
+
+        <div class="headline" data-od-id="headline">
+          <span class="line">Así se ve</span>
+          <span class="line">el <em>centro.</em></span>
+        </div>
+      </div>
+
+      <aside class="viewer" data-od-id="video-hover-panel" aria-label="Video de ciudad seleccionada">
+        <div class="viewer-frame" tabindex="0" aria-label="Hover para revelar video de Barranquilla">
+          <div class="video-stack" aria-label="Videos de Barranquilla">
+            <div class="clip">
+              <iframe title="Barranquilla — Así se ve el centro"
+                data-src="https://www.youtube.com/embed/5Q8Sq7YQrEE?autoplay=1&mute=1&loop=1&playlist=5Q8Sq7YQrEE&controls=1&playsinline=1&rel=0&modestbranding=1&enablejsapi=1"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen></iframe>
+            </div>
+            <div class="clip">
+              <iframe title="Barranquilla — Short"
+                data-src="https://www.youtube.com/embed/yT4JEs4TVQg?autoplay=1&mute=1&loop=1&playlist=yT4JEs4TVQg&controls=1&playsinline=1&rel=0&modestbranding=1&enablejsapi=1"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen></iframe>
+            </div>
+          </div>
+          <div class="slate" aria-hidden="true">
+            <div class="slate-title">Barranquilla abre el mapa.</div>
+            <div class="slate-meta">Hover sobre la ciudad o sobre este visor<br />para revelar las dos piezas de origen</div>
+          </div>
+        </div>
+        <div class="reel-switch" aria-label="Videos disponibles">
+          <a class="reel" href="https://youtu.be/5Q8Sq7YQrEE">Barranquilla / pieza 01</a>
+          <a class="reel" href="https://youtube.com/shorts/yT4JEs4TVQg">Barranquilla / short 01</a>
+        </div>
+        <div class="atlas-note">Patrón A: pines separados + visor lateral. Patrón C queda para comparar muchas ciudades cuando haya más archivo.</div>
+      </aside>
+    </section>
+
+    <div class="chrome bottom" data-od-id="chrome">
+      <div>Hover reveals video</div>
+      <div class="rule" aria-hidden="true"></div>
+      <div>12s cinematic loop</div>
+      <div class="rule" aria-hidden="true"></div>
+      <span class="audio-indicator">♪ drone</span>
+      <button class="audio-toggle" aria-label="Silenciar audio"><span class="on">♪</span><span class="off">♪̸</span></button>
+    </div>
+  </main>
+  <script>
+    (() => {
+      const stage = document.querySelector('main');
+      const viewer = document.querySelector('.viewer-frame');
+      const viewerStack = viewer.querySelector('.video-stack');
+      const viewerSlate = viewer.querySelector('.slate');
+
+      const cityRegistry = [
+        {
+          id: 'barranquilla',
+          name: 'Barranquilla',
+          videos: [
+            { title: 'Así se ve el centro', id: '5Q8Sq7YQrEE' },
+            { title: 'Short', id: 'yT4JEs4TVQg' }
+          ]
+        }
+      ];
+
+      let activeCity = null;
+      const loadedCities = {};
+
+      function buildIframeHTML(videoId, title) {
+        const p = 'autoplay=1&mute=1&loop=1&playlist=' + videoId + '&controls=1&playsinline=1&rel=0&modestbranding=1&enablejsapi=1';
+        return '<div class="clip"><iframe title="' + title + '" data-src="https://www.youtube.com/embed/' + videoId + '?' + p + '" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>';
+      }
+
+      function showCity(cityId) {
+        const city = cityRegistry.find(c => c.id === cityId);
+        if (!city || activeCity === cityId) return;
+
+        viewerStack.style.opacity = '0';
+        viewerSlate.style.opacity = '1';
+        viewerStack.style.transform = 'scale(1.03)';
+
+        setTimeout(() => {
+          viewerStack.innerHTML = city.videos.map(v => buildIframeHTML(v.id, v.title)).join('');
+
+          if (!loadedCities[cityId]) {
+            loadedCities[cityId] = true;
+            viewerStack.querySelectorAll('iframe[data-src]').forEach(f => {
+              f.src = f.dataset.src;
+              f.removeAttribute('data-src');
+            });
+          }
+
+          viewerSlate.querySelector('.slate-title').textContent = city.name + ' abre el mapa.';
+          viewerStack.style.opacity = '1';
+          viewerSlate.style.opacity = '0';
+          viewerStack.style.transform = 'scale(1)';
+          activeCity = cityId;
+        }, 300);
+      }
+
+      document.querySelectorAll('.city-pin.is-live').forEach(pin => {
+        pin.addEventListener('pointerenter', () => showCity('barranquilla'));
+        pin.addEventListener('focusin', () => showCity('barranquilla'));
+        pin.addEventListener('touchstart', () => {
+          showCity('barranquilla');
+          stage.classList.add('is-touch-revealed');
+        }, { passive: true });
+      });
+
+      viewer.addEventListener('pointerenter', () => showCity('barranquilla'));
+      viewer.addEventListener('focusin', () => showCity('barranquilla'));
+      viewer.addEventListener('touchstart', () => {
+        showCity('barranquilla');
+        stage.classList.add('is-touch-revealed');
+      }, { passive: true });
+
+      // --- Paso 6: Audio drone procedural ---
+      let audioCtx = null, droneStarted = false;
+
+      function initAudio() {
+        if (droneStarted) return;
+        droneStarted = true;
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        [65.41, 98.00, 130.81].forEach((freq, i) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = i === 0 ? 'sine' : 'triangle';
+          osc.frequency.value = freq;
+          osc.detune.value = Math.sin(i * 1.7) * 3;
+          gain.gain.value = 0;
+          gain.gain.setTargetAtTime(i === 0 ? 0.06 : 0.03, audioCtx.currentTime + 1, 2);
+          osc.connect(gain).connect(audioCtx.destination);
+          osc.start();
+
+          const lfo = audioCtx.createOscillator();
+          const lfoGain = audioCtx.createGain();
+          lfo.frequency.value = 0.08 + i * 0.03;
+          lfoGain.gain.value = 0.015;
+          lfo.connect(lfoGain).connect(gain.gain);
+          lfo.start();
+        });
+
+        document.querySelector('.audio-indicator')?.classList.add('is-active');
+        document.querySelector('.audio-wave')?.classList.add('is-active');
+      }
+
+      document.addEventListener('pointerdown', initAudio, { once: true });
+      document.addEventListener('keydown', initAudio, { once: true });
+
+      document.querySelector('.audio-toggle')?.addEventListener('click', function() {
+        const muted = this.classList.toggle('muted');
+        if (audioCtx) {
+          if (muted) audioCtx.suspend();
+          else audioCtx.resume();
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

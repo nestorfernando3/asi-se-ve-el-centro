@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>Así se ve el centro. — Atlas Hover</title>
+  <style>
+    :root {
+      --loop: 12s;
+      --matte: #030201;
+      --ink: #0e0a08;
+      --surface: #17110e;
+      --fg: #eadfd0;
+      --muted: #9a8d7c;
+      --dim: rgba(234, 223, 208, 0.22);
+      --line: rgba(234, 223, 208, 0.14);
+      --accent: #d64a28;
+      --accent-soft: rgba(214, 74, 40, 0.22);
+
+      --font-display: 'Iowan Old Style', 'Charter', Georgia, serif;
+      --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --font-mono: ui-monospace, 'IBM Plex Mono', 'JetBrains Mono', Menlo, monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; }
+    body {
+      overflow: hidden;
+      background: var(--matte);
+      color: var(--fg);
+      font-family: var(--font-body);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: geometricPrecision;
+    }
+
+    main {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      isolation: isolate;
+      background:
+        radial-gradient(ellipse at 50% 44%, rgba(234, 223, 208, 0.045) 0%, transparent 48%),
+        radial-gradient(ellipse at 50% 50%, transparent 28%, rgba(3, 2, 1, 0.82) 94%),
+        linear-gradient(180deg, rgba(3,2,1,0.62), transparent 18%, transparent 78%, rgba(3,2,1,0.7)),
+        var(--ink);
+    }
+
+    .matte-top,
+    .matte-bottom {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: clamp(24px, 4.4vh, 54px);
+      background: var(--matte);
+      z-index: 40;
+      pointer-events: none;
+    }
+    .matte-top { top: 0; border-bottom: 1px solid rgba(234, 223, 208, 0.06); }
+    .matte-bottom { bottom: 0; border-top: 1px solid rgba(234, 223, 208, 0.06); }
+
+    .grain,
+    .scanlines,
+    .vignette {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .grain {
+      z-index: 28;
+      opacity: 0.095;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 190px 190px;
+      animation: grain 0.24s steps(3) infinite;
+      mix-blend-mode: screen;
+    }
+
+    .scanlines {
+      z-index: 27;
+      background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.18) 3px, rgba(0,0,0,0.18) 4px);
+      animation: scanDrift var(--loop) linear infinite;
+      opacity: 0.28;
+    }
+
+    .vignette {
+      z-index: 26;
+      background:
+        linear-gradient(90deg, rgba(3,2,1,0.72), transparent 16%, transparent 84%, rgba(3,2,1,0.72)),
+        radial-gradient(circle at 50% 48%, transparent 24%, rgba(3,2,1,0.7) 96%);
+    }
+
+    .chrome {
+      position: absolute;
+      left: clamp(18px, 2.8vw, 38px);
+      right: clamp(18px, 2.8vw, 38px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      z-index: 35;
+      font: 10px/1.45 var(--font-mono);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      pointer-events: none;
+    }
+    .chrome.top { top: clamp(14px, 2.2vw, 26px); }
+    .chrome.bottom { bottom: clamp(14px, 2.2vw, 24px); }
+    .chrome strong { color: var(--fg); font-weight: 500; letter-spacing: 0.14em; }
+    .chrome .rule { flex: 1; height: 1px; margin: 0 14px; background: rgba(234, 223, 208, 0.14); }
+
+    .corner {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border-color: rgba(234, 223, 208, 0.24);
+      border-style: solid;
+      z-index: 36;
+      pointer-events: none;
+    }
+    .corner.tl { top: clamp(30px, 5vh, 60px); left: clamp(18px, 2.8vw, 38px); border-width: 1px 0 0 1px; }
+    .corner.tr { top: clamp(30px, 5vh, 60px); right: clamp(18px, 2.8vw, 38px); border-width: 1px 1px 0 0; }
+    .corner.bl { bottom: clamp(30px, 5vh, 60px); left: clamp(18px, 2.8vw, 38px); border-width: 0 0 1px 1px; }
+    .corner.br { bottom: clamp(30px, 5vh, 60px); right: clamp(18px, 2.8vw, 38px); border-width: 0 1px 1px 0; }
+
+    .timecode {
+      position: absolute;
+      right: clamp(18px, 2.8vw, 38px);
+      bottom: clamp(30px, 5vh, 60px);
+      z-index: 36;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font: 10px/1 var(--font-mono);
+      letter-spacing: 0.16em;
+      color: var(--muted);
+      pointer-events: none;
+    }
+    .timecode .rec { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); animation: blink 1.2s steps(1) infinite; }
+
+    .hero {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      z-index: 2;
+    }
+
+    .gate {
+      position: relative;
+      width: min(74vw, 78vh);
+      aspect-ratio: 1;
+      transform: translateY(-2vh);
+      animation: gateWeave var(--loop) ease-in-out infinite;
+    }
+
+    .composition { position: relative; width: 100%; height: 100%; }
+
+    .rings,
+    .labels {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      transform-origin: 50% 50%;
+    }
+
+    .rings { animation: spin var(--loop) linear infinite; }
+    .rings .ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 1px solid rgba(234, 223, 208, 0.16);
+      transform-origin: 50% 50%;
+    }
+    .rings .ring:nth-child(1) { border-top-color: rgba(234,223,208,0.03); border-left-color: rgba(234,223,208,0.04); }
+    .rings .ring:nth-child(2) { inset: 7%; border-style: dashed; border-color: rgba(234,223,208,0.12); animation: spinReverse 6s linear infinite; }
+    .rings .ring:nth-child(3) { inset: 14%; border-color: rgba(234,223,208,0.075); border-bottom-color: rgba(234,223,208,0.02); animation: spin 4s linear infinite; }
+
+    .labels { z-index: 5; animation: spin var(--loop) linear infinite; pointer-events: none; }
+    .label {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: rotate(var(--angle)) translateY(calc(var(--radius) * -1)) rotate(calc(var(--angle) * -1));
+      transform-origin: 0 0;
+      white-space: nowrap;
+      font: 10px/1 var(--font-mono);
+      letter-spacing: 0.17em;
+      text-transform: uppercase;
+      color: rgba(234, 223, 208, 0.5);
+    }
+    .label i { display: block; font-style: normal; animation: counterSpin var(--loop) linear infinite; }
+    .label.is-origin i { color: var(--fg); letter-spacing: 0.2em; }
+
+    .globe {
+      position: absolute;
+      inset: 18%;
+      z-index: 4;
+      display: grid;
+      place-items: center;
+      transform-origin: 50% 50%;
+      animation: globeDrift var(--loop) linear infinite;
+    }
+    .globe:hover,
+    .globe:focus-within { animation-play-state: paused; }
+    .globe svg { width: 100%; height: 100%; overflow: visible; display: block; }
+    .globe .shell { fill: rgba(234, 223, 208, 0.028); stroke: rgba(234, 223, 208, 0.22); stroke-width: 0.9; }
+    .globe .grid-slow,
+    .globe .grid-fast { fill: none; stroke-linecap: round; transform-origin: 50% 50%; transform-box: fill-box; }
+    .globe .grid-slow { stroke: rgba(234, 223, 208, 0.14); stroke-width: 0.7; animation: spinReverse 6s linear infinite; }
+    .globe .grid-fast { stroke: rgba(234, 223, 208, 0.08); stroke-width: 0.6; animation: spin 4s linear infinite; }
+    .globe:hover .grid-slow,
+    .globe:hover .grid-fast,
+    .globe:focus-within .grid-slow,
+    .globe:focus-within .grid-fast { animation-play-state: paused; }
+    .globe .land {
+      fill: rgba(234, 223, 208, 0.10);
+      stroke: rgba(234, 223, 208, 0.32);
+      stroke-width: 0.9;
+      vector-effect: non-scaling-stroke;
+    }
+    .globe .colombia { fill: rgba(214, 74, 40, 0.28); stroke: rgba(214, 74, 40, 0.74); }
+    .globe .horizon { fill: none; stroke: rgba(234, 223, 208, 0.14); stroke-width: 0.8; }
+
+    .city-pin {
+      position: absolute;
+      left: var(--x);
+      top: var(--y);
+      width: 18px;
+      height: 18px;
+      padding: 0;
+      border: 0;
+      border-radius: 50%;
+      background: transparent;
+      color: var(--fg);
+      transform: translate(-50%, -50%);
+      z-index: 12;
+      cursor: pointer;
+      font: inherit;
+      isolation: isolate;
+    }
+    .city-pin::before,
+    .city-pin::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .city-pin::before {
+      width: 9px;
+      height: 9px;
+      background: rgba(234, 223, 208, 0.78);
+      box-shadow: 0 0 0 1px rgba(3,2,1,0.85), 0 0 18px rgba(234, 223, 208, 0.18);
+    }
+    .city-pin::after {
+      width: 24px;
+      height: 24px;
+      border: 1px solid rgba(234, 223, 208, 0.26);
+      opacity: 0.7;
+      animation: pinPulse 3s ease-in-out infinite;
+    }
+    .city-pin.is-active::before { background: var(--accent); box-shadow: 0 0 0 1px rgba(3,2,1,0.9), 0 0 26px rgba(214, 74, 40, 0.52); }
+    .city-pin.is-active::after { border-color: rgba(214, 74, 40, 0.58); }
+    .city-pin.is-future { opacity: 0.58; cursor: default; }
+
+    .pin-name {
+      position: absolute;
+      left: 16px;
+      top: -6px;
+      padding: 3px 6px;
+      color: rgba(234, 223, 208, 0.74);
+      background: rgba(3,2,1,0.58);
+      border: 1px solid rgba(234, 223, 208, 0.12);
+      font: 9px/1 var(--font-mono);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      opacity: 0;
+      transform: translateY(4px);
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+    .city-pin:hover .pin-name,
+    .city-pin:focus-visible .pin-name,
+    .city-pin.is-active .pin-name { opacity: 1; transform: translateY(0); }
+
+    .video-preview {
+      position: absolute;
+      left: min(92vw, calc(100% + 28px));
+      top: 50%;
+      width: clamp(260px, 29vw, 410px);
+      transform: translate(0, -50%) scale(0.98);
+      padding: 10px;
+      border: 1px solid rgba(234, 223, 208, 0.20);
+      background: rgba(9, 6, 4, 0.92);
+      box-shadow: 0 18px 60px rgba(0,0,0,0.48), inset 0 0 0 1px rgba(255,255,255,0.03);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 190ms ease, transform 190ms ease;
+      backdrop-filter: blur(10px);
+    }
+    .city-pin:hover .video-preview,
+    .city-pin:focus-visible .video-preview,
+    .city-pin:focus-within .video-preview {
+      opacity: 1;
+      transform: translate(0, -50%) scale(1);
+      pointer-events: auto;
+    }
+    .video-preview::before {
+      content: '';
+      position: absolute;
+      left: -28px;
+      top: 50%;
+      width: 28px;
+      height: 1px;
+      background: rgba(214, 74, 40, 0.62);
+    }
+    .preview-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+      font: 9px/1.2 var(--font-mono);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .preview-head strong { color: var(--fg); font-weight: 500; }
+    .video-stack {
+      display: grid;
+      grid-template-columns: 1.68fr 0.72fr;
+      gap: 8px;
+      align-items: stretch;
+    }
+    .video-frame {
+      position: relative;
+      overflow: hidden;
+      background: #050302;
+      border: 1px solid rgba(234, 223, 208, 0.14);
+    }
+    .video-frame.wide { aspect-ratio: 16 / 9; }
+    .video-frame.vertical { aspect-ratio: 9 / 16; }
+    .video-frame iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      filter: saturate(0.88) contrast(1.08);
+    }
+    .preview-note {
+      margin: 8px 0 0;
+      color: rgba(234, 223, 208, 0.70);
+      font: 10px/1.45 var(--font-mono);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .headline {
+      position: absolute;
+      left: clamp(18px, 2.8vw, 38px);
+      bottom: clamp(70px, 7.4vw, 94px);
+      z-index: 10;
+      max-width: min(55vw, 880px);
+      font-family: var(--font-display);
+      line-height: 0.92;
+      letter-spacing: -0.035em;
+      color: var(--fg);
+      text-wrap: balance;
+      animation: headlineFloat var(--loop) ease-in-out infinite;
+    }
+    .headline .line {
+      display: block;
+      opacity: 0;
+      transform: translateY(0.35em);
+      animation: titleIn var(--loop) cubic-bezier(.2,.7,.2,1) infinite;
+    }
+    .headline .line:first-child { font-size: clamp(2rem, 4.6vw, 5.4rem); font-style: italic; }
+    .headline .line:last-child { margin-top: 0.08em; font-size: clamp(2.8rem, 6.6vw, 8.4rem); font-weight: 500; animation-delay: 0.14s; }
+    .headline em { color: var(--accent); font-style: italic; }
+
+    .atlas-note {
+      position: absolute;
+      right: clamp(18px, 2.8vw, 38px);
+      top: clamp(70px, 8vw, 110px);
+      z-index: 10;
+      max-width: 300px;
+      padding: 12px 14px;
+      border: 1px solid rgba(234, 223, 208, 0.13);
+      background: rgba(3, 2, 1, 0.48);
+      backdrop-filter: blur(8px);
+      color: rgba(234, 223, 208, 0.72);
+      font: 10px/1.55 var(--font-mono);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .atlas-note strong { display: block; margin-bottom: 6px; color: var(--fg); font-weight: 500; }
+
+    .baseline {
+      position: absolute;
+      left: clamp(18px, 2.8vw, 38px);
+      right: clamp(18px, 2.8vw, 38px);
+      bottom: clamp(50px, 5.6vw, 66px);
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(234, 223, 208, 0.22) 10%, rgba(234, 223, 208, 0.14) 90%, transparent);
+      z-index: 9;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes spinReverse { to { transform: rotate(-360deg); } }
+    @keyframes counterSpin { to { transform: rotate(-360deg); } }
+    @keyframes globeDrift { to { transform: rotate(360deg); } }
+    @keyframes pinPulse { 0%,100% { transform: translate(-50%, -50%) scale(0.78); opacity: 0.38; } 50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.84; } }
+    @keyframes grain { 0%,100% { opacity: 0.08; } 33% { opacity: 0.115; } 66% { opacity: 0.095; } }
+    @keyframes scanDrift { to { background-position: 0 24px; } }
+    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+    @keyframes headlineFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-1.5px); } }
+    @keyframes titleIn {
+      0%, 8% { opacity: 0; transform: translateY(0.42em); filter: blur(2px); }
+      16%, 84% { opacity: 1; transform: translateY(0); filter: blur(0); }
+      100% { opacity: 0; transform: translateY(-0.04em); filter: blur(1px); }
+    }
+    @keyframes gateWeave {
+      0%,100% { transform: translateY(-2vh) translate(0,0); }
+      18% { transform: translateY(-2vh) translate(0.35px,-0.25px); }
+      36% { transform: translateY(-2vh) translate(-0.25px,0.35px); }
+      54% { transform: translateY(-2vh) translate(0.25px,0.12px); }
+      72% { transform: translateY(-2vh) translate(-0.35px,-0.25px); }
+    }
+
+    @media (max-width: 980px) {
+      .gate { width: min(92vw, 76vh); transform: translateY(-1vh); }
+      .headline { max-width: 86vw; bottom: 82px; }
+      .headline .line:first-child { font-size: clamp(1.7rem, 6.5vw, 2.8rem); }
+      .headline .line:last-child { font-size: clamp(2.2rem, 10vw, 4rem); }
+      .chrome { font-size: 9px; letter-spacing: 0.14em; }
+      .label { font-size: 8px; letter-spacing: 0.12em; }
+      .atlas-note { display: none; }
+      .video-preview { left: 50%; top: calc(100% + 22px); transform: translate(-50%, 0) scale(0.98); width: min(88vw, 380px); }
+      .city-pin:hover .video-preview,
+      .city-pin:focus-visible .video-preview,
+      .city-pin:focus-within .video-preview { transform: translate(-50%, 0) scale(1); }
+      .video-preview::before { left: 50%; top: -22px; width: 1px; height: 22px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .grain, .scanlines, .gate, .rings, .rings .ring, .labels, .label i,
+      .globe, .globe .grid-slow, .globe .grid-fast, .city-pin::after,
+      .headline, .headline .line, .rec { animation: none !important; }
+      .headline .line { opacity: 1; transform: none; filter: none; }
+      .gate { transform: translateY(-2vh); }
+      .grain { opacity: 0.06; }
+    }
+  </style>
+</head>
+<body>
+  <main data-od-id="stage">
+    <div class="matte-top" aria-hidden="true"></div>
+    <div class="matte-bottom" aria-hidden="true"></div>
+    <div class="grain" aria-hidden="true"></div>
+    <div class="scanlines" aria-hidden="true"></div>
+    <div class="vignette" aria-hidden="true"></div>
+
+    <div class="corner tl" aria-hidden="true"></div>
+    <div class="corner tr" aria-hidden="true"></div>
+    <div class="corner bl" aria-hidden="true"></div>
+    <div class="corner br" aria-hidden="true"></div>
+
+    <div class="timecode" aria-hidden="true"><span class="rec"></span><span>00:00:00:00</span></div>
+
+    <div class="chrome top" data-od-id="chrome">
+      <div><strong>Así se ve el centro.</strong> — Atlas transmedia</div>
+      <div class="rule" aria-hidden="true"></div>
+      <div>Barranquilla active / mundo en expansión</div>
+    </div>
+
+    <section class="hero" aria-label="Animated hero with city map video previews">
+      <div class="gate">
+        <div class="composition">
+          <div class="rings" data-od-id="ring" aria-hidden="true">
+            <div class="ring"></div>
+            <div class="ring"></div>
+            <div class="ring"></div>
+          </div>
+
+          <div class="labels" data-od-id="ring" aria-hidden="true">
+            <span class="label is-origin" style="--angle: 0deg; --radius: 44%;"><i>Barranquilla</i></span>
+            <span class="label" style="--angle: 36deg; --radius: 44%;"><i>Bogotá</i></span>
+            <span class="label" style="--angle: 72deg; --radius: 44%;"><i>Medellín</i></span>
+            <span class="label" style="--angle: 108deg; --radius: 44%;"><i>Ciudad de México</i></span>
+            <span class="label" style="--angle: 144deg; --radius: 44%;"><i>Nueva York</i></span>
+            <span class="label" style="--angle: 180deg; --radius: 44%;"><i>Londres</i></span>
+            <span class="label" style="--angle: 216deg; --radius: 44%;"><i>Dakar</i></span>
+            <span class="label" style="--angle: 252deg; --radius: 44%;"><i>Mumbai</i></span>
+            <span class="label" style="--angle: 288deg; --radius: 44%;"><i>Tokio</i></span>
+            <span class="label" style="--angle: 324deg; --radius: 44%;"><i>Buenos Aires</i></span>
+          </div>
+
+          <div class="globe" data-od-id="focal">
+            <svg viewBox="0 0 300 300" role="img" aria-label="World map wireframe globe with separated city points">
+              <defs>
+                <clipPath id="worldClip"><circle cx="150" cy="150" r="120" /></clipPath>
+              </defs>
+              <circle class="shell" cx="150" cy="150" r="120" />
+              <g clip-path="url(#worldClip)">
+                <path class="land" d="M62 77c17-13 36-17 58-11 12 3 20 10 22 21 2 12-5 25-18 36-8 7-15 11-22 10-10-1-15-12-20-24-5-13-12-23-20-32Z" />
+                <path class="land" d="M113 139c18-6 35 3 42 19 9 21 3 53-11 78-7 13-18 18-25 11-9-9-8-30-6-50 2-18 1-39 0-58Z" />
+                <path class="colombia" d="M101 129c7-4 14-1 17 6 3 8 0 17-5 22-6 5-13 2-16-4-4-8-2-18 4-24Z" />
+                <path class="land" d="M142 82c10-6 23-5 31 3 6 7 5 16-3 22-8 5-21 4-28-3-7-7-7-16 0-22Z" />
+                <path class="land" d="M151 116c25-15 55-8 68 18 12 23 9 55-8 79-13 18-33 19-45 3-13-18-15-48-15-100Z" />
+                <path class="land" d="M177 75c27-10 61-3 77 15 14 16 10 37-9 48-17 10-42 5-58-12-13-13-22-36-10-51Z" />
+                <path class="land" d="M213 171c19-7 34 0 41 13 7 15 1 31-15 38-14 6-29 1-36-11-8-13-4-32 10-40Z" />
+                <path class="land" d="M76 244c35-10 105-11 150 0 11 3 9 9-7 12-39 7-111 7-143 0-15-3-15-8 0-12Z" />
+              </g>
+              <g class="grid-slow">
+                <ellipse cx="150" cy="150" rx="120" ry="28" />
+                <ellipse cx="150" cy="150" rx="120" ry="56" />
+                <ellipse cx="150" cy="150" rx="120" ry="86" />
+                <ellipse cx="150" cy="150" rx="28" ry="120" />
+                <ellipse cx="150" cy="150" rx="56" ry="120" />
+                <ellipse cx="150" cy="150" rx="86" ry="120" />
+              </g>
+              <g class="grid-fast">
+                <ellipse cx="150" cy="150" rx="108" ry="38" />
+                <ellipse cx="150" cy="150" rx="108" ry="70" />
+                <ellipse cx="150" cy="150" rx="40" ry="108" />
+                <ellipse cx="150" cy="150" rx="72" ry="108" />
+              </g>
+              <circle class="horizon" cx="150" cy="150" r="120" />
+            </svg>
+
+            <button class="city-pin is-active" style="--x: 35%; --y: 43%;" aria-label="Barranquilla — ver videos">
+              <span class="pin-name">Barranquilla</span>
+              <span class="video-preview" role="dialog" aria-label="Videos de Barranquilla">
+                <span class="preview-head"><strong>Barranquilla</strong><span>2 fuentes / centro</span></span>
+                <span class="video-stack">
+                  <span class="video-frame wide"><iframe title="Barranquilla video principal" data-src="https://www.youtube.com/embed/5Q8Sq7YQrEE?autoplay=1&mute=1&loop=1&playlist=5Q8Sq7YQrEE&controls=1&playsinline=1&rel=0&modestbranding=1&enablejsapi=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></span>
+                  <span class="video-frame vertical"><iframe title="Barranquilla short" data-src="https://www.youtube.com/embed/yT4JEs4TVQg?autoplay=1&mute=1&loop=1&playlist=yT4JEs4TVQg&controls=1&playsinline=1&rel=0&modestbranding=1&enablejsapi=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></span>
+                </span>
+                <span class="preview-note">Hover model A: city pin opens source footage. Atlas model C later expands into city clusters.</span>
+              </span>
+            </button>
+
+            <button class="city-pin is-future" style="--x: 41%; --y: 50%;" aria-label="Bogotá — próximo"><span class="pin-name">Bogotá · próximo</span></button>
+            <button class="city-pin is-future" style="--x: 39%; --y: 47%;" aria-label="Medellín — próximo"><span class="pin-name">Medellín · próximo</span></button>
+            <button class="city-pin is-future" style="--x: 55%; --y: 35%;" aria-label="Londres — próximo"><span class="pin-name">Londres · próximo</span></button>
+            <button class="city-pin is-future" style="--x: 62%; --y: 47%;" aria-label="Mumbai — próximo"><span class="pin-name">Mumbai · próximo</span></button>
+            <button class="city-pin is-future" style="--x: 71%; --y: 43%;" aria-label="Tokio — próximo"><span class="pin-name">Tokio · próximo</span></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="atlas-note" aria-hidden="true">
+      <strong>Interacción</strong>
+      Pasa por Barranquilla: el mapa se detiene y el archivo aparece como pantalla dentro del atlas.
+    </div>
+
+    <div class="headline" data-od-id="headline">
+      <span class="line">Así se ve</span>
+      <span class="line">el <em>centro.</em></span>
+    </div>
+
+    <div class="baseline" aria-hidden="true"></div>
+
+    <div class="chrome bottom" data-od-id="chrome">
+      <div>Modelo A ahora: una ciudad activa</div>
+      <div class="rule" aria-hidden="true"></div>
+      <div>Modelo C después: constelación multi-ciudad</div>
+    </div>
+  </main>
+  <script>
+    (() => {
+      const pin = document.querySelector('.city-pin.is-active');
+      if (!pin) return;
+      let loaded = false;
+      pin.querySelectorAll('iframe[data-src]').forEach(f => f.removeAttribute('src'));
+      const loadVideos = () => {
+        if (loaded) return;
+        loaded = true;
+        pin.querySelectorAll('iframe[data-src]').forEach(f => {
+          f.src = f.dataset.src;
+          f.removeAttribute('data-src');
+        });
+      };
+      pin.addEventListener('pointerenter', loadVideos, { once: true });
+      pin.addEventListener('focusin', loadVideos, { once: true });
+      pin.addEventListener('touchstart', loadVideos, { once: true, passive: true });
+    })();
+  </script>
+</body>
+</html>
