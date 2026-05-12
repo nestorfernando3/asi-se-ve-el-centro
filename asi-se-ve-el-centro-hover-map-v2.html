@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="es">
 <head>
@@ -6,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="dark" />
   <meta name="description" content="Mapa audiovisual interactivo para Así se ve el centro: pines de ciudad y visor de video de Barranquilla." />
-  <title>Así se ve el centro. — Hover Map</title>
+  <title>Así se ve el centro. — Globo transmedia</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <style>
     :root {
       --loop: 12s;
@@ -195,66 +195,28 @@
       container-type: inline-size;
     }
 
-    .rings {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      width: min(76vh, 62vw);
-      aspect-ratio: 1;
-      transform: translate(-50%, -50%);
-      border-radius: 50%;
-      pointer-events: none;
-      animation: spin var(--loop) linear infinite;
-    }
-    .rings .ring {
+    #globe-container {
       position: absolute;
       inset: 0;
-      border-radius: 50%;
-      border: 1px solid rgba(234, 223, 208, 0.12);
-      transform-origin: 50% 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1;
     }
-    .rings .ring:nth-child(1) { border-top-color: rgba(234,223,208,0.03); border-left-color: rgba(234,223,208,0.04); }
-    .rings .ring:nth-child(2) { inset: 8%; border-style: dashed; border-color: rgba(234,223,208,0.1); animation: spinReverse 6s linear infinite; }
-    .rings .ring:nth-child(3) { inset: 17%; border-color: rgba(234,223,208,0.065); border-bottom-color: rgba(234,223,208,0.02); animation-duration: 4s; }
-
-    .map-wrap {
-      position: absolute;
-      inset: 0;
-      display: grid;
-      place-items: center;
-      animation: mapBreath var(--loop) ease-in-out infinite;
-    }
-
-    .world-map {
-      width: min(92vw, 980px);
-      max-width: 100%;
-      height: auto;
+    #globe-container canvas {
       display: block;
-      filter: drop-shadow(0 0 32px rgba(211,74,40,0.08));
-    }
-    .graticule { fill: none; stroke: rgba(234,223,208,0.06); stroke-width: .8; }
-    .land {
-      fill: rgba(234,223,208,0.09);
-      stroke: rgba(234,223,208,0.28);
-      stroke-width: 1.05;
-      vector-effect: non-scaling-stroke;
-    }
-    .colombia {
-      fill: rgba(214,74,40,0.26);
-      stroke: rgba(214,74,40,0.68);
+      width: 100% !important;
+      height: 100% !important;
     }
 
     .pin-layer {
       position: absolute;
       inset: 0;
+      z-index: 3;
       pointer-events: none;
     }
     .city-pin {
-      --x: 50%;
-      --y: 50%;
       position: absolute;
-      left: var(--x);
-      top: var(--y);
       width: 18px;
       height: 18px;
       padding: 0;
@@ -265,6 +227,7 @@
       pointer-events: auto;
       cursor: pointer;
       isolation: isolate;
+      transition: opacity 200ms ease;
     }
     .city-pin::before, .city-pin::after {
       content: '';
@@ -292,7 +255,7 @@
       box-shadow: 0 0 0 1px rgba(3,2,1,0.9), 0 0 26px rgba(214,74,40,0.52);
     }
     .city-pin.is-live::after { border-color: rgba(214,74,40,0.58); }
-    .city-pin.is-future { opacity: 0.58; cursor: default; }
+    .city-pin.is-future { cursor: default; }
 
     .pin-name {
       position: absolute;
@@ -314,27 +277,11 @@
     .city-pin:focus-visible .pin-name,
     .city-pin.is-live .pin-name { opacity: 1; transform: translateY(0); }
 
-    .routes {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      opacity: 0.62;
-    }
-    .routes svg { width: 100%; height: 100%; display: block; }
-    .route {
-      fill: none;
-      stroke: rgba(211,74,40,0.28);
-      stroke-width: 1;
-      stroke-dasharray: 3 9;
-      animation: routeFlow 6s linear infinite;
-      vector-effect: non-scaling-stroke;
-    }
-
     .headline {
       position: absolute;
       left: clamp(0px, 1vw, 18px);
       bottom: clamp(8px, 3vh, 38px);
-      z-index: 8;
+      z-index: 2;
       max-width: min(680px, 64vw);
       font-family: var(--font-display);
       line-height: 0.92;
@@ -402,11 +349,19 @@
       letter-spacing: -.02em;
       max-width: 9ch;
     }
+    .slate-desc {
+      margin-top: 12px;
+      color: var(--fg);
+      font: 11px/1.5 var(--font-body);
+      letter-spacing: .06em;
+      max-width: 28ch;
+      opacity: 0.85;
+    }
     .slate-meta {
-      margin-top: 14px;
+      margin-top: 10px;
       color: var(--muted);
-      font: 10px/1.5 var(--font-mono);
-      letter-spacing: .16em;
+      font: 9px/1.4 var(--font-mono);
+      letter-spacing: .12em;
       text-transform: uppercase;
     }
     .video-stack {
@@ -466,21 +421,15 @@
 
     .atlas-note {
       color: var(--muted);
-      font: 10px/1.55 var(--font-mono);
-      letter-spacing: .14em;
+      font: 9px/1.55 var(--font-mono);
+      letter-spacing: .12em;
       text-transform: uppercase;
     }
 
-    @keyframes spin { to { transform: rotate(360deg); } }
-    @keyframes spinReverse { to { transform: rotate(-360deg); } }
-    @keyframes counterSpin { to { transform: rotate(-360deg); } }
     @keyframes grain { 0%,100% { opacity: 0.08; } 33% { opacity: 0.115; } 66% { opacity: 0.095; } }
     @keyframes scanDrift { to { background-position: 0 24px; } }
-    @keyframes mapBreath { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-2px) scale(1.006); } }
-    @keyframes routeFlow { to { stroke-dashoffset: -48; } }
     @keyframes pinPulse { 0%,100% { transform: translate(-50%, -50%) scale(0.78); opacity: 0.38; } 50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.84; } }
     @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
-    @keyframes headlineFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-1.5px); } }
     @keyframes titleIn {
       0%, 8% { opacity: 0; transform: translateY(0.42em); filter: blur(2px); }
       16%, 84% { opacity: 1; transform: translateY(0); filter: blur(0); }
@@ -494,18 +443,16 @@
     @media (max-width: 920px) {
       .stage { grid-template-columns: 1fr; inset: 56px 18px 72px; gap: 12px; }
       .atlas { min-height: 54vh; }
-      .rings { width: min(86vw, 54vh); }
       .headline { bottom: 2vh; max-width: 82vw; }
       .viewer { position: absolute; right: 0; bottom: 0; width: min(36vw, 180px); min-height: 0; z-index: 20; }
       .viewer-frame { min-height: 230px; }
-      .reel-switch, .atlas-note { display: none; }
       .chrome { font-size: 8.5px; letter-spacing: .12em; }
       .pin-name { display: none; }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .grain, .scanlines, .vignette, .rings, .rings .ring, .city-pin::after,
-      .headline, .headline .line, .rec, .map-wrap { animation: none !important; }
+      .grain, .scanlines, .vignette, .city-pin::after,
+      .headline, .headline .line, .rec { animation: none !important; }
       .headline .line { opacity: 1; transform: none; filter: none; }
       .grain { opacity: 0.06; }
     }
@@ -535,61 +482,24 @@
 
     <section class="stage" aria-label="Mapa transmedia con video por ciudad">
       <div class="atlas" data-od-id="map-atlas">
-        <div class="rings" aria-hidden="true"><div class="ring"></div><div class="ring"></div><div class="ring"></div></div>
-
-        <div class="map-wrap">
-          <svg class="world-map" viewBox="0 0 1000 560" role="img" aria-label="Mapa del mundo con ciudades separadas">
-            <g class="graticule">
-              <path d="M80 280H920M500 70V490M140 110H860M140 450H860M220 70V490M780 70V490" />
-              <ellipse cx="500" cy="280" rx="420" ry="210" />
-              <ellipse cx="500" cy="280" rx="300" ry="210" />
-              <ellipse cx="500" cy="280" rx="155" ry="210" />
-            </g>
-            <g>
-              <path class="land" d="M176 174c34-42 90-58 145-48 42 7 68 25 92 55 20 25 21 55 4 77-16 21-46 26-68 15-19-10-31-29-53-30-24-1-42 20-65 18-34-3-57-27-72-55-6-12 2-22 17-32Z" />
-              <path class="land" d="M300 278c33 12 54 39 62 74 8 37-8 76-32 110-20 28-42 36-56 20-18-20-9-55-25-82-13-22-39-34-45-59-7-32 33-77 96-63Z" />
-              <path class="colombia" d="M304 312c12-8 26-4 30 9 4 14-6 27-13 39-7 11-5 25-14 31-12 7-24-6-22-19 2-14 12-23 10-37-1-9 2-17 9-23Z" />
-              <path class="land" d="M445 145c62-34 133-33 202-10 42 14 76 42 102 77 20 27 19 55-4 75-20 17-52 12-76-1-35-19-70-31-109-19-33 10-59 38-94 30-41-9-68-49-76-88-5-25 14-47 55-64Z" />
-              <path class="land" d="M600 268c52 4 112 23 145 65 23 29 23 64-5 86-28 23-78 19-106-2-27-20-34-55-63-71-28-16-68-12-82-39-14-28 39-45 111-39Z" />
-              <path class="land" d="M773 366c40-10 80-2 101 18 18 17 12 41-12 55-35 19-94 12-125-9-20-14-10-50 36-64Z" />
-              <path class="land" d="M418 98c16-20 40-25 62-20 16 4 21 17 10 29-18 20-58 24-76 8-5-5-3-11 4-17Z" />
-            </g>
-          </svg>
-        </div>
-
-        <div class="routes" aria-hidden="true">
-          <svg viewBox="0 0 1000 560" preserveAspectRatio="none">
-            <path class="route" d="M316 333 C390 270 496 245 592 245" />
-            <path class="route" d="M316 333 C446 218 625 190 716 206" />
-            <path class="route" d="M316 333 C520 358 650 385 784 396" />
-            <path class="route" d="M316 333 Q304 364 295 395" />
-            <path class="route" d="M316 333 Q312 324 315 315" />
-            <path class="route" d="M316 333 Q308 384 300 435" />
-            <path class="route" d="M316 333 Q270 309 225 285" />
-            <path class="route" d="M316 333 Q290 274 265 215" />
-            <path class="route" d="M316 333 Q440 270 565 208" />
-            <path class="route" d="M316 333 Q430 278 545 223" />
-            <path class="route" d="M316 333 Q383 324 450 315" />
-            <path class="route" d="M316 333 Q500 321 685 310" />
-          </svg>
-        </div>
+        <div id="globe-container" aria-label="Globo terráqueo interactivo"></div>
 
         <div class="pin-layer" aria-label="Ciudades">
-          <button class="city-pin is-live" style="--x:31.6%; --y:59.2%;" aria-label="Barranquilla: ver videos"><span class="pin-name">Barranquilla</span></button>
-          <button class="city-pin is-future" style="--x:32.8%; --y:64%;" aria-label="Bogotá: próximamente"><span class="pin-name">Bogotá · próximo</span></button>
-          <button class="city-pin is-future" style="--x:31.1%; --y:63%;" aria-label="Medellín: próximamente"><span class="pin-name">Medellín · próximo</span></button>
-          <button class="city-pin is-future" style="--x:59.2%; --y:43.8%;" aria-label="Londres: futura ruta"><span class="pin-name">Londres · futura</span></button>
-          <button class="city-pin is-future" style="--x:71.6%; --y:36.9%;" aria-label="Tokio: futura ruta"><span class="pin-name">Tokio · futura</span></button>
-          <button class="city-pin is-future" style="--x:78.4%; --y:70.7%;" aria-label="Sídney: futura ruta"><span class="pin-name">Sídney · futura</span></button>
-          <button class="city-pin is-future" style="--x:29.5%; --y:70.5%;" aria-label="Cali: próximamente"><span class="pin-name">Cali · próximo</span></button>
-          <button class="city-pin is-future" style="--x:31.5%; --y:56.3%;" aria-label="Cartagena: próximamente"><span class="pin-name">Cartagena · próximo</span></button>
-          <button class="city-pin is-future" style="--x:30%; --y:77.7%;" aria-label="Lima: futura ruta"><span class="pin-name">Lima · futura</span></button>
-          <button class="city-pin is-future" style="--x:22.5%; --y:50.9%;" aria-label="Ciudad de México: futura ruta"><span class="pin-name">CDMX · futura</span></button>
-          <button class="city-pin is-future" style="--x:26.5%; --y:38.4%;" aria-label="Nueva York: futura ruta"><span class="pin-name">NYC · futura</span></button>
-          <button class="city-pin is-future" style="--x:56.5%; --y:37.1%;" aria-label="París: futura ruta"><span class="pin-name">París · futura</span></button>
-          <button class="city-pin is-future" style="--x:54.5%; --y:39.8%;" aria-label="Barcelona: futura ruta"><span class="pin-name">Barcelona · futura</span></button>
-          <button class="city-pin is-future" style="--x:45%; --y:56.3%;" aria-label="Dakar: futura ruta"><span class="pin-name">Dakar · futura</span></button>
-          <button class="city-pin is-future" style="--x:68.5%; --y:55.4%;" aria-label="Mumbai: futura ruta"><span class="pin-name">Mumbai · futura</span></button>
+          <button class="city-pin is-live" data-city-id="barranquilla" aria-label="Barranquilla: ver videos"><span class="pin-name">Barranquilla</span></button>
+          <button class="city-pin is-future" data-city-id="bogota" aria-label="Bogotá: próximamente"><span class="pin-name">Bogotá · próximo</span></button>
+          <button class="city-pin is-future" data-city-id="medellin" aria-label="Medellín: próximamente"><span class="pin-name">Medellín · próximo</span></button>
+          <button class="city-pin is-future" data-city-id="cali" aria-label="Cali: próximamente"><span class="pin-name">Cali · próximo</span></button>
+          <button class="city-pin is-future" data-city-id="cartagena" aria-label="Cartagena: próximamente"><span class="pin-name">Cartagena · próximo</span></button>
+          <button class="city-pin is-future" data-city-id="lima" aria-label="Lima: futura ruta"><span class="pin-name">Lima · futura</span></button>
+          <button class="city-pin is-future" data-city-id="cdmx" aria-label="Ciudad de México: futura ruta"><span class="pin-name">CDMX · futura</span></button>
+          <button class="city-pin is-future" data-city-id="nyc" aria-label="Nueva York: futura ruta"><span class="pin-name">NYC · futura</span></button>
+          <button class="city-pin is-future" data-city-id="londres" aria-label="Londres: futura ruta"><span class="pin-name">Londres · futura</span></button>
+          <button class="city-pin is-future" data-city-id="paris" aria-label="París: futura ruta"><span class="pin-name">París · futura</span></button>
+          <button class="city-pin is-future" data-city-id="barcelona" aria-label="Barcelona: futura ruta"><span class="pin-name">Barcelona · futura</span></button>
+          <button class="city-pin is-future" data-city-id="dakar" aria-label="Dakar: futura ruta"><span class="pin-name">Dakar · futura</span></button>
+          <button class="city-pin is-future" data-city-id="mumbai" aria-label="Mumbai: futura ruta"><span class="pin-name">Mumbai · futura</span></button>
+          <button class="city-pin is-future" data-city-id="tokio" aria-label="Tokio: futura ruta"><span class="pin-name">Tokio · futura</span></button>
+          <button class="city-pin is-future" data-city-id="sydney" aria-label="Sídney: futura ruta"><span class="pin-name">Sídney · futura</span></button>
         </div>
 
         <div class="headline" data-od-id="headline">
@@ -599,27 +509,28 @@
       </div>
 
       <aside class="viewer" data-od-id="video-hover-panel" aria-label="Video de ciudad seleccionada">
-        <div class="viewer-frame" tabindex="0" aria-label="Hover para revelar video de Barranquilla">
-          <div class="video-stack" aria-label="Video de Barranquilla">
+        <div class="viewer-frame" tabindex="0" aria-label="Hover para revelar video">
+          <div class="video-stack" aria-label="Video">
             <div class="clip"></div>
           </div>
           <div class="slate" aria-hidden="true">
             <div class="slate-title">Barranquilla abre el mapa.</div>
-            <div class="slate-meta">Hover sobre la ciudad o sobre este visor<br />para revelar el video</div>
+            <div class="slate-desc">—</div>
+            <div class="slate-meta">Hover sobre el globo para revelar el video</div>
           </div>
         </div>
         <div class="reel-switch" aria-label="Cambiar video">
           <button class="reel is-active" data-video-index="0">Barranquilla / pieza 01</button>
           <button class="reel" data-video-index="1">Barranquilla / short 01</button>
         </div>
-        <div class="atlas-note">Hover sobre el mapa para revelar video.</div>
+        <div class="atlas-note">Desplaza el cursor sobre el globo para explorar.</div>
       </aside>
     </section>
 
     <div class="chrome bottom" data-od-id="chrome">
       <div>Hover reveals video</div>
       <div class="rule" aria-hidden="true"></div>
-      <div>12s cinematic loop</div>
+      <div>globo 360</div>
       <div class="rule" aria-hidden="true"></div>
       <span class="audio-indicator">♪ drone</span>
       <button class="audio-toggle" aria-label="Silenciar audio"><span class="on">♪</span><span class="off">♪̸</span></button>
@@ -627,25 +538,94 @@
   </main>
   <script>
     (() => {
+      // ========== CITY REGISTRY ==========
+      const cityRegistry = [
+        { id: 'barranquilla', name: 'Barranquilla', lat: 10.97, lng: -74.80, status: 'live',
+          description: '"Con los cabellos al viento, la dulce piel encendida, y el andar sin descanso tal aire de gallardía que el alma de las palmeras se detiene a verla pasar."',
+          author: '— Meira Delmar, "Romance de Barranquilla"',
+          videos: [
+            { title: 'Así se ve el centro', id: '5Q8Sq7YQrEE' },
+            { title: 'Short', id: 'yT4JEs4TVQg' }
+          ] },
+        { id: 'bogota', name: 'Bogotá', lat: 4.71, lng: -74.07, status: 'future',
+          description: '"Ciudad a medio hacer, siempre a punto de parecerse a algo como una muchacha que comienza a menstruar, precaria, sin belleza alguna. La ciudad que amo se parece demasiado a mi vida."',
+          author: '— María Mercedes Carranza, "Bogotá, 1982"',
+          videos: [] },
+        { id: 'medellin', name: 'Medellín', lat: 6.25, lng: -75.57, status: 'future',
+          description: 'Ladera de flores, / la primavera desborda / entre el tranvía.',
+          author: '— Haiku',
+          videos: [] },
+        { id: 'cali', name: 'Cali', lat: 3.45, lng: -76.53, status: 'future',
+          description: 'Salsa en la piel, / el Pacífico en la sangre, / Cali calienta.',
+          author: '— Haiku',
+          videos: [] },
+        { id: 'cartagena', name: 'Cartagena', lat: 10.39, lng: -75.51, status: 'future',
+          description: '"Más hoy, plena de rancio desaliño, bien puedes inspirar ese cariño que uno les tiene a sus zapatos viejos."',
+          author: '— Luis Carlos López, "A mi ciudad nativa"',
+          videos: [] },
+        { id: 'lima', name: 'Lima', lat: -12.05, lng: -77.04, status: 'future',
+          description: 'Neblina y mar, / el ceviche y el ruido, / Lima despierta.',
+          author: '— Haiku',
+          videos: [] },
+        { id: 'cdmx', name: 'Ciudad de México', lat: 19.43, lng: -99.13, status: 'future',
+          description: '"De la famosa México el asiento, archivo de toda grandeza y ornamento, del mundo la riqueza y el tesoro."',
+          author: '— Bernardo de Balbuena, "La grandeza mexicana" (1604)',
+          videos: [] },
+        { id: 'nyc', name: 'Nueva York', lat: 40.71, lng: -74.01, status: 'future',
+          description: '"Asesinado por el cielo, entre las formas que van hacia la sierpe y las formas que buscan el cristal."',
+          author: '— Federico García Lorca, "Poeta en Nueva York"',
+          videos: [] },
+        { id: 'londres', name: 'Londres', lat: 51.51, lng: -0.13, status: 'future',
+          description: '"I wander thro\' each charter\'d street, near where the charter\'d Thames does flow. And mark in every face I meet marks of weakness, marks of woe."',
+          author: '— William Blake, "London" (1794)',
+          videos: [] },
+        { id: 'paris', name: 'París', lat: 48.86, lng: 2.35, status: 'future',
+          description: '"Paris change! mais rien dans ma mélancolie n\'a bougé! palais neufs, échafaudages, blocs, vieux faubourgs, tout pour moi devient allégorie."',
+          author: '— Charles Baudelaire, "Le Cygne"',
+          videos: [] },
+        { id: 'barcelona', name: 'Barcelona', lat: 41.39, lng: 2.17, status: 'future',
+          description: '"Los imagino al mediodía, por la avenida de los tilos, la capota del coche salpicada de sol, y la música fundiéndose al rumor de los neumáticos."',
+          author: '— Jaime Gil de Biedma, "Barcelona ja no es bona"',
+          videos: [] },
+        { id: 'dakar', name: 'Dakar', lat: 14.72, lng: -17.47, status: 'future',
+          description: '"Je contemple toits et collines dans la brume. Dans la paix – les cheminées sont graves et nues."',
+          author: '— Léopold Sédar Senghor, "Chants d\'ombre"',
+          videos: [] },
+        { id: 'mumbai', name: 'Mumbai', lat: 19.08, lng: 72.88, status: 'future',
+          description: '"The morning is a long straight line of flavours, a longitude of tastes along which the city stretches and wakes."',
+          author: '— Arun Kolatkar, "Kala Ghoda Poems"',
+          videos: [] },
+        { id: 'tokio', name: 'Tokio', lat: 35.68, lng: 139.69, status: 'future',
+          description: 'Neón y templo, / el puente flota en luz, / Tokio respira.',
+          author: '— Haiku',
+          videos: [] },
+        { id: 'sydney', name: 'Sídney', lat: -33.87, lng: 151.21, status: 'future',
+          description: 'La Ópera blanca, / el sol sobre el puerto, / olas de acero.',
+          author: '— Haiku',
+          videos: [] }
+      ];
+
+      // ========== VIDEO VIEWER ==========
       const stage = document.querySelector('main');
       const viewer = document.querySelector('.viewer-frame');
       const viewerStack = viewer.querySelector('.video-stack');
       const viewerSlate = viewer.querySelector('.slate');
+      const slateTitle = viewerSlate.querySelector('.slate-title');
+      const slateDesc = viewerSlate.querySelector('.slate-desc');
+      const slateMeta = viewerSlate.querySelector('.slate-meta');
 
-      const cityRegistry = [
-        {
-          id: 'barranquilla',
-          name: 'Barranquilla',
-          videos: [
-            { title: 'Así se ve el centro', id: '5Q8Sq7YQrEE' },
-            { title: 'Short', id: 'yT4JEs4TVQg' }
-          ]
-        }
-      ];
-
-      let activeCity = null;
+      let activeCityId = 'barranquilla';
       let activeVideoIndex = 0;
       let videoRevealed = false;
+
+      function updateSlate(cityId) {
+        const city = cityRegistry.find(c => c.id === cityId);
+        if (!city) return;
+        slateTitle.textContent = city.name + ' abre el mapa.';
+        slateDesc.textContent = city.description;
+        slateMeta.textContent = city.author || 'Hover sobre el globo para revelar el video';
+      }
+      updateSlate('barranquilla');
 
       function iframeURL(videoId, autoplay) {
         return 'https://www.youtube.com/embed/' + videoId + '?' +
@@ -655,7 +635,7 @@
 
       function showVideo(cityId, videoIndex) {
         const city = cityRegistry.find(c => c.id === cityId);
-        if (!city) return;
+        if (!city || city.videos.length === 0) return;
         const vi = videoIndex != null ? videoIndex : activeVideoIndex;
         const video = city.videos[vi];
         if (!video) return;
@@ -664,7 +644,7 @@
         const existing = clip.querySelector('iframe');
         const sameSrc = existing && existing.src.includes(video.id);
 
-        if (sameSrc) return; // already showing this video
+        if (sameSrc && activeCityId === cityId) return;
 
         // Stop drone on first video reveal
         if (!videoRevealed) {
@@ -673,7 +653,7 @@
         }
 
         activeVideoIndex = vi;
-        activeCity = cityId;
+        activeCityId = cityId;
 
         viewerStack.style.opacity = '0';
         viewerStack.style.transform = 'scale(1.03)';
@@ -685,23 +665,20 @@
           viewerStack.style.opacity = '1';
           viewerStack.style.transform = 'scale(1)';
 
-          // update reel active state
           document.querySelectorAll('.reel-switch .reel').forEach((btn, i) => {
             btn.classList.toggle('is-active', i === vi);
           });
         }, 260);
       }
 
-      // Reel buttons: switch video
       document.querySelectorAll('.reel-switch .reel').forEach(btn => {
         btn.addEventListener('click', () => {
-          showVideo('barranquilla', parseInt(btn.dataset.videoIndex));
+          showVideo(activeCityId || 'barranquilla', parseInt(btn.dataset.videoIndex));
         });
       });
 
-      // Hover on pin or viewer reveals video
       function onReveal() {
-        showVideo(activeCity || 'barranquilla');
+        showVideo(activeCityId || 'barranquilla');
       }
 
       document.querySelectorAll('.city-pin.is-live').forEach(pin => {
@@ -720,12 +697,132 @@
         stage.classList.add('is-touch-revealed');
       }, { passive: true });
 
-      // --- Paso 6: Audio drone procedural ---
+      // ========== 3D GLOBE ==========
+      const container = document.getElementById('globe-container');
+      const pinLayer = document.querySelector('.pin-layer');
+
+      const w = container.clientWidth || 600;
+      const h = container.clientHeight || 500;
+      const R = 5;
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 1000);
+      camera.position.set(0, 0, 14);
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(w, h);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setClearColor(0x000000, 0);
+      container.appendChild(renderer.domElement);
+
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+      scene.add(ambientLight);
+      const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      dirLight.position.set(5, 3, 8);
+      scene.add(dirLight);
+
+      const globeGeom = new THREE.SphereGeometry(R, 64, 64);
+      const textureLoader = new THREE.TextureLoader();
+      const textureUrl = 'https://unpkg.com/three-globe@2.24.8/example/img/earth-blue-marble.jpg';
+      const globeMat = new THREE.MeshPhongMaterial({
+        color: 0xffffff,
+        specular: 0x111111,
+        shininess: 5
+      });
+      const globe = new THREE.Mesh(globeGeom, globeMat);
+      scene.add(globe);
+
+      // Add a subtle atmosphere glow
+      const glowGeom = new THREE.SphereGeometry(R * 1.015, 48, 48);
+      const glowMat = new THREE.MeshBasicMaterial({
+        color: 0x2a1808,
+        transparent: true,
+        opacity: 0.18,
+        side: THREE.BackSide
+      });
+      const glow = new THREE.Mesh(glowGeom, glowMat);
+      scene.add(glow);
+
+      // City markers as 3D objects (invisible, just for position tracking)
+      const cityObjects = [];
+      cityRegistry.forEach(city => {
+        const lngRad = city.lng * Math.PI / 180;
+        const latRad = city.lat * Math.PI / 180;
+        const x = R * Math.cos(latRad) * Math.cos(lngRad);
+        const y = R * Math.sin(latRad);
+        const z = R * Math.cos(latRad) * Math.sin(lngRad);
+
+        const obj = new THREE.Object3D();
+        obj.position.set(x, y, z);
+        globe.add(obj);
+        cityObjects.push(obj);
+      });
+
+      // Load texture
+      textureLoader.load(textureUrl, (tex) => {
+        globe.material.map = tex;
+        globe.material.needsUpdate = true;
+      }, undefined, () => {
+        // Fallback: color only, no texture
+        globe.material.color.setHex(0x1a2a3a);
+      });
+
+      const worldPos = new THREE.Vector3();
+      const projected = new THREE.Vector3();
+      let animId = null;
+
+      function animate() {
+        animId = requestAnimationFrame(animate);
+        globe.rotation.y += 0.0025;
+
+        // Update pin positions
+        const rect = container.getBoundingClientRect();
+        const cw = rect.width || w;
+        const ch = rect.height || h;
+
+        cityRegistry.forEach((city, i) => {
+          const pin = pinLayer.querySelector(`[data-city-id="${city.id}"]`);
+          if (!pin) return;
+
+          cityObjects[i].getWorldPosition(worldPos);
+
+          // Check if pin is on the front side (z > 0 relative to camera at 0,0,dist)
+          if (worldPos.z > 0) {
+            pin.style.opacity = '1';
+            projected.copy(worldPos).project(camera);
+            const px = (projected.x + 1) / 2 * cw;
+            const py = (1 - projected.y) / 2 * ch;
+            pin.style.left = px + 'px';
+            pin.style.top = py + 'px';
+          } else {
+            pin.style.opacity = '0';
+          }
+        });
+
+        renderer.render(scene, camera);
+      }
+      animate();
+
+      // Resize handler
+      function onResize() {
+        const rect = container.getBoundingClientRect();
+        const nw = rect.width || 600;
+        const nh = rect.height || 400;
+        camera.aspect = nw / nh;
+        camera.updateProjectionMatrix();
+        renderer.setSize(nw, nh);
+      }
+      window.addEventListener('resize', onResize);
+      const ro = new ResizeObserver(onResize);
+      ro.observe(container);
+
+      // ========== AUDIO DRONE ==========
       let audioCtx = null, droneStarted = false;
       const droneNodes = [];
 
       function initAudio() {
         if (droneStarted) return;
+        if (videoRevealed) return; // don't start if video already played
         droneStarted = true;
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
@@ -760,9 +857,8 @@
           gain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.5);
           lfoGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.5);
           setTimeout(() => {
-            lfo.stop();
-            lfo.disconnect();
-            gain.disconnect();
+            try { lfo.stop(); lfo.disconnect(); } catch(e) {}
+            try { gain.disconnect(); } catch(e) {}
           }, 1000);
         });
         droneNodes.length = 0;
