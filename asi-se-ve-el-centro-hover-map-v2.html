@@ -630,7 +630,7 @@
       function iframeURL(videoId, autoplay) {
         return 'https://www.youtube.com/embed/' + videoId + '?' +
           (autoplay ? 'autoplay=1&' : '') +
-          'mute=1&loop=1&playlist=' + videoId + '&controls=1&playsinline=1&rel=0&modestbranding=1&enablejsapi=1';
+          'loop=1&playlist=' + videoId + '&controls=1&playsinline=1&rel=0&modestbranding=1&enablejsapi=1';
       }
 
       function showVideo(cityId, videoIndex) {
@@ -677,23 +677,28 @@
         });
       });
 
-      function onReveal() {
-        showVideo(activeCityId || 'barranquilla');
+      // Click any pin → show city info in slate
+      function selectCity(cityId) {
+        const city = cityRegistry.find(c => c.id === cityId);
+        if (!city) return;
+        activeCityId = cityId;
+        updateSlate(cityId);
       }
 
-      document.querySelectorAll('.city-pin.is-live').forEach(pin => {
-        pin.addEventListener('pointerenter', onReveal);
-        pin.addEventListener('focusin', onReveal);
-        pin.addEventListener('touchstart', () => {
-          onReveal();
-          stage.classList.add('is-touch-revealed');
-        }, { passive: true });
+      document.querySelectorAll('.city-pin').forEach(pin => {
+        pin.addEventListener('click', () => selectCity(pin.dataset.cityId));
       });
 
-      viewer.addEventListener('pointerenter', onReveal);
-      viewer.addEventListener('focusin', onReveal);
+      // Hover on live pin reveals video
+      document.querySelectorAll('.city-pin.is-live').forEach(pin => {
+        pin.addEventListener('pointerenter', () => showVideo(activeCityId));
+        pin.addEventListener('focusin', () => showVideo(activeCityId));
+      });
+
+      viewer.addEventListener('pointerenter', () => showVideo(activeCityId));
+      viewer.addEventListener('focusin', () => showVideo(activeCityId));
       viewer.addEventListener('touchstart', () => {
-        onReveal();
+        showVideo(activeCityId);
         stage.classList.add('is-touch-revealed');
       }, { passive: true });
 
@@ -746,11 +751,11 @@
       // City markers as 3D objects (invisible, just for position tracking)
       const cityObjects = [];
       cityRegistry.forEach(city => {
-        const lngRad = city.lng * Math.PI / 180;
-        const latRad = city.lat * Math.PI / 180;
-        const x = R * Math.cos(latRad) * Math.cos(lngRad);
-        const y = R * Math.sin(latRad);
-        const z = R * Math.cos(latRad) * Math.sin(lngRad);
+        const phi = (90 - city.lat) * Math.PI / 180;
+        const theta = (city.lng + 180) * Math.PI / 180;
+        const x = -R * Math.sin(phi) * Math.cos(theta);
+        const y = R * Math.cos(phi);
+        const z = R * Math.sin(phi) * Math.sin(theta);
 
         const obj = new THREE.Object3D();
         obj.position.set(x, y, z);
