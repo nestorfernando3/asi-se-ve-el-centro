@@ -252,9 +252,9 @@
     }
     .city-pin.is-live::before {
       background: var(--accent);
-      box-shadow: 0 0 0 1px rgba(3,2,1,0.9), 0 0 26px rgba(214,74,40,0.52);
+      box-shadow: 0 0 0 1px rgba(3,2,1,0.9), 0 0 20px rgba(214,74,40,0.45), 0 0 40px rgba(214,74,40,0.12);
     }
-    .city-pin.is-live::after { border-color: rgba(214,74,40,0.58); }
+    .city-pin.is-live::after { border-color: rgba(214,74,40,0.5); }
     .city-pin.is-future { cursor: default; }
 
     .pin-name {
@@ -312,11 +312,14 @@
       width: 100%;
       aspect-ratio: 9 / 14;
       min-height: 420px;
-      border: 1px solid rgba(234,223,208,0.20);
+      border: 1px solid rgba(214,74,40,0.18);
+      box-shadow:
+        0 18px 60px rgba(0,0,0,0.38),
+        inset 0 0 0 1px rgba(255,255,255,0.02),
+        inset 0 0 40px rgba(214,74,40,0.04);
       background:
         linear-gradient(180deg, rgba(234,223,208,0.04), rgba(234,223,208,0.01)),
         rgba(9,6,4,0.92);
-      box-shadow: 0 18px 60px rgba(0,0,0,0.38), inset 0 0 0 1px rgba(255,255,255,0.02);
       overflow: hidden;
     }
     .viewer-frame::before {
@@ -345,23 +348,22 @@
       pointer-events: none;
     }
     .slate-title {
-      font: italic clamp(30px, 4.2vw, 54px)/.92 var(--font-display);
+      font: italic clamp(28px, 3.8vw, 48px)/.92 var(--font-display);
       letter-spacing: -.02em;
       max-width: 9ch;
     }
     .slate-desc {
-      margin-top: 12px;
-      color: var(--fg);
-      font: 11px/1.5 var(--font-body);
-      letter-spacing: .06em;
+      margin-top: 10px;
+      color: rgba(234,223,208,0.8);
+      font: 13px/1.55 var(--font-body);
+      letter-spacing: .04em;
       max-width: 28ch;
-      opacity: 0.85;
     }
     .slate-meta {
-      margin-top: 10px;
-      color: var(--muted);
-      font: 9px/1.4 var(--font-mono);
-      letter-spacing: .12em;
+      margin-top: 8px;
+      color: rgba(154,141,124,0.7);
+      font: 8px/1.4 var(--font-mono);
+      letter-spacing: .14em;
       text-transform: uppercase;
     }
     .video-stack {
@@ -407,17 +409,25 @@
     }
     .reel {
       position: relative;
-      border: 1px solid rgba(231,222,208,0.16);
-      color: rgba(231,222,208,0.72);
-      font: 10px/1.4 var(--font-mono);
-      letter-spacing: .13em;
+      border: 1px solid rgba(231,222,208,0.14);
+      color: rgba(231,222,208,0.6);
+      font: 9px/1.4 var(--font-mono);
+      letter-spacing: .14em;
       text-transform: uppercase;
-      padding: 10px;
-      background: rgba(231,222,208,0.035);
+      padding: 8px 10px;
+      background: rgba(231,222,208,0.025);
       cursor: pointer;
+      transition: background 200ms ease, border-color 200ms ease, color 200ms ease;
     }
-    .reel.is-active { color: var(--fg); border-color: rgba(211,74,40,0.44); }
-    .reel.is-active:hover { background: rgba(214,74,40,0.12); }
+    .reel.is-active {
+      color: var(--fg);
+      border-color: rgba(214,74,40,0.4);
+      background: rgba(214,74,40,0.06);
+    }
+    .reel:hover:not(.is-active) {
+      background: rgba(214,74,40,0.03);
+      border-color: rgba(214,74,40,0.18);
+    }
 
     .atlas-note {
       color: var(--muted);
@@ -729,85 +739,114 @@
       warmLight.position.set(-4, 1, 6);
       scene.add(warmLight);
 
-      // ===== Artisitic globe texture (canvas-generated) =====
+      // ===== Stylized globe texture — multi-tonal ink-wash =====
       function generateArtisticTexture(w, h) {
         const c = document.createElement('canvas');
         c.width = w; c.height = h;
         const ctx = c.getContext('2d');
 
-        // Deep vintage parchment background
+        // Deep warm background with subtle gradient
         const bg = ctx.createRadialGradient(w/2, h*0.45, 0, w/2, h*0.45, w*0.7);
         bg.addColorStop(0, '#1a1410');
-        bg.addColorStop(1, '#0a0806');
+        bg.addColorStop(0.6, '#0f0c08');
+        bg.addColorStop(1, '#060403');
         ctx.fillStyle = bg;
         ctx.fillRect(0, 0, w, h);
 
-        // Soft continent blobs — artistic, watercolor style
-        const blobs = [
-          // South America
-          {lng:-65, lat:-15, r:10}, {lng:-60, lat:-2, r:7}, {lng:-50, lat:-20, r:6},
-          {lng:-68, lat:-40, r:5}, {lng:-75, lat:-8, r:5}, {lng:-58, lat:-50, r:4},
-          // North America
-          {lng:-100, lat:48, r:11}, {lng:-80, lat:40, r:8}, {lng:-120, lat:40, r:8},
-          {lng:-90, lat:58, r:7}, {lng:-110, lat:55, r:6}, {lng:-130, lat:55, r:5},
-          {lng:-150, lat:60, r:5}, {lng:-165, lat:62, r:4},
-          // Europe
-          {lng:10, lat:50, r:6}, {lng:0, lat:45, r:5}, {lng:20, lat:55, r:5},
-          {lng:5, lat:55, r:4}, {lng:25, lat:58, r:4}, {lng:-5, lat:48, r:3},
-          // Africa
-          {lng:20, lat:5, r:9}, {lng:0, lat:5, r:6}, {lng:30, lat:-8, r:6},
-          {lng:35, lat:-20, r:5}, {lng:15, lat:-25, r:5}, {lng:-10, lat:10, r:4},
-          {lng:45, lat:5, r:4}, {lng:10, lat:-30, r:4},
-          // Asia
-          {lng:80, lat:50, r:13}, {lng:60, lat:35, r:9}, {lng:90, lat:30, r:8},
-          {lng:110, lat:25, r:7}, {lng:70, lat:50, r:6}, {lng:120, lat:45, r:6},
-          {lng:100, lat:60, r:6}, {lng:130, lat:40, r:5}, {lng:40, lat:45, r:5},
-          {lng:95, lat:10, r:5}, {lng:80, lat:10, r:5}, {lng:60, lat:20, r:4},
-          // Australia / Oceania
-          {lng:135, lat:-25, r:6}, {lng:145, lat:-30, r:4}, {lng:130, lat:-30, r:3},
-          {lng:150, lat:-22, r:3}, {lng:120, lat:-28, r:3},
-          // Greenland
-          {lng:-42, lat:72, r:4},
-          // Antarctica (just a hint)
-          {lng:0, lat:-85, r:12}, {lng:90, lat:-85, r:10}, {lng:-90, lat:-85, r:10},
-          {lng:180, lat:-85, r:8}
+        // Continent blobs with regional color variation
+        const colors = [
+          '#d64a28', // terracotta (South America, Africa)
+          '#b85a30', // burnt orange (North America, Europe)
+          '#9a6a3a', // ochre (Asia, Australia)
+          '#7a4a2a', // umber (Siberia, Antarctica)
+          '#c45a28', // warm rust (India, Middle East)
+          '#a05030'  // sienna (Oceania)
         ];
 
-        // Draw soft glowing blobs — multiple passes for depth
-        [0.12, 0.08, 0.05].forEach((baseOpacity, pass) => {
+        const blobs = [
+          // [lng, lat, radius, colorIndex, opacityScale]
+          // South America
+          [-65,-15,10,0,1], [-60,-2,7,0,0.85], [-50,-20,6,0,0.7],
+          [-68,-40,5,0,0.8], [-75,-8,5,0,0.65], [-58,-50,4,0,0.7],
+          // North America
+          [-100,48,11,1,1], [-80,40,8,1,0.85], [-120,40,8,1,0.8],
+          [-90,58,7,1,0.9], [-110,55,6,1,0.75], [-130,55,5,1,0.7],
+          [-150,60,5,1,0.6], [-165,62,4,1,0.55],
+          // Europe
+          [10,50,6,1,0.9], [0,45,5,1,0.8], [20,55,5,1,0.85],
+          [5,55,4,1,0.7], [25,58,4,1,0.75], [-5,48,3,1,0.6],
+          // Africa
+          [20,5,9,0,1], [0,5,6,0,0.85], [30,-8,6,0,0.8],
+          [35,-20,5,0,0.85], [15,-25,5,0,0.7], [-10,10,4,0,0.65],
+          [45,5,4,0,0.6], [10,-30,4,0,0.65],
+          // Asia
+          [80,50,13,2,1], [60,35,9,2,0.85], [90,30,8,2,0.8],
+          [110,25,7,2,0.75], [70,50,6,2,0.7], [120,45,6,2,0.7],
+          [100,60,6,2,0.75], [130,40,5,2,0.65], [40,45,5,2,0.7],
+          [95,10,5,2,0.6], [80,10,5,2,0.55], [60,20,4,2,0.5],
+          // Australia / Oceania
+          [135,-25,6,3,0.9], [145,-30,4,3,0.75], [130,-30,3,3,0.6],
+          [150,-22,3,3,0.65], [120,-28,3,3,0.55],
+          // Greenland
+          [-42,72,4,1,0.6],
+          // Antarctica
+          [0,-85,12,3,0.5], [90,-85,10,3,0.45], [-90,-85,10,3,0.45],
+          [180,-85,8,3,0.4]
+        ];
+
+        // Pass 1: deep shadow/underglow — dark brown beneath each blob
+        blobs.forEach(b => {
+          const px = (b[0] + 180) / 360 * w;
+          const py = (90 - b[1]) / 180 * h;
+          const pr = b[2] * w / 300;
+          const g = ctx.createRadialGradient(px, py + pr*0.1, 0, px, py + pr*0.1, pr * 1.1);
+          g.addColorStop(0, 'rgba(30,15,8,0.15)');
+          g.addColorStop(1, 'rgba(30,15,8,0)');
+          ctx.fillStyle = g;
+          ctx.fillRect(px - pr*1.1, py - pr*1.1 + pr*0.1, pr*2.2, pr*2.2);
+        });
+
+        // Pass 2: main color blobs — three intensity layers
+        [0.15, 0.09, 0.05].forEach((mult, pass) => {
           blobs.forEach(b => {
-            const px = (b.lng + 180) / 360 * w;
-            const py = (90 - b.lat) / 180 * h;
-            const pr = b.r * w / 320;
-            const grad = ctx.createRadialGradient(px, py, 0, px, py, pr);
-            const innerOpacity = baseOpacity * (pass === 0 ? 1.3 : pass === 1 ? 0.8 : 0.5);
-            grad.addColorStop(0, `rgba(214,74,40,${innerOpacity})`);
-            grad.addColorStop(0.4, `rgba(214,74,40,${innerOpacity * 0.6})`);
-            grad.addColorStop(1, 'rgba(214,74,40,0)');
-            ctx.fillStyle = grad;
-            ctx.fillRect(px - pr, py - pr, pr * 2, pr * 2);
+            const color = colors[b[3] % colors.length];
+            const px = (b[0] + 180) / 360 * w;
+            const py = (90 - b[1]) / 180 * h;
+            const pr = b[2] * w / 300;
+            const scale = 1 + pass * 0.2;
+            const opacity = pass === 0 ? b[4] * 0.85 : pass === 1 ? b[4] * 0.55 : b[4] * 0.3;
+            const g = ctx.createRadialGradient(px, py, 0, px, py, pr * scale);
+            g.addColorStop(0, color.replace(')', `,${opacity * mult * 1.4})`).replace('rgb', 'rgba'));
+            g.addColorStop(0.35, color.replace(')', `,${opacity * mult * 0.7})`).replace('rgb', 'rgba'));
+            g.addColorStop(1, color.replace(')', `,0)`).replace('rgb', 'rgba'));
+            ctx.fillStyle = g;
+            ctx.fillRect(px - pr*scale, py - pr*scale, pr*2*scale, pr*2*scale);
           });
         });
 
-        // Atmospheric scattered dots around blobs
+        // Pass 3: ink speckle texture at blob edges
         blobs.forEach(b => {
-          const px = (b.lng + 180) / 360 * w;
-          const py = (90 - b.lat) / 180 * h;
-          for (let i = 0; i < 8; i++) {
+          const px = (b[0] + 180) / 360 * w;
+          const py = (90 - b[1]) / 180 * h;
+          const pr = b[2] * w / 300;
+          const color = colors[b[3] % colors.length];
+          for (let i = 0; i < 15; i++) {
             const angle = Math.random() * Math.PI * 2;
-            const dist = Math.random() * b.r * w / 200 + b.r * w / 320;
-            const dx = px + Math.cos(angle) * dist;
-            const dy = py + Math.sin(angle) * dist;
-            ctx.fillStyle = `rgba(214,74,40,${0.02 + Math.random() * 0.04})`;
+            const dist = pr * (0.7 + Math.random() * 0.5);
+            const sx = px + Math.cos(angle) * dist;
+            const sy = py + Math.sin(angle) * dist;
+            const sr = 0.5 + Math.random() * 1.8;
+            const alpha = 0.03 + Math.random() * 0.06;
+            ctx.fillStyle = color.replace(')', `,${alpha})`).replace('rgb', 'rgba');
             ctx.beginPath();
-            ctx.arc(dx, dy, 1 + Math.random() * 2, 0, Math.PI * 2);
+            ctx.arc(sx, sy, sr, 0, Math.PI * 2);
             ctx.fill();
           }
         });
 
-        // Graticule — lat/lng lines in warm accent
-        ctx.strokeStyle = 'rgba(214,74,40,0.06)';
-        ctx.lineWidth = 0.8;
+        // Graticule — lat/lng lines
+        ctx.strokeStyle = 'rgba(214,74,40,0.05)';
+        ctx.lineWidth = 0.7;
         for (let lat = -75; lat <= 75; lat += 15) {
           const y = (90 - lat) / 180 * h;
           ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
@@ -817,37 +856,26 @@
           ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
         }
 
-        // Equator brighter
-        ctx.strokeStyle = 'rgba(214,74,40,0.15)';
-        ctx.lineWidth = 1.1;
+        // Equator — slightly more visible
+        ctx.strokeStyle = 'rgba(214,74,40,0.14)';
+        ctx.lineWidth = 1;
         const eqY = (90 - 0) / 180 * h;
         ctx.beginPath(); ctx.moveTo(0, eqY); ctx.lineTo(w, eqY); ctx.stroke();
 
-        // Tropics lines
-        ctx.strokeStyle = 'rgba(214,74,40,0.08)';
-        ctx.lineWidth = 0.8;
+        // Tropics
+        ctx.strokeStyle = 'rgba(214,74,40,0.07)';
+        ctx.lineWidth = 0.7;
         [23.4, -23.4].forEach(lat => {
           const y = (90 - lat) / 180 * h;
           ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
         });
 
-        // Subtle vignette
-        const vig = ctx.createRadialGradient(w/2, h/2, w*0.03, w/2, h/2, w*0.6);
-        vig.addColorStop(0, 'rgba(255,200,150,0.0)');
-        vig.addColorStop(1, 'rgba(0,0,0,0.4)');
+        // Vignette
+        const vig = ctx.createRadialGradient(w/2, h/2.1, w*0.02, w/2, h*2.1, w*0.6);
+        vig.addColorStop(0, 'rgba(0,0,0,0)');
+        vig.addColorStop(1, 'rgba(0,0,0,0.45)');
         ctx.fillStyle = vig;
         ctx.fillRect(0, 0, w, h);
-
-        // Tiny scattered stars/sparkles
-        for (let i = 0; i < 200; i++) {
-          const sx = Math.random() * w;
-          const sy = Math.random() * h;
-          const sr = 0.3 + Math.random() * 0.8;
-          ctx.fillStyle = `rgba(214,74,40,${0.02 + Math.random() * 0.05})`;
-          ctx.beginPath();
-          ctx.arc(sx, sy, sr, 0, Math.PI * 2);
-          ctx.fill();
-        }
 
         return c;
       }
@@ -858,10 +886,10 @@
 
       const globeMat = new THREE.MeshStandardMaterial({
         map: tex,
-        roughness: 0.7,
-        metalness: 0.1,
-        emissive: new THREE.Color(0x2a1808),
-        emissiveIntensity: 0.2
+        roughness: 0.65,
+        metalness: 0.05,
+        emissive: new THREE.Color(0x3a2010),
+        emissiveIntensity: 0.25
       });
       const globeGeom = new THREE.SphereGeometry(R, 72, 72);
       const globe = new THREE.Mesh(globeGeom, globeMat);
