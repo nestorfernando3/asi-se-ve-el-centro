@@ -609,7 +609,7 @@
             </div>
             <div class="clip">
               <iframe title="Barranquilla — Short"
-                data-src="https://www.youtube.com/embed/yT4JEs4TVQg?autoplay=1&mute=1&loop=1&playlist=yT4JEs4TVQg&controls=1&playsinline=1&rel=0&modestbranding=1&enablejsapi=1"
+                data-src="https://www.youtube.com/embed/yT4JEs4TVQg?mute=1&loop=1&playlist=yT4JEs4TVQg&controls=1&playsinline=1&rel=0&modestbranding=1&enablejsapi=1"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowfullscreen></iframe>
             </div>
@@ -657,8 +657,8 @@
       let activeCity = null;
       const loadedCities = {};
 
-      function buildIframeHTML(videoId, title) {
-        const p = 'autoplay=1&mute=1&loop=1&playlist=' + videoId + '&controls=1&playsinline=1&rel=0&modestbranding=1&enablejsapi=1';
+      function buildIframeHTML(videoId, title, autoplay) {
+        const p = (autoplay ? 'autoplay=1&' : '') + 'mute=1&loop=1&playlist=' + videoId + '&controls=1&playsinline=1&rel=0&modestbranding=1&enablejsapi=1';
         return '<div class="clip"><iframe title="' + title + '" data-src="https://www.youtube.com/embed/' + videoId + '?' + p + '" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>';
       }
 
@@ -671,14 +671,17 @@
         viewerStack.style.transform = 'scale(1.03)';
 
         setTimeout(() => {
-          viewerStack.innerHTML = city.videos.map(v => buildIframeHTML(v.id, v.title)).join('');
+          // Only first video autoplays; second stays paused until clicked
+          viewerStack.innerHTML = city.videos.map((v, i) => buildIframeHTML(v.id, v.title, i === 0)).join('');
 
           if (!loadedCities[cityId]) {
             loadedCities[cityId] = true;
-            viewerStack.querySelectorAll('iframe[data-src]').forEach(f => {
-              f.src = f.dataset.src;
-              f.removeAttribute('data-src');
-            });
+            // Load only the first iframe (autoplay); second stays data-src until user clicks reel
+            const firstIframe = viewerStack.querySelector('iframe[data-src]');
+            if (firstIframe) {
+              firstIframe.src = firstIframe.dataset.src;
+              firstIframe.removeAttribute('data-src');
+            }
           }
 
           viewerSlate.querySelector('.slate-title').textContent = city.name + ' abre el mapa.';
@@ -688,6 +691,18 @@
           activeCity = cityId;
         }, 300);
       }
+
+      // Load second video on reel-switch click
+      document.querySelectorAll('.reel-switch .reel').forEach((link, i) => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          const clips = viewerStack.querySelectorAll('.clip iframe');
+          if (clips[i] && clips[i].dataset.src) {
+            clips[i].src = clips[i].dataset.src;
+            clips[i].removeAttribute('data-src');
+          }
+        });
+      });
 
       document.querySelectorAll('.city-pin.is-live').forEach(pin => {
         pin.addEventListener('pointerenter', () => showCity('barranquilla'));
