@@ -395,6 +395,7 @@
         repeating-linear-gradient(90deg, rgba(231,222,208,0.04), rgba(231,222,208,0.04) 1px, transparent 1px, transparent 32px);
       color: var(--fg);
       transition: opacity 260ms ease;
+      pointer-events: none;
     }
     .slate-title {
       font: italic clamp(30px, 4.2vw, 54px)/.92 var(--font-display);
@@ -412,15 +413,13 @@
       position: absolute;
       inset: 12px;
       z-index: 4;
-      display: grid;
-      grid-template-rows: 1fr 1.55fr;
-      gap: 10px;
       opacity: 0;
       transform: scale(1.03);
       transition: opacity 260ms ease, transform 600ms cubic-bezier(.22,1,.36,1);
     }
     .clip {
-      position: relative;
+      position: absolute;
+      inset: 0;
       overflow: hidden;
       border: 1px solid rgba(231,222,208,0.12);
       background: #060403;
@@ -460,9 +459,10 @@
       text-transform: uppercase;
       padding: 10px;
       background: rgba(231,222,208,0.035);
-      text-decoration: none;
+      cursor: pointer;
     }
-    .reel:first-child { color: var(--fg); border-color: rgba(211,74,40,0.44); }
+    .reel.is-active { color: var(--fg); border-color: rgba(211,74,40,0.44); }
+    .reel.is-active:hover { background: rgba(214,74,40,0.12); }
 
     .atlas-note {
       color: var(--muted);
@@ -600,30 +600,19 @@
 
       <aside class="viewer" data-od-id="video-hover-panel" aria-label="Video de ciudad seleccionada">
         <div class="viewer-frame" tabindex="0" aria-label="Hover para revelar video de Barranquilla">
-          <div class="video-stack" aria-label="Videos de Barranquilla">
-            <div class="clip">
-              <iframe title="Barranquilla — Así se ve el centro"
-                data-src="https://www.youtube.com/embed/5Q8Sq7YQrEE?autoplay=1&mute=1&loop=1&playlist=5Q8Sq7YQrEE&controls=1&playsinline=1&rel=0&modestbranding=1&enablejsapi=1"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowfullscreen></iframe>
-            </div>
-            <div class="clip">
-              <iframe title="Barranquilla — Short"
-                data-src="https://www.youtube.com/embed/yT4JEs4TVQg?mute=1&loop=1&playlist=yT4JEs4TVQg&controls=1&playsinline=1&rel=0&modestbranding=1&enablejsapi=1"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowfullscreen></iframe>
-            </div>
+          <div class="video-stack" aria-label="Video de Barranquilla">
+            <div class="clip"></div>
           </div>
           <div class="slate" aria-hidden="true">
             <div class="slate-title">Barranquilla abre el mapa.</div>
-            <div class="slate-meta">Hover sobre la ciudad o sobre este visor<br />para revelar las dos piezas de origen</div>
+            <div class="slate-meta">Hover sobre la ciudad o sobre este visor<br />para revelar el video</div>
           </div>
         </div>
-        <div class="reel-switch" aria-label="Videos disponibles">
-          <a class="reel" href="https://youtu.be/5Q8Sq7YQrEE">Barranquilla / pieza 01</a>
-          <a class="reel" href="https://youtube.com/shorts/yT4JEs4TVQg">Barranquilla / short 01</a>
+        <div class="reel-switch" aria-label="Cambiar video">
+          <button class="reel is-active" data-video-index="0">Barranquilla / pieza 01</button>
+          <button class="reel" data-video-index="1">Barranquilla / short 01</button>
         </div>
-        <div class="atlas-note">Patrón A: pines separados + visor lateral. Patrón C queda para comparar muchas ciudades cuando haya más archivo.</div>
+        <div class="atlas-note">Hover sobre el mapa para revelar video.</div>
       </aside>
     </section>
 
@@ -655,80 +644,93 @@
       ];
 
       let activeCity = null;
-      const loadedCities = {};
+      let activeVideoIndex = 0;
+      let videoRevealed = false;
 
-      function buildIframeHTML(videoId, title, autoplay) {
-        const p = (autoplay ? 'autoplay=1&' : '') + 'mute=1&loop=1&playlist=' + videoId + '&controls=1&playsinline=1&rel=0&modestbranding=1&enablejsapi=1';
-        return '<div class="clip"><iframe title="' + title + '" data-src="https://www.youtube.com/embed/' + videoId + '?' + p + '" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>';
+      function iframeURL(videoId, autoplay) {
+        return 'https://www.youtube.com/embed/' + videoId + '?' +
+          (autoplay ? 'autoplay=1&' : '') +
+          'mute=1&loop=1&playlist=' + videoId + '&controls=1&playsinline=1&rel=0&modestbranding=1&enablejsapi=1';
       }
 
-      function showCity(cityId) {
+      function showVideo(cityId, videoIndex) {
         const city = cityRegistry.find(c => c.id === cityId);
-        if (!city || activeCity === cityId) return;
+        if (!city) return;
+        const vi = videoIndex != null ? videoIndex : activeVideoIndex;
+        const video = city.videos[vi];
+        if (!video) return;
+
+        const clip = viewerStack.querySelector('.clip');
+        const existing = clip.querySelector('iframe');
+        const sameSrc = existing && existing.src.includes(video.id);
+
+        if (sameSrc) return; // already showing this video
+
+        // Stop drone on first video reveal
+        if (!videoRevealed) {
+          videoRevealed = true;
+          stopDrone();
+        }
+
+        activeVideoIndex = vi;
+        activeCity = cityId;
 
         viewerStack.style.opacity = '0';
-        viewerSlate.style.opacity = '1';
         viewerStack.style.transform = 'scale(1.03)';
 
         setTimeout(() => {
-          // Only first video autoplays; second stays paused until clicked
-          viewerStack.innerHTML = city.videos.map((v, i) => buildIframeHTML(v.id, v.title, i === 0)).join('');
+          const html = '<iframe title="' + video.title + '" src="' + iframeURL(video.id, true) + '" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>';
+          clip.innerHTML = html;
 
-          if (!loadedCities[cityId]) {
-            loadedCities[cityId] = true;
-            // Load only the first iframe (autoplay); second stays data-src until user clicks reel
-            const firstIframe = viewerStack.querySelector('iframe[data-src]');
-            if (firstIframe) {
-              firstIframe.src = firstIframe.dataset.src;
-              firstIframe.removeAttribute('data-src');
-            }
-          }
-
-          viewerSlate.querySelector('.slate-title').textContent = city.name + ' abre el mapa.';
           viewerStack.style.opacity = '1';
-          viewerSlate.style.opacity = '0';
           viewerStack.style.transform = 'scale(1)';
-          activeCity = cityId;
-        }, 300);
+
+          // update reel active state
+          document.querySelectorAll('.reel-switch .reel').forEach((btn, i) => {
+            btn.classList.toggle('is-active', i === vi);
+          });
+        }, 260);
       }
 
-      // Load second video on reel-switch click
-      document.querySelectorAll('.reel-switch .reel').forEach((link, i) => {
-        link.addEventListener('click', (e) => {
-          e.preventDefault();
-          const clips = viewerStack.querySelectorAll('.clip iframe');
-          if (clips[i] && clips[i].dataset.src) {
-            clips[i].src = clips[i].dataset.src;
-            clips[i].removeAttribute('data-src');
-          }
+      // Reel buttons: switch video
+      document.querySelectorAll('.reel-switch .reel').forEach(btn => {
+        btn.addEventListener('click', () => {
+          showVideo('barranquilla', parseInt(btn.dataset.videoIndex));
         });
       });
 
+      // Hover on pin or viewer reveals video
+      function onReveal() {
+        showVideo(activeCity || 'barranquilla');
+      }
+
       document.querySelectorAll('.city-pin.is-live').forEach(pin => {
-        pin.addEventListener('pointerenter', () => showCity('barranquilla'));
-        pin.addEventListener('focusin', () => showCity('barranquilla'));
+        pin.addEventListener('pointerenter', onReveal);
+        pin.addEventListener('focusin', onReveal);
         pin.addEventListener('touchstart', () => {
-          showCity('barranquilla');
+          onReveal();
           stage.classList.add('is-touch-revealed');
         }, { passive: true });
       });
 
-      viewer.addEventListener('pointerenter', () => showCity('barranquilla'));
-      viewer.addEventListener('focusin', () => showCity('barranquilla'));
+      viewer.addEventListener('pointerenter', onReveal);
+      viewer.addEventListener('focusin', onReveal);
       viewer.addEventListener('touchstart', () => {
-        showCity('barranquilla');
+        onReveal();
         stage.classList.add('is-touch-revealed');
       }, { passive: true });
 
       // --- Paso 6: Audio drone procedural ---
       let audioCtx = null, droneStarted = false;
+      const droneNodes = [];
 
       function initAudio() {
         if (droneStarted) return;
         droneStarted = true;
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-        [65.41, 98.00, 130.81].forEach((freq, i) => {
+        const freqs = [65.41, 98.00, 130.81];
+        freqs.forEach((freq, i) => {
           const osc = audioCtx.createOscillator();
           const gain = audioCtx.createGain();
           osc.type = i === 0 ? 'sine' : 'triangle';
@@ -745,10 +747,27 @@
           lfoGain.gain.value = 0.015;
           lfo.connect(lfoGain).connect(gain.gain);
           lfo.start();
+
+          droneNodes.push({ osc, gain, lfo, lfoGain });
         });
 
         document.querySelector('.audio-indicator')?.classList.add('is-active');
         document.querySelector('.audio-wave')?.classList.add('is-active');
+      }
+
+      function stopDrone() {
+        droneNodes.forEach(({ gain, lfo, lfoGain }) => {
+          gain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.5);
+          lfoGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.5);
+          setTimeout(() => {
+            lfo.stop();
+            lfo.disconnect();
+            gain.disconnect();
+          }, 1000);
+        });
+        droneNodes.length = 0;
+        document.querySelector('.audio-indicator')?.classList.remove('is-active');
+        document.querySelector('.audio-wave')?.classList.remove('is-active');
       }
 
       document.addEventListener('pointerdown', initAudio, { once: true });
