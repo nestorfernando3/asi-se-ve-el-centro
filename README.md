@@ -14,6 +14,7 @@ Rotating type ring around a wireframe globe. Cinematic 12s loop, designed for Hy
 
 ```
 Así se ve el centro/
+├── index.html                         ← 🟢 GitHub Pages entry — interactive map (v3 unified)
 ├── README.md                          ← this file
 ├── DESIGN.md                          ← visual system, colors, architecture, city registry
 ├── frames/                            ← device frames for multi-screen prototypes
@@ -27,8 +28,8 @@ Así se ve el centro/
 │   └── example.html                   ← reference example output
 ├── asi-se-ve-el-centro-hero.html      ← v1 — rotating rings + globe + headline (light editorial)
 ├── asi-se-ve-el-centro-cinematic.html ← v2 — full cinematic: dark palette, grain, scanlines, 12s loop
-├── asi-se-ve-el-centro-atlas-hover.html ← v4 — multi-city comparison grid (pattern C, preview)
-└── asi-se-ve-el-centro-hover-map-v2.html ← v3 — interactive map + hover-to-video (active)
+├── asi-se-ve-el-centro-atlas-hover.html ← v4 — multi-city cinematic atlas (pattern C, preview)
+└── asi-se-ve-el-centro-hover-map-v2.html ← v3 — source file for index.html
 ```
 
 ---
@@ -38,7 +39,10 @@ Así se ve el centro/
 ### View in browser
 Open any `.html` file directly in a browser. No server needed.
 
-### Current active file
+### 🌐 Live webapp
+**`index.html`** — served at [nestorfernando3.github.io/asi-se-ve-el-centro](https://nestorfernando3.github.io/asi-se-ve-el-centro/). Cinematic interactive map with 15 city pins, hover-to-reveal video, procedural audio drone, and full film-grain aesthetic.
+
+### Current active file (local)
 **`asi-se-ve-el-centro-hover-map-v2.html`** — world map with city pins. Hover Barranquilla's pin (red) or the video panel to load and play the two YouTube pieces.
 
 ### Best export file
