@@ -2,7 +2,16 @@
 
 ## 2026-05-12
 
-### `7981d2f` — fix: syntax error in Africa polygon data
+### `48bc029` — feat: design pass — multi-tonal ink-wash globe, refined typography, warm glow
+- **Globe texture**: replaced single-color blobs with 6-color palette (terracotta, burnt orange, ochre, umber, rust, sienna) mapped per continent
+- **Ink wash shading**: 4-pass rendering — deep under-shadow → main color (3 opacity layers) → ink speckle bleed at edges
+- **Graticule**: subtler lines (opacity 0.05), equator at 0.14, tropics added at 0.07
+- **Viewer frame**: border color changed to `rgba(214,74,40,0.18)`, added `inset box-shadow` warm glow (`0 0 40px rgba(214,74,40,0.04)`)
+- **Live pin**: softer glow ring (`0 0 20px + 0 0 40px`), warmer falloff
+- **Slate typography**: poem text larger (`13px` → better readability), lighter opacity (`0.8`); author smaller (`8px`), more muted (`0.7` opacity); tighter spacing
+- **Reel buttons**: reduced font to `9px`, added smooth transitions (`200ms ease`) for bg/border/color; active state gets accent bg tint; hover affects border
+- **Globe material**: increased emissive warmth (`0x3a2010`, intensity 0.25), reduced metalness to 0.05
+- Removed generic sparkle dots (200 random dots), replaced with intentional ink-speckle bleed at continent edges
 - **Source:** `asi-se-ve-el-centro-hover-map-v2.html`
 - Fixed 6 polygon points in Africa continent data missing `lng:` prefix (bare `{-5` syntax error)
 
