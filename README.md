@@ -5,6 +5,9 @@
 
 Rotating type ring around a wireframe globe. Cinematic 12s loop, designed for HyperFrames export. Interactive map with hover-to-reveal video.
 
+🌐 **Live site:** [nestorfernando3.github.io/asi-se-ve-el-centro](https://nestorfernando3.github.io/asi-se-ve-el-centro/)
+📁 **GitHub:** [github.com/nestorfernando3/asi-se-ve-el-centro](https://github.com/nestorfernando3/asi-se-ve-el-centro)
+
 ---
 
 ## Project structure
