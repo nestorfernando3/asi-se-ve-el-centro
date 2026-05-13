@@ -7,6 +7,7 @@ Rotating type ring around a wireframe globe. Cinematic 12s loop, designed for Hy
 
 🌐 **Live site:** [nestorfernando3.github.io/asi-se-ve-el-centro](https://nestorfernando3.github.io/asi-se-ve-el-centro/)
 📁 **GitHub:** [github.com/nestorfernando3/asi-se-ve-el-centro](https://github.com/nestorfernando3/asi-se-ve-el-centro)
+🎞️ **Proof pack:** [`projects.html`](projects.html)
 
 ---
 
@@ -17,6 +18,9 @@ Así se ve el centro/
 ├── index.html                         ← 🟢 GitHub Pages entry — interactive map (v3 unified)
 ├── README.md                          ← this file
 ├── DESIGN.md                          ← visual system, colors, architecture, city registry
+├── projects.html                      ← funder-facing proof pack entry page
+├── funding/                           ← bilingual treatment, artist statement, route, budget, target tracker
+├── assets/proof/                      ← temporary concept board + proof assets
 ├── frames/                            ← device frames for multi-screen prototypes
 │   ├── iphone-15-pro.html             ← 390×844 with Dynamic Island
 │   ├── android-pixel.html             ← 412×900 with punch-hole
@@ -41,6 +45,9 @@ Open any `.html` file directly in a browser. No server needed.
 
 ### 🌐 Live webapp
 **`index.html`** — served at [nestorfernando3.github.io/asi-se-ve-el-centro](https://nestorfernando3.github.io/asi-se-ve-el-centro/). Cinematic interactive map with 15 city pins, hover-to-reveal video, procedural audio drone, and full film-grain aesthetic.
+
+### 🎞️ Funder proof pack
+**`projects.html`** — reviewer-facing page for grants, residencies, and media labs. It frames the project as a silent documentary archive, explains the Barranquilla → Bogotá → Cartagena route, and links to bilingual packet source docs in `funding/`.
 
 ### Current active file (local)
 **`asi-se-ve-el-centro-hover-map-v2.html`** — world map with city pins. Hover Barranquilla's pin (red) or the video panel to load and play the two YouTube pieces.

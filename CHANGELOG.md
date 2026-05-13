@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Proof pack
+- Added `projects.html` as funder-facing reviewer entry page while keeping `index.html` as the atlas artwork.
+- Added bilingual packet source docs under `funding/`: one-page treatment, artist statement, route proposal, budget draft, and grant tracker.
+- Added temporary OpenAI-generated concept board under `assets/proof/` as visual north star for page, treatment, installation mockup, and reel frame language.
+- Updated README with proof-pack path and funding material structure.
+
 ## 2026-05-12
 
 ### `48bc029` — feat: design pass — multi-tonal ink-wash globe, refined typography, warm glow

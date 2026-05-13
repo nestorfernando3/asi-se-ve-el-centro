@@ -782,6 +782,9 @@
           <button class="city-pin is-future" data-city-id="mumbai" aria-label="Mumbai: futura ruta"><span class="pin-name">Mumbai · futura</span></button>
           <button class="city-pin is-future" data-city-id="tokio" aria-label="Tokio: futura ruta"><span class="pin-name">Tokio · futura</span></button>
           <button class="city-pin is-future" data-city-id="sydney" aria-label="Sídney: futura ruta"><span class="pin-name">Sídney · futura</span></button>
+          <button class="city-pin is-future" data-city-id="kansas-city" aria-label="Kansas City: futura ruta"><span class="pin-name">Kansas City · futura</span></button>
+          <button class="city-pin is-future" data-city-id="dublin" aria-label="Dublín: futura ruta"><span class="pin-name">Dublín · futura</span></button>
+          <button class="city-pin is-future" data-city-id="rome" aria-label="Rome: futura ruta"><span class="pin-name">Rome · futura</span></button>
         </div>
 
         <div class="headline" data-od-id="headline">
@@ -889,6 +892,18 @@
         { id: 'sydney', name: 'Sídney', lat: -33.87, lng: 151.21, status: 'future',
           description: 'La Ópera blanca, / el sol sobre el puerto, / olas de acero.',
           author: '— Haiku',
+          videos: [] },
+        { id: 'kansas-city', name: 'Kansas City', lat: 39.10, lng: -94.58, status: 'future',
+          description: 'Jazz en ladrillo, / rieles cruzan la llanura, / Kansas City late.',
+          author: '— Haiku',
+          videos: [] },
+        { id: 'dublin', name: 'Dublín', lat: 53.35, lng: -6.26, status: 'future',
+          description: 'Lluvia sobre piedra, / el río guarda voces, / Dublín despierta.',
+          author: '— Haiku',
+          videos: [] },
+        { id: 'rome', name: 'Rome', lat: 41.90, lng: 12.50, status: 'future',
+          description: 'Ruinas al sol, / cada calle vuelve al mármol, / Rome respira.',
+          author: '— Haiku',
           videos: [] }
       ];
 
@@ -949,7 +964,10 @@
           dakar: ['rgba(201,155,94,0.28)', 'rgba(214,74,40,0.2)'],
           mumbai: ['rgba(214,74,40,0.22)', 'rgba(92,147,139,0.24)'],
           tokio: ['rgba(92,147,139,0.2)', 'rgba(214,74,40,0.28)'],
-          sydney: ['rgba(92,147,139,0.26)', 'rgba(234,223,208,0.22)']
+          sydney: ['rgba(92,147,139,0.26)', 'rgba(234,223,208,0.22)'],
+          'kansas-city': ['rgba(201,155,94,0.22)', 'rgba(154,141,124,0.3)'],
+          dublin: ['rgba(92,147,139,0.28)', 'rgba(234,223,208,0.2)'],
+          rome: ['rgba(214,74,40,0.24)', 'rgba(201,155,94,0.32)']
         };
         return palettes[cityId] || palettes.barranquilla;
       }
