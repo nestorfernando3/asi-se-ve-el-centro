@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### UI refresh
+- Removed film-grain, scanline, vignette, matte-bar, corner, and timecode overlays from the atlas views.
+- Shifted typography to Montserrat and pushed palette cooler and cleaner across `index.html`, `projects.html`, and atlas variants.
+- Improved globe contrast and pin clarity; Barranquilla video now loads without `mute=1`.
+
 ### Proof pack
 - Added `projects.html` as funder-facing reviewer entry page while keeping `index.html` as the atlas artwork.
 - Added bilingual packet source docs under `funding/`: one-page treatment, artist statement, route proposal, budget draft, and grant tracker.

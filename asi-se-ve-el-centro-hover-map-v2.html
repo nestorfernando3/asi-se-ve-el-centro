@@ -46,69 +46,11 @@
       overflow: hidden;
       isolation: isolate;
       background:
-        radial-gradient(ellipse at 50% 44%, rgba(234, 223, 208, 0.045) 0%, transparent 48%),
+        radial-gradient(ellipse at 50% 44%, rgba(127, 160, 175, 0.04) 0%, transparent 48%),
         radial-gradient(ellipse at 50% 50%, transparent 28%, rgba(3, 2, 1, 0.82) 94%),
-        linear-gradient(180deg, rgba(3,2,1,0.62), transparent 18%, transparent 78%, rgba(3,2,1,0.7)),
+        linear-gradient(180deg, rgba(3,2,1,0.48), transparent 18%, transparent 78%, rgba(3,2,1,0.58)),
         var(--ink);
     }
-
-    .matte-top, .matte-bottom {
-      position: absolute;
-      left: 0; right: 0;
-      height: clamp(24px, 4.4vh, 54px);
-      background: var(--matte);
-      z-index: 40;
-      pointer-events: none;
-    }
-    .matte-top { top: 0; border-bottom: 1px solid rgba(234, 223, 208, 0.06); }
-    .matte-bottom { bottom: 0; border-top: 1px solid rgba(234, 223, 208, 0.06); }
-
-    .grain, .scanlines, .vignette {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-    }
-    .grain {
-      z-index: 28;
-      opacity: 0.095;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-      background-size: 190px 190px;
-      animation: grain 0.24s steps(3) infinite;
-      mix-blend-mode: screen;
-    }
-    .scanlines {
-      z-index: 27;
-      opacity: 0.28;
-      background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.18) 3px, rgba(0,0,0,0.18) 4px);
-      animation: scanDrift var(--loop) linear infinite;
-    }
-    .vignette {
-      z-index: 26;
-      background:
-        linear-gradient(90deg, rgba(3,2,1,0.72), transparent 16%, transparent 84%, rgba(3,2,1,0.72)),
-        radial-gradient(circle at 50% 48%, transparent 24%, rgba(3,2,1,0.7) 96%);
-    }
-
-    .audio-wave {
-      position: absolute;
-      left: 50%;
-      bottom: clamp(20px, 3vh, 40px);
-      width: 280px;
-      height: 1px;
-      transform: translateX(-50%);
-      z-index: 14;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 2s ease 3s;
-      background: linear-gradient(90deg,
-        transparent 0%, rgba(214,74,40,0.5) 8%, transparent 12%,
-        rgba(214,74,40,0.35) 28%, transparent 34%,
-        rgba(234,223,208,0.3) 48%, transparent 52%,
-        rgba(214,74,40,0.25) 68%, transparent 74%,
-        rgba(234,223,208,0.3) 88%, transparent 94%, transparent 100%);
-      animation: wavePulse 4s ease-in-out infinite;
-    }
-    .audio-wave.is-active { opacity: 0.6; }
 
     .chrome {
       position: absolute;
@@ -140,6 +82,8 @@
     .audio-indicator.is-active { opacity: 0.7; }
 
     .audio-toggle {
+      width: 44px;
+      min-height: 44px;
       background: none;
       border: 1px solid rgba(234,223,208,0.2);
       color: var(--muted);
@@ -151,35 +95,6 @@
     .audio-toggle .off { display: none; }
     .audio-toggle.muted .on { display: none; }
     .audio-toggle.muted .off { display: inline; }
-
-    .corner {
-      position: absolute;
-      width: 18px;
-      height: 18px;
-      z-index: 36;
-      border-color: rgba(234, 223, 208, 0.24);
-      border-style: solid;
-      pointer-events: none;
-    }
-    .corner.tl { top: clamp(30px, 5vh, 60px); left: clamp(18px, 2.8vw, 38px); border-width: 1px 0 0 1px; }
-    .corner.tr { top: clamp(30px, 5vh, 60px); right: clamp(18px, 2.8vw, 38px); border-width: 1px 1px 0 0; }
-    .corner.bl { bottom: clamp(30px, 5vh, 60px); left: clamp(18px, 2.8vw, 38px); border-width: 0 0 1px 1px; }
-    .corner.br { bottom: clamp(30px, 5vh, 60px); right: clamp(18px, 2.8vw, 38px); border-width: 0 1px 1px 0; }
-
-    .timecode {
-      position: absolute;
-      right: clamp(18px, 2.8vw, 38px);
-      bottom: clamp(30px, 5vh, 60px);
-      z-index: 36;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font: 10px/1 var(--font-mono);
-      letter-spacing: 0.16em;
-      color: var(--muted);
-      pointer-events: none;
-    }
-    .timecode .rec { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); animation: blink 1.2s steps(1) infinite; }
 
     .stage {
       position: absolute;
@@ -225,8 +140,8 @@
     }
     .city-pin {
       position: absolute;
-      width: 32px;
-      height: 32px;
+      width: 44px;
+      height: 44px;
       padding: 0;
       border: 0;
       border-radius: 50%;
@@ -246,16 +161,16 @@
       transform: translate(-50%, -50%);
     }
     .city-pin::before {
-      width: 9px;
-      height: 9px;
+      width: 10px;
+      height: 10px;
       background: rgba(234,223,208,0.78);
-      box-shadow: 0 0 0 1px rgba(3,2,1,0.85), 0 0 18px rgba(234,223,208,0.18);
+      box-shadow: 0 0 0 1px rgba(3,2,1,0.85), 0 0 20px rgba(127,160,175,0.22);
     }
     .city-pin::after {
-      width: 24px;
-      height: 24px;
-      border: 1px solid rgba(234,223,208,0.26);
-      opacity: 0.7;
+      width: 26px;
+      height: 26px;
+      border: 1px solid rgba(127,160,175,0.34);
+      opacity: 0.8;
       animation: pinPulse 3s ease-in-out infinite;
     }
     .city-pin.is-live::before {
@@ -273,9 +188,9 @@
         0 0 28px rgba(201,155,94,0.34);
     }
     .city-pin.is-selected::after {
-      width: 34px;
-      height: 34px;
-      border-color: rgba(201,155,94,0.58);
+      width: 36px;
+      height: 36px;
+      border-color: rgba(127,160,175,0.64);
       animation-duration: 2.2s;
     }
     .city-pin.is-future::before { background: rgba(92,147,139,0.88); }
@@ -316,9 +231,10 @@
       max-width: min(680px, 64vw);
       font-family: var(--font-display);
       line-height: 0.92;
-      letter-spacing: -0.035em;
+      letter-spacing: 0;
       text-wrap: balance;
       pointer-events: none;
+      margin: 0;
     }
     .headline .line {
       display: block;
@@ -571,6 +487,7 @@
     }
     .reel {
       position: relative;
+      min-height: 44px;
       border: 1px solid rgba(231,222,208,0.14);
       color: rgba(231,222,208,0.6);
       font: 9px/1.4 var(--font-mono);
@@ -620,7 +537,7 @@
       background: rgba(201,155,94,0.28);
     }
     .city-tab {
-      min-height: 34px;
+      min-height: 44px;
       border: 1px solid rgba(231,222,208,0.12);
       color: rgba(234,223,208,0.62);
       background: rgba(231,222,208,0.025);
@@ -647,8 +564,6 @@
       color: rgba(92,147,139,0.85);
     }
 
-    @keyframes grain { 0%,100% { opacity: 0.08; } 33% { opacity: 0.115; } 66% { opacity: 0.095; } }
-    @keyframes scanDrift { to { background-position: 0 24px; } }
     @keyframes pinPulse { 0%,100% { transform: translate(-50%, -50%) scale(0.78); opacity: 0.38; } 50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.84; } }
     @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
     @keyframes titleIn {
@@ -673,7 +588,7 @@
       .viewer-header { display: none; }
       .viewer-frame { width: 100%; height: auto; aspect-ratio: 9 / 13; min-height: 230px; }
       .city-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); max-height: 118px; }
-      .city-tab { min-height: 38px; font-size: 7.5px; }
+      .city-tab { min-height: 44px; font-size: 7.5px; }
       .chrome { font-size: 8.5px; letter-spacing: .12em; }
       .pin-name { display: none; }
     }
@@ -685,9 +600,9 @@
         position: relative;
         inset: auto;
         min-height: 100svh;
-        padding: 62px 14px 80px;
+        padding: 58px 14px 72px;
       }
-      .atlas { min-height: 58svh; }
+      .atlas { min-height: 52svh; }
       .field-note {
         top: 8px;
         width: min(310px, 82vw);
@@ -703,7 +618,7 @@
         right: auto;
         bottom: auto;
         width: 100%;
-        margin-top: -18px;
+        margin-top: 12px;
       }
       .viewer-header { display: grid; }
       .viewer-frame {
@@ -720,35 +635,20 @@
         -webkit-box-orient: vertical;
         overflow: hidden;
       }
-      .city-rail { grid-template-columns: repeat(3, minmax(0, 1fr)); max-height: 154px; }
+      .city-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); max-height: none; }
       .chrome .rule { display: none; }
       .chrome.bottom { align-items: flex-end; }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .grain, .scanlines, .vignette, .city-pin::after,
+      .city-pin::after,
       .headline, .headline .line, .rec { animation: none !important; }
       .headline .line { opacity: 1; transform: none; filter: none; }
-      .grain { opacity: 0.06; }
     }
   </style>
 </head>
 <body>
   <main data-od-id="stage">
-    <div class="matte-top" aria-hidden="true"></div>
-    <div class="matte-bottom" aria-hidden="true"></div>
-    <div class="grain" aria-hidden="true"></div>
-    <div class="scanlines" aria-hidden="true"></div>
-    <div class="vignette" aria-hidden="true"></div>
-    <div class="audio-wave" aria-hidden="true"></div>
-
-    <div class="corner tl" aria-hidden="true"></div>
-    <div class="corner tr" aria-hidden="true"></div>
-    <div class="corner bl" aria-hidden="true"></div>
-    <div class="corner br" aria-hidden="true"></div>
-
-    <div class="timecode" aria-hidden="true"><span class="rec"></span><span data-timecode>00:00:00:00</span></div>
-
     <div class="chrome top" data-od-id="chrome">
       <div><strong>Así se ve el centro.</strong> — Atlas transmedia</div>
       <div class="rule" aria-hidden="true"></div>
@@ -787,10 +687,10 @@
           <button class="city-pin is-future" data-city-id="rome" aria-label="Rome: futura ruta"><span class="pin-name">Rome · futura</span></button>
         </div>
 
-        <div class="headline" data-od-id="headline">
+        <h1 class="headline" data-od-id="headline">
           <span class="line">Así se ve</span>
           <span class="line">el <em>centro.</em></span>
-        </div>
+        </h1>
         <div class="globe-hint">arrastra el globo / elige ciudad</div>
       </div>
 
@@ -842,20 +742,20 @@
           author: '— María Mercedes Carranza, "Bogotá, 1982"',
           videos: [] },
         { id: 'medellin', name: 'Medellín', lat: 6.25, lng: -75.57, status: 'future',
-          description: 'Ladera de flores, / la primavera desborda / entre el tranvía.',
-          author: '— Haiku',
+          description: '"El maíz con las lluvias va creciendo / henchido de verdor y lozanía."',
+          author: '— Gregorio Gutiérrez González, "Memoria sobre el cultivo del maíz en Antioquia"',
           videos: [] },
         { id: 'cali', name: 'Cali', lat: 3.45, lng: -76.53, status: 'future',
-          description: 'Salsa en la piel, / el Pacífico en la sangre, / Cali calienta.',
-          author: '— Haiku',
+          description: '"Tu incesante rumor vine escuchando / desde la cumbre de lejana sierra."',
+          author: '— Jorge Isaacs, "Río Moro"',
           videos: [] },
         { id: 'cartagena', name: 'Cartagena', lat: 10.39, lng: -75.51, status: 'future',
           description: '"Más hoy, plena de rancio desaliño, bien puedes inspirar ese cariño que uno les tiene a sus zapatos viejos."',
           author: '— Luis Carlos López, "A mi ciudad nativa"',
           videos: [] },
         { id: 'lima', name: 'Lima', lat: -12.05, lng: -77.04, status: 'future',
-          description: 'Neblina y mar, / el ceviche y el ruido, / Lima despierta.',
-          author: '— Haiku',
+          description: '"Santa Rosa de Lima, que atormentadamente / tus favores sepultas en umbroso rincón."',
+          author: '— José Santos Chocano, "Plegaria lírica"',
           videos: [] },
         { id: 'cdmx', name: 'Ciudad de México', lat: 19.43, lng: -99.13, status: 'future',
           description: '"De la famosa México el asiento, archivo de toda grandeza y ornamento, del mundo la riqueza y el tesoro."',
@@ -886,24 +786,24 @@
           author: '— Arun Kolatkar, "Kala Ghoda Poems"',
           videos: [] },
         { id: 'tokio', name: 'Tokio', lat: 35.68, lng: 139.69, status: 'future',
-          description: 'Neón y templo, / el puente flota en luz, / Tokio respira.',
-          author: '— Haiku',
+          description: '"Furu ike ya / kawazu tobikomu / mizu no oto."',
+          author: '— Matsuo Bashō, haiku del estanque viejo',
           videos: [] },
         { id: 'sydney', name: 'Sídney', lat: -33.87, lng: 151.21, status: 'future',
-          description: 'La Ópera blanca, / el sol sobre el puerto, / olas de acero.',
-          author: '— Haiku',
+          description: '"All the life and light and beauty / that belong to Sydney-Side."',
+          author: '— Henry Lawson, "Sydney-Side"',
           videos: [] },
         { id: 'kansas-city', name: 'Kansas City', lat: 39.10, lng: -94.58, status: 'future',
-          description: 'Jazz en ladrillo, / rieles cruzan la llanura, / Kansas City late.',
-          author: '— Haiku',
+          description: '"A signalman in a tower, the outpost of Kansas City, keeps his place at a window."',
+          author: '— Carl Sandburg, "Still Life"',
           videos: [] },
         { id: 'dublin', name: 'Dublín', lat: 53.35, lng: -6.26, status: 'future',
-          description: 'Lluvia sobre piedra, / el río guarda voces, / Dublín despierta.',
-          author: '— Haiku',
+          description: '"Hunt the hare and turn her down the rocky road / and all the way to Dublin."',
+          author: '— D. K. Gavan, "The Rocky Road to Dublin"',
           videos: [] },
         { id: 'rome', name: 'Rome', lat: 41.90, lng: 12.50, status: 'future',
-          description: 'Ruinas al sol, / cada calle vuelve al mármol, / Rome respira.',
-          author: '— Haiku',
+          description: '"Around... surge awful ruins, prone, august, and hoar."',
+          author: '— Isa Blagden, "Rome. 1870"',
           videos: [] }
       ];
 
@@ -923,26 +823,11 @@
       const activeCityLabel = document.querySelector('[data-active-city-label]');
       const reelSwitch = document.querySelector('.reel-switch');
       const cityRail = document.querySelector('.city-rail');
-      const timecode = document.querySelector('[data-timecode]');
 
       let activeCityId = 'barranquilla';
       let activeVideoIndex = 0;
       let videoRevealed = false;
       let videoRenderToken = 0;
-
-      const timeStart = performance.now();
-      function pad2(n) { return String(n).padStart(2, '0'); }
-      function tickTimecode(now) {
-        const elapsed = Math.max(0, now - timeStart);
-        const totalSeconds = Math.floor(elapsed / 1000);
-        const frames = Math.floor((elapsed % 1000) / (1000 / 24));
-        const hours = Math.floor(totalSeconds / 3600);
-        const minutes = Math.floor((totalSeconds % 3600) / 60);
-        const seconds = totalSeconds % 60;
-        timecode.textContent = pad2(hours) + ':' + pad2(minutes) + ':' + pad2(seconds) + ':' + pad2(frames);
-        requestAnimationFrame(tickTimecode);
-      }
-      requestAnimationFrame(tickTimecode);
 
       function cityById(cityId) {
         return cityRegistry.find(c => c.id === cityId);
@@ -1037,7 +922,7 @@
 
       function iframeURL(videoId, autoplay) {
         return 'https://www.youtube.com/embed/' + videoId + '?' +
-          (autoplay ? 'autoplay=1&mute=1&' : '') +
+          (autoplay ? 'autoplay=1&' : '') +
           'loop=1&playlist=' + videoId + '&controls=1&playsinline=1&rel=0&modestbranding=1&enablejsapi=1';
       }
 
@@ -1229,64 +1114,45 @@
         const GR = [[-55,65],[-50,68],[-45,72],[-40,76],[-30,82],[-20,80],[-18,76],[-25,72],[-35,70],[-42,68],[-50,66],[-55,65]];
         const AN = [[-180,-82],[180,-82],[180,-90],[-180,-90]]; // Antarctica hint
 
-        // Shadow underlay — shifted downward slightly
-        const shadowColor = 'rgba(20,10,6,0.2)';
         const landPolys = [NA, SA, EU, AF, AS, AU, GR, AN];
         const landColors = [
-          'rgba(184,90,48,0.09)',  // NA — burnt orange
-          'rgba(214,74,40,0.09)',  // SA — terracotta
-          'rgba(184,90,48,0.08)',  // EU — burnt orange
-          'rgba(214,74,40,0.09)',  // AF — terracotta
-          'rgba(154,106,58,0.09)', // AS — ochre
-          'rgba(154,106,58,0.08)', // AU — ochre
-          'rgba(122,74,42,0.06)',  // GR — umber
-          'rgba(122,74,42,0.04)'   // AN — umber
+          'rgba(111,168,182,0.18)',  // NA — steel blue
+          'rgba(92,147,139,0.16)',   // SA — sea glass
+          'rgba(111,168,182,0.18)',  // EU — steel blue
+          'rgba(99,169,161,0.17)',   // AF — sea glass
+          'rgba(127,160,175,0.18)',  // AS — cool gray-blue
+          'rgba(127,160,175,0.16)',  // AU — cool gray-blue
+          'rgba(94,130,146,0.12)',   // GR — slate
+          'rgba(94,130,146,0.08)'    // AN — slate
         ];
 
-        // Soft shadow beneath continents (shift each vertex down slightly)
-        ctx.save();
-        ctx.translate(0, w * 0.004); // subtle downward offset
-        ctx.globalAlpha = 0.35;
-        landPolys.forEach((poly, i) => {
-          drawContinentSoft(ctx, poly, 'rgba(12,6,3,0.3)', w, h);
-        });
-        ctx.restore();
-
-        // Core fills — very soft, low opacity
         landPolys.forEach((poly, i) => {
           drawContinentSoft(ctx, poly, landColors[i], w, h);
         });
 
-        // Second fill pass — slightly brighter, smaller radius/subtracted effect
-        // (simulated by using the same fills at lower opacity)
-        ctx.globalAlpha = 0.5;
-        landPolys.forEach((poly, i) => {
-          drawContinentSoft(ctx, poly, landColors[i], w, h);
-        });
-        ctx.globalAlpha = 1;
-
-        // Ink-speckle edge treatment on each continent
-        landPolys.forEach((poly, colorIdx) => {
-          const speckColor = colorIdx < 2 ? 'rgba(214,74,40,' : colorIdx < 6 ? 'rgba(154,106,58,': 'rgba(122,74,42,';
-          poly.forEach((p, pi) => {
+        function strokeContinentSoft(poly, strokeColor) {
+          if (poly.length < 3) return;
+          ctx.beginPath();
+          poly.forEach((p, i) => {
             const x = lx(p[0], w);
             const y = ly(p[1], h);
-            for (let k = 0; k < 6 && pi % 2 === 0; k++) {
-              const angle = Math.random() * Math.PI * 2;
-              const dist = 2 + Math.random() * 6;
-              const sx = x + Math.cos(angle) * dist;
-              const sy = y + Math.sin(angle) * dist;
-              ctx.fillStyle = speckColor + (0.03 + Math.random() * 0.05) + ')';
-              ctx.beginPath();
-              ctx.arc(sx, sy, 0.4 + Math.random() * 1.4, 0, Math.PI * 2);
-              ctx.fill();
-            }
+            i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
           });
+          ctx.closePath();
+          ctx.strokeStyle = strokeColor;
+          ctx.stroke();
+        }
+
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        ctx.lineWidth = 1.05;
+        landPolys.forEach((poly, i) => {
+          strokeContinentSoft(poly, i === 1 ? 'rgba(92,147,139,0.44)' : 'rgba(137,188,206,0.34)');
         });
 
         // Graticule
-        ctx.strokeStyle = 'rgba(214,74,40,0.05)';
-        ctx.lineWidth = 0.6;
+        ctx.strokeStyle = 'rgba(137,188,206,0.08)';
+        ctx.lineWidth = 0.7;
         for (let lat = -75; lat <= 75; lat += 15) {
           const y = ly(lat, h);
           ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
@@ -1297,13 +1163,13 @@
         }
 
         // Equator
-        ctx.strokeStyle = 'rgba(214,74,40,0.13)';
-        ctx.lineWidth = 0.9;
+        ctx.strokeStyle = 'rgba(127,160,175,0.18)';
+        ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(0, ly(0, h)); ctx.lineTo(w, ly(0, h)); ctx.stroke();
 
         // Tropics
-        ctx.strokeStyle = 'rgba(214,74,40,0.07)';
+        ctx.strokeStyle = 'rgba(127,160,175,0.08)';
         ctx.lineWidth = 0.6;
         [23.4, -23.4].forEach(lat => {
           ctx.beginPath();
@@ -1313,7 +1179,7 @@
         // Vignette
         const vig = ctx.createRadialGradient(w/2, h*0.44, w*0.02, w/2, h*0.44, w*0.6);
         vig.addColorStop(0, 'rgba(0,0,0,0)');
-        vig.addColorStop(1, 'rgba(0,0,0,0.5)');
+        vig.addColorStop(1, 'rgba(0,0,0,0.34)');
         ctx.fillStyle = vig;
         ctx.fillRect(0, 0, w, h);
 
@@ -1326,20 +1192,20 @@
 
       const globeMat = new THREE.MeshStandardMaterial({
         map: tex,
-        roughness: 0.65,
-        metalness: 0.05,
-        emissive: new THREE.Color(0x3a2010),
-        emissiveIntensity: 0.25
+        roughness: 0.46,
+        metalness: 0.02,
+        emissive: new THREE.Color(0x17323a),
+        emissiveIntensity: 0.16
       });
       const globeGeom = new THREE.SphereGeometry(R, 72, 72);
       const globe = new THREE.Mesh(globeGeom, globeMat);
       scene.add(globe);
 
-      // Atmosphere glow — warm
+      // Atmosphere glow — cool
       const glowMat = new THREE.MeshBasicMaterial({
-        color: 0xd64a28,
+        color: 0x8fc6d5,
         transparent: true,
-        opacity: 0.08,
+        opacity: 0.12,
         side: THREE.BackSide
       });
       const glow = new THREE.Mesh(new THREE.SphereGeometry(R * 1.035, 48, 48), glowMat);
@@ -1348,15 +1214,15 @@
       // Screen-readable graticule on top of texture.
       const gridGroup = new THREE.Group();
       const gridMat = new THREE.LineBasicMaterial({
-        color: 0xeadfd0,
+        color: 0xd9edf7,
         transparent: true,
-        opacity: 0.16,
+        opacity: 0.22,
         depthWrite: false
       });
       const accentGridMat = new THREE.LineBasicMaterial({
-        color: 0xc99b5e,
+        color: 0x7fbfd2,
         transparent: true,
-        opacity: 0.28,
+        opacity: 0.38,
         depthWrite: false
       });
 

@@ -6,25 +6,28 @@
   <meta name="color-scheme" content="dark" />
   <meta name="description" content="Mapa audiovisual interactivo para Así se ve el centro: pines de ciudad y visor de video de Barranquilla." />
   <title>Así se ve el centro. — Globo transmedia</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <style>
     :root {
       --loop: 12s;
-      --matte: #030201;
-      --ink: #0e0a08;
-      --surface: #17110e;
-      --fg: #eadfd0;
-      --muted: #9a8d7c;
-      --dim: rgba(234, 223, 208, 0.22);
-      --line: rgba(234, 223, 208, 0.14);
-      --accent: #d64a28;
-      --accent-soft: rgba(214, 74, 40, 0.22);
-      --gold: #c99b5e;
-      --sea: #5c938b;
-      --paper-soft: rgba(234, 223, 208, 0.08);
+      --matte: #050b10;
+      --ink: #0b1218;
+      --surface: #111a22;
+      --fg: #f1f5f8;
+      --muted: #92a2ae;
+      --dim: rgba(241, 245, 248, 0.22);
+      --line: rgba(241, 245, 248, 0.12);
+      --accent: #e06957;
+      --accent-soft: rgba(224, 105, 87, 0.18);
+      --gold: #7fa0af;
+      --sea: #63a9a1;
+      --paper-soft: rgba(241, 245, 248, 0.06);
 
-      --font-display: 'Iowan Old Style', 'Charter', Georgia, serif;
-      --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --font-display: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --font-body: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
       --font-mono: ui-monospace, 'IBM Plex Mono', 'JetBrains Mono', Menlo, monospace;
     }
 
@@ -35,6 +38,7 @@
       background: var(--matte);
       color: var(--fg);
       font-family: var(--font-body);
+      font-weight: 400;
       -webkit-font-smoothing: antialiased;
       text-rendering: geometricPrecision;
     }
@@ -46,69 +50,11 @@
       overflow: hidden;
       isolation: isolate;
       background:
-        radial-gradient(ellipse at 50% 44%, rgba(234, 223, 208, 0.045) 0%, transparent 48%),
-        radial-gradient(ellipse at 50% 50%, transparent 28%, rgba(3, 2, 1, 0.82) 94%),
-        linear-gradient(180deg, rgba(3,2,1,0.62), transparent 18%, transparent 78%, rgba(3,2,1,0.7)),
+        radial-gradient(ellipse at 50% 44%, rgba(127, 160, 175, 0.04) 0%, transparent 48%),
+        radial-gradient(ellipse at 50% 50%, transparent 28%, rgba(5, 11, 16, 0.82) 94%),
+        linear-gradient(180deg, rgba(5,11,16,0.48), transparent 18%, transparent 78%, rgba(5,11,16,0.58)),
         var(--ink);
     }
-
-    .matte-top, .matte-bottom {
-      position: absolute;
-      left: 0; right: 0;
-      height: clamp(24px, 4.4vh, 54px);
-      background: var(--matte);
-      z-index: 40;
-      pointer-events: none;
-    }
-    .matte-top { top: 0; border-bottom: 1px solid rgba(234, 223, 208, 0.06); }
-    .matte-bottom { bottom: 0; border-top: 1px solid rgba(234, 223, 208, 0.06); }
-
-    .grain, .scanlines, .vignette {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-    }
-    .grain {
-      z-index: 28;
-      opacity: 0.095;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-      background-size: 190px 190px;
-      animation: grain 0.24s steps(3) infinite;
-      mix-blend-mode: screen;
-    }
-    .scanlines {
-      z-index: 27;
-      opacity: 0.28;
-      background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.18) 3px, rgba(0,0,0,0.18) 4px);
-      animation: scanDrift var(--loop) linear infinite;
-    }
-    .vignette {
-      z-index: 26;
-      background:
-        linear-gradient(90deg, rgba(3,2,1,0.72), transparent 16%, transparent 84%, rgba(3,2,1,0.72)),
-        radial-gradient(circle at 50% 48%, transparent 24%, rgba(3,2,1,0.7) 96%);
-    }
-
-    .audio-wave {
-      position: absolute;
-      left: 50%;
-      bottom: clamp(20px, 3vh, 40px);
-      width: 280px;
-      height: 1px;
-      transform: translateX(-50%);
-      z-index: 14;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 2s ease 3s;
-      background: linear-gradient(90deg,
-        transparent 0%, rgba(214,74,40,0.5) 8%, transparent 12%,
-        rgba(214,74,40,0.35) 28%, transparent 34%,
-        rgba(234,223,208,0.3) 48%, transparent 52%,
-        rgba(214,74,40,0.25) 68%, transparent 74%,
-        rgba(234,223,208,0.3) 88%, transparent 94%, transparent 100%);
-      animation: wavePulse 4s ease-in-out infinite;
-    }
-    .audio-wave.is-active { opacity: 0.6; }
 
     .chrome {
       position: absolute;
@@ -140,8 +86,10 @@
     .audio-indicator.is-active { opacity: 0.7; }
 
     .audio-toggle {
+      width: 44px;
+      min-height: 44px;
       background: none;
-      border: 1px solid rgba(234,223,208,0.2);
+      border: 1px solid rgba(241,245,248,0.2);
       color: var(--muted);
       font: 9px var(--font-mono);
       padding: 2px 6px;
@@ -151,35 +99,6 @@
     .audio-toggle .off { display: none; }
     .audio-toggle.muted .on { display: none; }
     .audio-toggle.muted .off { display: inline; }
-
-    .corner {
-      position: absolute;
-      width: 18px;
-      height: 18px;
-      z-index: 36;
-      border-color: rgba(234, 223, 208, 0.24);
-      border-style: solid;
-      pointer-events: none;
-    }
-    .corner.tl { top: clamp(30px, 5vh, 60px); left: clamp(18px, 2.8vw, 38px); border-width: 1px 0 0 1px; }
-    .corner.tr { top: clamp(30px, 5vh, 60px); right: clamp(18px, 2.8vw, 38px); border-width: 1px 1px 0 0; }
-    .corner.bl { bottom: clamp(30px, 5vh, 60px); left: clamp(18px, 2.8vw, 38px); border-width: 0 0 1px 1px; }
-    .corner.br { bottom: clamp(30px, 5vh, 60px); right: clamp(18px, 2.8vw, 38px); border-width: 0 1px 1px 0; }
-
-    .timecode {
-      position: absolute;
-      right: clamp(18px, 2.8vw, 38px);
-      bottom: clamp(30px, 5vh, 60px);
-      z-index: 36;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font: 10px/1 var(--font-mono);
-      letter-spacing: 0.16em;
-      color: var(--muted);
-      pointer-events: none;
-    }
-    .timecode .rec { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); animation: blink 1.2s steps(1) infinite; }
 
     .stage {
       position: absolute;
@@ -225,8 +144,8 @@
     }
     .city-pin {
       position: absolute;
-      width: 32px;
-      height: 32px;
+      width: 44px;
+      height: 44px;
       padding: 0;
       border: 0;
       border-radius: 50%;
@@ -246,21 +165,21 @@
       transform: translate(-50%, -50%);
     }
     .city-pin::before {
-      width: 9px;
-      height: 9px;
-      background: rgba(234,223,208,0.78);
-      box-shadow: 0 0 0 1px rgba(3,2,1,0.85), 0 0 18px rgba(234,223,208,0.18);
+      width: 10px;
+      height: 10px;
+      background: rgba(241,245,248,0.78);
+      box-shadow: 0 0 0 1px rgba(3,2,1,0.85), 0 0 20px rgba(127,160,175,0.22);
     }
     .city-pin::after {
-      width: 24px;
-      height: 24px;
-      border: 1px solid rgba(234,223,208,0.26);
-      opacity: 0.7;
+      width: 26px;
+      height: 26px;
+      border: 1px solid rgba(127,160,175,0.34);
+      opacity: 0.8;
       animation: pinPulse 3s ease-in-out infinite;
     }
     .city-pin.is-live::before {
       background: var(--accent);
-      box-shadow: 0 0 0 1px rgba(3,2,1,0.9), 0 0 20px rgba(214,74,40,0.45), 0 0 40px rgba(214,74,40,0.12);
+      box-shadow: 0 0 0 1px rgba(3,2,1,0.9), 0 0 20px rgba(214,74,40,0.42), 0 0 40px rgba(214,74,40,0.12);
     }
     .city-pin.is-live::after { border-color: rgba(214,74,40,0.5); }
     .city-pin.is-selected::before {
@@ -269,13 +188,13 @@
       background: var(--gold);
       box-shadow:
         0 0 0 1px rgba(3,2,1,0.9),
-        0 0 0 5px rgba(201,155,94,0.12),
-        0 0 28px rgba(201,155,94,0.34);
+        0 0 0 5px rgba(127,160,175,0.12),
+        0 0 28px rgba(127,160,175,0.34);
     }
     .city-pin.is-selected::after {
-      width: 34px;
-      height: 34px;
-      border-color: rgba(201,155,94,0.58);
+      width: 36px;
+      height: 36px;
+      border-color: rgba(127,160,175,0.64);
       animation-duration: 2.2s;
     }
     .city-pin.is-future::before { background: rgba(92,147,139,0.88); }
@@ -286,16 +205,16 @@
       transform: translate(-50%, -50%) scale(1.08);
       outline: none;
     }
-    .city-pin:focus-visible::after { box-shadow: 0 0 0 3px rgba(234,223,208,0.24); }
+    .city-pin:focus-visible::after { box-shadow: 0 0 0 3px rgba(241,245,248,0.24); }
 
     .pin-name {
       position: absolute;
       left: 24px;
       top: 2px;
       padding: 5px 7px;
-      color: rgba(234,223,208,0.74);
+      color: rgba(241,245,248,0.74);
       background: rgba(3,2,1,0.72);
-      border: 1px solid rgba(234,223,208,0.16);
+      border: 1px solid rgba(241,245,248,0.16);
       font: 9px/1 var(--font-mono);
       letter-spacing: 0.12em;
       text-transform: uppercase;
@@ -316,9 +235,10 @@
       max-width: min(680px, 64vw);
       font-family: var(--font-display);
       line-height: 0.92;
-      letter-spacing: -0.035em;
+      letter-spacing: 0;
       text-wrap: balance;
       pointer-events: none;
+      margin: 0;
     }
     .headline .line {
       display: block;
@@ -326,9 +246,9 @@
       transform: translateY(0.35em);
       animation: titleIn var(--loop) cubic-bezier(.2,.7,.2,1) infinite;
     }
-    .headline .line:first-child { font-size: clamp(2rem, 4.4vw, 5.3rem); font-style: italic; }
+    .headline .line:first-child { font-size: clamp(2rem, 4.4vw, 5.3rem); font-weight: 500; }
     .headline .line:last-child { margin-top: .08em; font-size: clamp(2.7rem, 6.4vw, 8rem); animation-delay: .14s; }
-    .headline em { color: var(--accent); font-style: italic; }
+    .headline em { color: var(--accent); font-style: normal; font-weight: 800; }
 
     .field-note {
       position: absolute;
@@ -337,7 +257,7 @@
       z-index: 4;
       width: min(360px, 42vw);
       padding-left: 16px;
-      border-left: 1px solid rgba(201,155,94,0.52);
+      border-left: 1px solid rgba(127,160,175,0.52);
       color: var(--fg);
       pointer-events: none;
     }
@@ -350,30 +270,30 @@
       height: 7px;
       border-radius: 50%;
       background: var(--gold);
-      box-shadow: 0 0 18px rgba(201,155,94,0.34);
+      box-shadow: 0 0 18px rgba(127,160,175,0.34);
     }
     .note-kicker,
     .viewer-kicker {
       font: 9px/1.45 var(--font-mono);
       letter-spacing: 0.16em;
       text-transform: uppercase;
-      color: rgba(201,155,94,0.82);
+      color: rgba(127,160,175,0.82);
     }
     .note-title {
       margin-top: 8px;
-      font: italic clamp(28px, 3.4vw, 54px)/0.92 var(--font-display);
-      letter-spacing: -0.02em;
+      font: 700 clamp(28px, 3.4vw, 54px)/0.92 var(--font-display);
+      letter-spacing: -0.01em;
       text-wrap: balance;
     }
     .note-copy {
       margin-top: 12px;
       max-width: 34ch;
-      color: rgba(234,223,208,0.78);
+      color: rgba(241,245,248,0.78);
       font: 13px/1.55 var(--font-body);
     }
     .note-author {
       margin-top: 8px;
-      color: rgba(154,141,124,0.82);
+      color: rgba(145,157,167,0.82);
       font: 9px/1.45 var(--font-mono);
       letter-spacing: 0.1em;
       text-transform: uppercase;
@@ -386,7 +306,7 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      color: rgba(234,223,208,0.62);
+      color: rgba(241,245,248,0.62);
       font: 9px/1.4 var(--font-mono);
       letter-spacing: 0.12em;
       text-transform: uppercase;
@@ -417,8 +337,8 @@
       gap: 14px;
     }
     .viewer-city {
-      font: italic clamp(28px, 3vw, 42px)/0.95 var(--font-display);
-      letter-spacing: -0.02em;
+      font: 700 clamp(28px, 3vw, 42px)/0.95 var(--font-display);
+      letter-spacing: -0.01em;
       text-align: right;
     }
     .viewer-frame {
@@ -433,7 +353,7 @@
         inset 0 0 0 1px rgba(255,255,255,0.02),
         inset 0 0 40px rgba(214,74,40,0.04);
       background:
-        linear-gradient(180deg, rgba(234,223,208,0.04), rgba(234,223,208,0.01)),
+        linear-gradient(180deg, rgba(241,245,248,0.04), rgba(241,245,248,0.01)),
         rgba(9,6,4,0.92);
       overflow: hidden;
     }
@@ -444,8 +364,8 @@
       z-index: 8;
       pointer-events: none;
       background:
-        linear-gradient(180deg, rgba(5,3,2,0.72), transparent 18%, transparent 76%, rgba(5,3,2,0.66)),
-        radial-gradient(circle at 50% 38%, transparent 28%, rgba(5,3,2,0.38));
+        linear-gradient(180deg, rgba(5,11,16,0.22), transparent 18%, transparent 76%, rgba(5,11,16,0.22)),
+        radial-gradient(circle at 50% 38%, transparent 28%, rgba(5,11,16,0.18));
     }
 
     .slate {
@@ -456,9 +376,8 @@
       align-content: end;
       padding: 18px;
       background:
-        linear-gradient(180deg, rgba(5,3,2,0.06), rgba(5,3,2,0.88)),
-        radial-gradient(circle at 28% 20%, var(--poster-glow, rgba(214,74,40,0.16)), transparent 36%),
-        repeating-linear-gradient(90deg, rgba(231,222,208,0.035), rgba(231,222,208,0.035) 1px, transparent 1px, transparent 32px);
+        linear-gradient(180deg, rgba(5,11,16,0.06), rgba(5,11,16,0.82)),
+        radial-gradient(circle at 28% 20%, var(--poster-glow, rgba(127,160,175,0.18)), transparent 36%);
       color: var(--fg);
       transition: opacity 260ms ease;
       pointer-events: none;
@@ -470,10 +389,10 @@
       overflow: hidden;
       border: 1px solid rgba(231,222,208,0.12);
       background:
-        linear-gradient(135deg, rgba(234,223,208,0.08), transparent 38%),
-        radial-gradient(circle at 42% 34%, var(--poster-core, rgba(201,155,94,0.36)), transparent 16%),
-        radial-gradient(circle at 61% 47%, rgba(92,147,139,0.24), transparent 22%),
-        linear-gradient(165deg, rgba(5,3,2,0.12), rgba(5,3,2,0.78)),
+        linear-gradient(135deg, rgba(241,245,248,0.08), transparent 38%),
+        radial-gradient(circle at 42% 34%, var(--poster-core, rgba(127,160,175,0.38)), transparent 16%),
+        radial-gradient(circle at 61% 47%, rgba(92,147,139,0.26), transparent 22%),
+        linear-gradient(165deg, rgba(5,11,16,0.10), rgba(5,11,16,0.76)),
         var(--surface);
     }
     .poster-art::before {
@@ -481,8 +400,8 @@
       position: absolute;
       inset: -18%;
       background:
-        repeating-linear-gradient(18deg, transparent 0 22px, rgba(234,223,208,0.08) 23px, transparent 24px),
-        repeating-linear-gradient(102deg, transparent 0 34px, rgba(201,155,94,0.08) 35px, transparent 36px);
+        repeating-linear-gradient(18deg, transparent 0 22px, rgba(127,160,175,0.07) 23px, transparent 24px),
+        repeating-linear-gradient(102deg, transparent 0 34px, rgba(127,160,175,0.08) 35px, transparent 36px);
       mask-image: radial-gradient(circle at 50% 45%, black 0 54%, transparent 70%);
       transform: rotate(-4deg);
     }
@@ -493,11 +412,11 @@
       right: 12%;
       bottom: 18%;
       height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(234,223,208,0.5), transparent);
+      background: linear-gradient(90deg, transparent, rgba(241,245,248,0.44), transparent);
       box-shadow:
-        0 -28px 0 rgba(234,223,208,0.08),
-        0 -54px 0 rgba(214,74,40,0.08),
-        0 26px 0 rgba(92,147,139,0.1);
+        0 -28px 0 rgba(241,245,248,0.08),
+        0 -54px 0 rgba(127,160,175,0.08),
+        0 26px 0 rgba(92,147,139,0.08);
     }
     .poster-city {
       position: absolute;
@@ -505,27 +424,27 @@
       bottom: 14px;
       z-index: 2;
       max-width: calc(100% - 28px);
-      color: rgba(234,223,208,0.84);
-      font: italic clamp(18px, 1.6vw, 26px)/0.95 var(--font-display);
-      letter-spacing: -0.02em;
+      color: rgba(241,245,248,0.84);
+      font: 700 clamp(18px, 1.6vw, 26px)/0.95 var(--font-display);
+      letter-spacing: -0.01em;
       text-wrap: balance;
       display: none;
     }
     .slate-title {
-      font: italic clamp(26px, 3vw, 38px)/.92 var(--font-display);
-      letter-spacing: -.02em;
+      font: 700 clamp(26px, 3vw, 38px)/.92 var(--font-display);
+      letter-spacing: -.01em;
       max-width: 13ch;
     }
     .slate-desc {
       margin-top: 10px;
-      color: rgba(234,223,208,0.8);
+      color: rgba(241,245,248,0.8);
       font: 13px/1.55 var(--font-body);
       letter-spacing: .04em;
       max-width: 30ch;
     }
     .slate-meta {
       margin-top: 8px;
-      color: rgba(154,141,124,0.7);
+      color: rgba(145,157,167,0.7);
       font: 8px/1.4 var(--font-mono);
       letter-spacing: .14em;
       text-transform: uppercase;
@@ -571,6 +490,7 @@
     }
     .reel {
       position: relative;
+      min-height: 44px;
       border: 1px solid rgba(231,222,208,0.14);
       color: rgba(231,222,208,0.6);
       font: 9px/1.4 var(--font-mono);
@@ -584,7 +504,7 @@
     .reel:focus-visible,
     .city-tab:focus-visible,
     .audio-toggle:focus-visible {
-      outline: 2px solid rgba(201,155,94,0.68);
+      outline: 2px solid rgba(127,160,175,0.68);
       outline-offset: 3px;
     }
     .reel.is-active {
@@ -617,12 +537,12 @@
       width: 4px;
     }
     .city-rail::-webkit-scrollbar-thumb {
-      background: rgba(201,155,94,0.28);
+      background: rgba(127,160,175,0.28);
     }
     .city-tab {
-      min-height: 34px;
+      min-height: 44px;
       border: 1px solid rgba(231,222,208,0.12);
-      color: rgba(234,223,208,0.62);
+      color: rgba(241,245,248,0.62);
       background: rgba(231,222,208,0.025);
       font: 8px/1.2 var(--font-mono);
       letter-spacing: 0.1em;
@@ -632,23 +552,21 @@
     }
     .city-tab:hover {
       color: var(--fg);
-      border-color: rgba(201,155,94,0.28);
-      background: rgba(201,155,94,0.055);
+      border-color: rgba(127,160,175,0.28);
+      background: rgba(127,160,175,0.055);
       transform: translateY(-1px);
     }
     .city-tab.is-active {
       color: var(--fg);
       border-color: rgba(214,74,40,0.45);
       background:
-        linear-gradient(90deg, rgba(214,74,40,0.12), rgba(201,155,94,0.055));
+        linear-gradient(90deg, rgba(214,74,40,0.12), rgba(127,160,175,0.055));
     }
     .city-tab[data-status="future"]::after {
       content: ' / ruta';
       color: rgba(92,147,139,0.85);
     }
 
-    @keyframes grain { 0%,100% { opacity: 0.08; } 33% { opacity: 0.115; } 66% { opacity: 0.095; } }
-    @keyframes scanDrift { to { background-position: 0 24px; } }
     @keyframes pinPulse { 0%,100% { transform: translate(-50%, -50%) scale(0.78); opacity: 0.38; } 50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.84; } }
     @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
     @keyframes titleIn {
@@ -673,7 +591,7 @@
       .viewer-header { display: none; }
       .viewer-frame { width: 100%; height: auto; aspect-ratio: 9 / 13; min-height: 230px; }
       .city-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); max-height: 118px; }
-      .city-tab { min-height: 38px; font-size: 7.5px; }
+      .city-tab { min-height: 44px; font-size: 7.5px; }
       .chrome { font-size: 8.5px; letter-spacing: .12em; }
       .pin-name { display: none; }
     }
@@ -685,9 +603,9 @@
         position: relative;
         inset: auto;
         min-height: 100svh;
-        padding: 62px 14px 80px;
+        padding: 58px 14px 72px;
       }
-      .atlas { min-height: 58svh; }
+      .atlas { min-height: 52svh; }
       .field-note {
         top: 8px;
         width: min(310px, 82vw);
@@ -703,7 +621,7 @@
         right: auto;
         bottom: auto;
         width: 100%;
-        margin-top: -18px;
+        margin-top: 12px;
       }
       .viewer-header { display: grid; }
       .viewer-frame {
@@ -720,35 +638,20 @@
         -webkit-box-orient: vertical;
         overflow: hidden;
       }
-      .city-rail { grid-template-columns: repeat(3, minmax(0, 1fr)); max-height: 154px; }
+      .city-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); max-height: none; }
       .chrome .rule { display: none; }
       .chrome.bottom { align-items: flex-end; }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .grain, .scanlines, .vignette, .city-pin::after,
+      .city-pin::after,
       .headline, .headline .line, .rec { animation: none !important; }
       .headline .line { opacity: 1; transform: none; filter: none; }
-      .grain { opacity: 0.06; }
     }
   </style>
 </head>
 <body>
   <main data-od-id="stage">
-    <div class="matte-top" aria-hidden="true"></div>
-    <div class="matte-bottom" aria-hidden="true"></div>
-    <div class="grain" aria-hidden="true"></div>
-    <div class="scanlines" aria-hidden="true"></div>
-    <div class="vignette" aria-hidden="true"></div>
-    <div class="audio-wave" aria-hidden="true"></div>
-
-    <div class="corner tl" aria-hidden="true"></div>
-    <div class="corner tr" aria-hidden="true"></div>
-    <div class="corner bl" aria-hidden="true"></div>
-    <div class="corner br" aria-hidden="true"></div>
-
-    <div class="timecode" aria-hidden="true"><span class="rec"></span><span data-timecode>00:00:00:00</span></div>
-
     <div class="chrome top" data-od-id="chrome">
       <div><strong>Así se ve el centro.</strong> — Atlas transmedia</div>
       <div class="rule" aria-hidden="true"></div>
@@ -787,10 +690,10 @@
           <button class="city-pin is-future" data-city-id="rome" aria-label="Rome: futura ruta"><span class="pin-name">Rome · futura</span></button>
         </div>
 
-        <div class="headline" data-od-id="headline">
+        <h1 class="headline" data-od-id="headline">
           <span class="line">Así se ve</span>
           <span class="line">el <em>centro.</em></span>
-        </div>
+        </h1>
         <div class="globe-hint">arrastra el globo / elige ciudad</div>
       </div>
 
@@ -842,20 +745,20 @@
           author: '— María Mercedes Carranza, "Bogotá, 1982"',
           videos: [] },
         { id: 'medellin', name: 'Medellín', lat: 6.25, lng: -75.57, status: 'future',
-          description: 'Ladera de flores, / la primavera desborda / entre el tranvía.',
-          author: '— Haiku',
+          description: '"El maíz con las lluvias va creciendo / henchido de verdor y lozanía."',
+          author: '— Gregorio Gutiérrez González, "Memoria sobre el cultivo del maíz en Antioquia"',
           videos: [] },
         { id: 'cali', name: 'Cali', lat: 3.45, lng: -76.53, status: 'future',
-          description: 'Salsa en la piel, / el Pacífico en la sangre, / Cali calienta.',
-          author: '— Haiku',
+          description: '"Tu incesante rumor vine escuchando / desde la cumbre de lejana sierra."',
+          author: '— Jorge Isaacs, "Río Moro"',
           videos: [] },
         { id: 'cartagena', name: 'Cartagena', lat: 10.39, lng: -75.51, status: 'future',
           description: '"Más hoy, plena de rancio desaliño, bien puedes inspirar ese cariño que uno les tiene a sus zapatos viejos."',
           author: '— Luis Carlos López, "A mi ciudad nativa"',
           videos: [] },
         { id: 'lima', name: 'Lima', lat: -12.05, lng: -77.04, status: 'future',
-          description: 'Neblina y mar, / el ceviche y el ruido, / Lima despierta.',
-          author: '— Haiku',
+          description: '"Santa Rosa de Lima, que atormentadamente / tus favores sepultas en umbroso rincón."',
+          author: '— José Santos Chocano, "Plegaria lírica"',
           videos: [] },
         { id: 'cdmx', name: 'Ciudad de México', lat: 19.43, lng: -99.13, status: 'future',
           description: '"De la famosa México el asiento, archivo de toda grandeza y ornamento, del mundo la riqueza y el tesoro."',
@@ -886,24 +789,24 @@
           author: '— Arun Kolatkar, "Kala Ghoda Poems"',
           videos: [] },
         { id: 'tokio', name: 'Tokio', lat: 35.68, lng: 139.69, status: 'future',
-          description: 'Neón y templo, / el puente flota en luz, / Tokio respira.',
-          author: '— Haiku',
+          description: '"Furu ike ya / kawazu tobikomu / mizu no oto."',
+          author: '— Matsuo Bashō, haiku del estanque viejo',
           videos: [] },
         { id: 'sydney', name: 'Sídney', lat: -33.87, lng: 151.21, status: 'future',
-          description: 'La Ópera blanca, / el sol sobre el puerto, / olas de acero.',
-          author: '— Haiku',
+          description: '"All the life and light and beauty / that belong to Sydney-Side."',
+          author: '— Henry Lawson, "Sydney-Side"',
           videos: [] },
         { id: 'kansas-city', name: 'Kansas City', lat: 39.10, lng: -94.58, status: 'future',
-          description: 'Jazz en ladrillo, / rieles cruzan la llanura, / Kansas City late.',
-          author: '— Haiku',
+          description: '"A signalman in a tower, the outpost of Kansas City, keeps his place at a window."',
+          author: '— Carl Sandburg, "Still Life"',
           videos: [] },
         { id: 'dublin', name: 'Dublín', lat: 53.35, lng: -6.26, status: 'future',
-          description: 'Lluvia sobre piedra, / el río guarda voces, / Dublín despierta.',
-          author: '— Haiku',
+          description: '"Hunt the hare and turn her down the rocky road / and all the way to Dublin."',
+          author: '— D. K. Gavan, "The Rocky Road to Dublin"',
           videos: [] },
         { id: 'rome', name: 'Rome', lat: 41.90, lng: 12.50, status: 'future',
-          description: 'Ruinas al sol, / cada calle vuelve al mármol, / Rome respira.',
-          author: '— Haiku',
+          description: '"Around... surge awful ruins, prone, august, and hoar."',
+          author: '— Isa Blagden, "Rome. 1870"',
           videos: [] }
       ];
 
@@ -923,26 +826,11 @@
       const activeCityLabel = document.querySelector('[data-active-city-label]');
       const reelSwitch = document.querySelector('.reel-switch');
       const cityRail = document.querySelector('.city-rail');
-      const timecode = document.querySelector('[data-timecode]');
 
       let activeCityId = 'barranquilla';
       let activeVideoIndex = 0;
       let videoRevealed = false;
       let videoRenderToken = 0;
-
-      const timeStart = performance.now();
-      function pad2(n) { return String(n).padStart(2, '0'); }
-      function tickTimecode(now) {
-        const elapsed = Math.max(0, now - timeStart);
-        const totalSeconds = Math.floor(elapsed / 1000);
-        const frames = Math.floor((elapsed % 1000) / (1000 / 24));
-        const hours = Math.floor(totalSeconds / 3600);
-        const minutes = Math.floor((totalSeconds % 3600) / 60);
-        const seconds = totalSeconds % 60;
-        timecode.textContent = pad2(hours) + ':' + pad2(minutes) + ':' + pad2(seconds) + ':' + pad2(frames);
-        requestAnimationFrame(tickTimecode);
-      }
-      requestAnimationFrame(tickTimecode);
 
       function cityById(cityId) {
         return cityRegistry.find(c => c.id === cityId);
@@ -950,24 +838,24 @@
 
       function cityPosterVars(cityId) {
         const palettes = {
-          barranquilla: ['rgba(214,74,40,0.26)', 'rgba(201,155,94,0.44)'],
-          bogota: ['rgba(92,147,139,0.22)', 'rgba(234,223,208,0.28)'],
-          medellin: ['rgba(92,147,139,0.26)', 'rgba(201,155,94,0.32)'],
-          cali: ['rgba(201,155,94,0.22)', 'rgba(214,74,40,0.32)'],
-          cartagena: ['rgba(201,155,94,0.28)', 'rgba(92,147,139,0.24)'],
-          lima: ['rgba(154,141,124,0.26)', 'rgba(92,147,139,0.24)'],
-          cdmx: ['rgba(214,74,40,0.18)', 'rgba(201,155,94,0.36)'],
-          nyc: ['rgba(92,147,139,0.18)', 'rgba(234,223,208,0.28)'],
-          londres: ['rgba(92,147,139,0.22)', 'rgba(154,141,124,0.28)'],
-          paris: ['rgba(201,155,94,0.18)', 'rgba(234,223,208,0.24)'],
-          barcelona: ['rgba(214,74,40,0.2)', 'rgba(201,155,94,0.34)'],
-          dakar: ['rgba(201,155,94,0.28)', 'rgba(214,74,40,0.2)'],
+          barranquilla: ['rgba(214,74,40,0.26)', 'rgba(127,160,175,0.44)'],
+          bogota: ['rgba(92,147,139,0.22)', 'rgba(241,245,248,0.28)'],
+          medellin: ['rgba(92,147,139,0.26)', 'rgba(127,160,175,0.32)'],
+          cali: ['rgba(127,160,175,0.22)', 'rgba(214,74,40,0.32)'],
+          cartagena: ['rgba(127,160,175,0.28)', 'rgba(92,147,139,0.24)'],
+          lima: ['rgba(145,157,167,0.26)', 'rgba(92,147,139,0.24)'],
+          cdmx: ['rgba(214,74,40,0.18)', 'rgba(127,160,175,0.36)'],
+          nyc: ['rgba(92,147,139,0.18)', 'rgba(241,245,248,0.28)'],
+          londres: ['rgba(92,147,139,0.22)', 'rgba(145,157,167,0.28)'],
+          paris: ['rgba(127,160,175,0.18)', 'rgba(241,245,248,0.24)'],
+          barcelona: ['rgba(214,74,40,0.2)', 'rgba(127,160,175,0.34)'],
+          dakar: ['rgba(127,160,175,0.28)', 'rgba(214,74,40,0.2)'],
           mumbai: ['rgba(214,74,40,0.22)', 'rgba(92,147,139,0.24)'],
           tokio: ['rgba(92,147,139,0.2)', 'rgba(214,74,40,0.28)'],
-          sydney: ['rgba(92,147,139,0.26)', 'rgba(234,223,208,0.22)'],
-          'kansas-city': ['rgba(201,155,94,0.22)', 'rgba(154,141,124,0.3)'],
-          dublin: ['rgba(92,147,139,0.28)', 'rgba(234,223,208,0.2)'],
-          rome: ['rgba(214,74,40,0.24)', 'rgba(201,155,94,0.32)']
+          sydney: ['rgba(92,147,139,0.26)', 'rgba(241,245,248,0.22)'],
+          'kansas-city': ['rgba(127,160,175,0.22)', 'rgba(145,157,167,0.3)'],
+          dublin: ['rgba(92,147,139,0.28)', 'rgba(241,245,248,0.2)'],
+          rome: ['rgba(214,74,40,0.24)', 'rgba(127,160,175,0.32)']
         };
         return palettes[cityId] || palettes.barranquilla;
       }
@@ -1036,8 +924,8 @@
       }
 
       function iframeURL(videoId, autoplay) {
-        return 'https://www.youtube.com/embed/' + videoId + '?' +
-          (autoplay ? 'autoplay=1&mute=1&' : '') +
+      return 'https://www.youtube.com/embed/' + videoId + '?' +
+          (autoplay ? 'autoplay=1&' : '') +
           'loop=1&playlist=' + videoId + '&controls=1&playsinline=1&rel=0&modestbranding=1&enablejsapi=1';
       }
 
@@ -1121,6 +1009,7 @@
 
       renderCityRail();
       updateSlate('barranquilla');
+      setTimeout(() => showVideo('barranquilla'), 0);
 
       // ========== 3D GLOBE ==========
       const container = document.getElementById('globe-container');
@@ -1145,7 +1034,7 @@
       const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
       dirLight.position.set(5, 3, 8);
       scene.add(dirLight);
-      const warmLight = new THREE.DirectionalLight(0xd64a28, 1.2);
+      const warmLight = new THREE.DirectionalLight(0x6ea8b6, 1.2);
       warmLight.position.set(-4, 1, 6);
       scene.add(warmLight);
 
@@ -1171,11 +1060,11 @@
         c.width = w; c.height = h;
         const ctx = c.getContext('2d');
 
-        // Deep warm background
+        // Deep cool background
         const bg = ctx.createRadialGradient(w/2, h*0.43, 0, w/2, h*0.43, w*0.65);
-        bg.addColorStop(0, '#1a1410');
-        bg.addColorStop(0.55, '#0f0c08');
-        bg.addColorStop(1, '#050302');
+        bg.addColorStop(0, '#203240');
+        bg.addColorStop(0.58, '#0f1921');
+        bg.addColorStop(1, '#050b10');
         ctx.fillStyle = bg;
         ctx.fillRect(0, 0, w, h);
 
@@ -1229,64 +1118,45 @@
         const GR = [[-55,65],[-50,68],[-45,72],[-40,76],[-30,82],[-20,80],[-18,76],[-25,72],[-35,70],[-42,68],[-50,66],[-55,65]];
         const AN = [[-180,-82],[180,-82],[180,-90],[-180,-90]]; // Antarctica hint
 
-        // Shadow underlay — shifted downward slightly
-        const shadowColor = 'rgba(20,10,6,0.2)';
         const landPolys = [NA, SA, EU, AF, AS, AU, GR, AN];
         const landColors = [
-          'rgba(184,90,48,0.09)',  // NA — burnt orange
-          'rgba(214,74,40,0.09)',  // SA — terracotta
-          'rgba(184,90,48,0.08)',  // EU — burnt orange
-          'rgba(214,74,40,0.09)',  // AF — terracotta
-          'rgba(154,106,58,0.09)', // AS — ochre
-          'rgba(154,106,58,0.08)', // AU — ochre
-          'rgba(122,74,42,0.06)',  // GR — umber
-          'rgba(122,74,42,0.04)'   // AN — umber
+          'rgba(111,168,182,0.18)',  // NA — steel blue
+          'rgba(92,147,139,0.16)',   // SA — sea glass
+          'rgba(111,168,182,0.18)',  // EU — steel blue
+          'rgba(99,169,161,0.17)',   // AF — sea glass
+          'rgba(127,160,175,0.18)',  // AS — cool gray-blue
+          'rgba(127,160,175,0.16)',  // AU — cool gray-blue
+          'rgba(94,130,146,0.12)',   // GR — slate
+          'rgba(94,130,146,0.08)'    // AN — slate
         ];
 
-        // Soft shadow beneath continents (shift each vertex down slightly)
-        ctx.save();
-        ctx.translate(0, w * 0.004); // subtle downward offset
-        ctx.globalAlpha = 0.35;
-        landPolys.forEach((poly, i) => {
-          drawContinentSoft(ctx, poly, 'rgba(12,6,3,0.3)', w, h);
-        });
-        ctx.restore();
-
-        // Core fills — very soft, low opacity
         landPolys.forEach((poly, i) => {
           drawContinentSoft(ctx, poly, landColors[i], w, h);
         });
 
-        // Second fill pass — slightly brighter, smaller radius/subtracted effect
-        // (simulated by using the same fills at lower opacity)
-        ctx.globalAlpha = 0.5;
-        landPolys.forEach((poly, i) => {
-          drawContinentSoft(ctx, poly, landColors[i], w, h);
-        });
-        ctx.globalAlpha = 1;
-
-        // Ink-speckle edge treatment on each continent
-        landPolys.forEach((poly, colorIdx) => {
-          const speckColor = colorIdx < 2 ? 'rgba(214,74,40,' : colorIdx < 6 ? 'rgba(154,106,58,': 'rgba(122,74,42,';
-          poly.forEach((p, pi) => {
+        function strokeContinentSoft(poly, strokeColor) {
+          if (poly.length < 3) return;
+          ctx.beginPath();
+          poly.forEach((p, i) => {
             const x = lx(p[0], w);
             const y = ly(p[1], h);
-            for (let k = 0; k < 6 && pi % 2 === 0; k++) {
-              const angle = Math.random() * Math.PI * 2;
-              const dist = 2 + Math.random() * 6;
-              const sx = x + Math.cos(angle) * dist;
-              const sy = y + Math.sin(angle) * dist;
-              ctx.fillStyle = speckColor + (0.03 + Math.random() * 0.05) + ')';
-              ctx.beginPath();
-              ctx.arc(sx, sy, 0.4 + Math.random() * 1.4, 0, Math.PI * 2);
-              ctx.fill();
-            }
+            i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
           });
+          ctx.closePath();
+          ctx.strokeStyle = strokeColor;
+          ctx.stroke();
+        }
+
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        ctx.lineWidth = 1.05;
+        landPolys.forEach((poly, i) => {
+          strokeContinentSoft(poly, i === 1 ? 'rgba(92,147,139,0.44)' : 'rgba(137,188,206,0.34)');
         });
 
         // Graticule
-        ctx.strokeStyle = 'rgba(214,74,40,0.05)';
-        ctx.lineWidth = 0.6;
+        ctx.strokeStyle = 'rgba(137,188,206,0.08)';
+        ctx.lineWidth = 0.7;
         for (let lat = -75; lat <= 75; lat += 15) {
           const y = ly(lat, h);
           ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
@@ -1297,13 +1167,13 @@
         }
 
         // Equator
-        ctx.strokeStyle = 'rgba(214,74,40,0.13)';
-        ctx.lineWidth = 0.9;
+        ctx.strokeStyle = 'rgba(127,160,175,0.18)';
+        ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(0, ly(0, h)); ctx.lineTo(w, ly(0, h)); ctx.stroke();
 
         // Tropics
-        ctx.strokeStyle = 'rgba(214,74,40,0.07)';
+        ctx.strokeStyle = 'rgba(127,160,175,0.08)';
         ctx.lineWidth = 0.6;
         [23.4, -23.4].forEach(lat => {
           ctx.beginPath();
@@ -1313,7 +1183,7 @@
         // Vignette
         const vig = ctx.createRadialGradient(w/2, h*0.44, w*0.02, w/2, h*0.44, w*0.6);
         vig.addColorStop(0, 'rgba(0,0,0,0)');
-        vig.addColorStop(1, 'rgba(0,0,0,0.5)');
+        vig.addColorStop(1, 'rgba(0,0,0,0.34)');
         ctx.fillStyle = vig;
         ctx.fillRect(0, 0, w, h);
 
@@ -1326,10 +1196,10 @@
 
       const globeMat = new THREE.MeshStandardMaterial({
         map: tex,
-        roughness: 0.65,
-        metalness: 0.05,
-        emissive: new THREE.Color(0x3a2010),
-        emissiveIntensity: 0.25
+        roughness: 0.46,
+        metalness: 0.02,
+        emissive: new THREE.Color(0x17323a),
+        emissiveIntensity: 0.16
       });
       const globeGeom = new THREE.SphereGeometry(R, 72, 72);
       const globe = new THREE.Mesh(globeGeom, globeMat);
@@ -1337,9 +1207,9 @@
 
       // Atmosphere glow — warm
       const glowMat = new THREE.MeshBasicMaterial({
-        color: 0xd64a28,
+        color: 0x8fc6d5,
         transparent: true,
-        opacity: 0.08,
+        opacity: 0.12,
         side: THREE.BackSide
       });
       const glow = new THREE.Mesh(new THREE.SphereGeometry(R * 1.035, 48, 48), glowMat);
@@ -1348,15 +1218,15 @@
       // Screen-readable graticule on top of texture.
       const gridGroup = new THREE.Group();
       const gridMat = new THREE.LineBasicMaterial({
-        color: 0xeadfd0,
+        color: 0xd9edf7,
         transparent: true,
-        opacity: 0.16,
+        opacity: 0.22,
         depthWrite: false
       });
       const accentGridMat = new THREE.LineBasicMaterial({
-        color: 0xc99b5e,
+        color: 0x7fbfd2,
         transparent: true,
-        opacity: 0.28,
+        opacity: 0.38,
         depthWrite: false
       });
 
@@ -1527,6 +1397,11 @@
       }
 
       function stopDrone() {
+        if (!audioCtx || droneNodes.length === 0) {
+          document.querySelector('.audio-indicator')?.classList.remove('is-active');
+          document.querySelector('.audio-wave')?.classList.remove('is-active');
+          return;
+        }
         droneNodes.forEach(({ gain, lfo, lfoGain }) => {
           gain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.5);
           lfoGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.5);

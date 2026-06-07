@@ -41,54 +41,10 @@
       overflow: hidden;
       isolation: isolate;
       background:
-        radial-gradient(ellipse at 50% 44%, rgba(234, 223, 208, 0.045) 0%, transparent 48%),
+        radial-gradient(ellipse at 50% 44%, rgba(127, 160, 175, 0.04) 0%, transparent 48%),
         radial-gradient(ellipse at 50% 50%, transparent 28%, rgba(3, 2, 1, 0.82) 94%),
-        linear-gradient(180deg, rgba(3,2,1,0.62), transparent 18%, transparent 78%, rgba(3,2,1,0.7)),
+        linear-gradient(180deg, rgba(3,2,1,0.48), transparent 18%, transparent 78%, rgba(3,2,1,0.58)),
         var(--ink);
-    }
-
-    .matte-top,
-    .matte-bottom {
-      position: absolute;
-      left: 0;
-      right: 0;
-      height: clamp(24px, 4.4vh, 54px);
-      background: var(--matte);
-      z-index: 40;
-      pointer-events: none;
-    }
-    .matte-top { top: 0; border-bottom: 1px solid rgba(234, 223, 208, 0.06); }
-    .matte-bottom { bottom: 0; border-top: 1px solid rgba(234, 223, 208, 0.06); }
-
-    .grain,
-    .scanlines,
-    .vignette {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-    }
-
-    .grain {
-      z-index: 28;
-      opacity: 0.095;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-      background-size: 190px 190px;
-      animation: grain 0.24s steps(3) infinite;
-      mix-blend-mode: screen;
-    }
-
-    .scanlines {
-      z-index: 27;
-      background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.18) 3px, rgba(0,0,0,0.18) 4px);
-      animation: scanDrift var(--loop) linear infinite;
-      opacity: 0.28;
-    }
-
-    .vignette {
-      z-index: 26;
-      background:
-        linear-gradient(90deg, rgba(3,2,1,0.72), transparent 16%, transparent 84%, rgba(3,2,1,0.72)),
-        radial-gradient(circle at 50% 48%, transparent 24%, rgba(3,2,1,0.7) 96%);
     }
 
     .chrome {
@@ -110,35 +66,6 @@
     .chrome.bottom { bottom: clamp(14px, 2.2vw, 24px); }
     .chrome strong { color: var(--fg); font-weight: 500; letter-spacing: 0.14em; }
     .chrome .rule { flex: 1; height: 1px; margin: 0 14px; background: rgba(234, 223, 208, 0.14); }
-
-    .corner {
-      position: absolute;
-      width: 18px;
-      height: 18px;
-      border-color: rgba(234, 223, 208, 0.24);
-      border-style: solid;
-      z-index: 36;
-      pointer-events: none;
-    }
-    .corner.tl { top: clamp(30px, 5vh, 60px); left: clamp(18px, 2.8vw, 38px); border-width: 1px 0 0 1px; }
-    .corner.tr { top: clamp(30px, 5vh, 60px); right: clamp(18px, 2.8vw, 38px); border-width: 1px 1px 0 0; }
-    .corner.bl { bottom: clamp(30px, 5vh, 60px); left: clamp(18px, 2.8vw, 38px); border-width: 0 0 1px 1px; }
-    .corner.br { bottom: clamp(30px, 5vh, 60px); right: clamp(18px, 2.8vw, 38px); border-width: 0 1px 1px 0; }
-
-    .timecode {
-      position: absolute;
-      right: clamp(18px, 2.8vw, 38px);
-      bottom: clamp(30px, 5vh, 60px);
-      z-index: 36;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font: 10px/1 var(--font-mono);
-      letter-spacing: 0.16em;
-      color: var(--muted);
-      pointer-events: none;
-    }
-    .timecode .rec { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); animation: blink 1.2s steps(1) infinite; }
 
     .hero {
       position: absolute;
@@ -206,30 +133,30 @@
     .globe:hover,
     .globe:focus-within { animation-play-state: paused; }
     .globe svg { width: 100%; height: 100%; overflow: visible; display: block; }
-    .globe .shell { fill: rgba(234, 223, 208, 0.028); stroke: rgba(234, 223, 208, 0.22); stroke-width: 0.9; }
+    .globe .shell { fill: rgba(241, 245, 248, 0.03); stroke: rgba(127, 160, 175, 0.4); stroke-width: 0.9; }
     .globe .grid-slow,
     .globe .grid-fast { fill: none; stroke-linecap: round; transform-origin: 50% 50%; transform-box: fill-box; }
-    .globe .grid-slow { stroke: rgba(234, 223, 208, 0.14); stroke-width: 0.7; animation: spinReverse 6s linear infinite; }
-    .globe .grid-fast { stroke: rgba(234, 223, 208, 0.08); stroke-width: 0.6; animation: spin 4s linear infinite; }
+    .globe .grid-slow { stroke: rgba(127, 160, 175, 0.18); stroke-width: 0.7; animation: spinReverse 6s linear infinite; }
+    .globe .grid-fast { stroke: rgba(127, 160, 175, 0.1); stroke-width: 0.6; animation: spin 4s linear infinite; }
     .globe:hover .grid-slow,
     .globe:hover .grid-fast,
     .globe:focus-within .grid-slow,
     .globe:focus-within .grid-fast { animation-play-state: paused; }
     .globe .land {
-      fill: rgba(234, 223, 208, 0.10);
-      stroke: rgba(234, 223, 208, 0.32);
+      fill: rgba(111, 168, 182, 0.14);
+      stroke: rgba(127, 160, 175, 0.36);
       stroke-width: 0.9;
       vector-effect: non-scaling-stroke;
     }
-    .globe .colombia { fill: rgba(214, 74, 40, 0.28); stroke: rgba(214, 74, 40, 0.74); }
-    .globe .horizon { fill: none; stroke: rgba(234, 223, 208, 0.14); stroke-width: 0.8; }
+    .globe .colombia { fill: rgba(127, 191, 210, 0.42); stroke: rgba(127, 191, 210, 0.86); }
+    .globe .horizon { fill: none; stroke: rgba(127, 160, 175, 0.18); stroke-width: 0.8; }
 
     .city-pin {
       position: absolute;
       left: var(--x);
       top: var(--y);
-      width: 18px;
-      height: 18px;
+      width: 44px;
+      height: 44px;
       padding: 0;
       border: 0;
       border-radius: 50%;
@@ -251,19 +178,19 @@
       transform: translate(-50%, -50%);
     }
     .city-pin::before {
-      width: 9px;
-      height: 9px;
+      width: 10px;
+      height: 10px;
       background: rgba(234, 223, 208, 0.78);
-      box-shadow: 0 0 0 1px rgba(3,2,1,0.85), 0 0 18px rgba(234, 223, 208, 0.18);
+      box-shadow: 0 0 0 1px rgba(3,2,1,0.85), 0 0 20px rgba(127,160,175,0.22);
     }
     .city-pin::after {
-      width: 24px;
-      height: 24px;
-      border: 1px solid rgba(234, 223, 208, 0.26);
-      opacity: 0.7;
+      width: 26px;
+      height: 26px;
+      border: 1px solid rgba(127,160,175,0.34);
+      opacity: 0.8;
       animation: pinPulse 3s ease-in-out infinite;
     }
-    .city-pin.is-active::before { background: var(--accent); box-shadow: 0 0 0 1px rgba(3,2,1,0.9), 0 0 26px rgba(214, 74, 40, 0.52); }
+    .city-pin.is-active::before { background: var(--accent); box-shadow: 0 0 0 1px rgba(3,2,1,0.9), 0 0 26px rgba(214, 74, 40, 0.44); }
     .city-pin.is-active::after { border-color: rgba(214, 74, 40, 0.58); }
     .city-pin.is-future { opacity: 0.58; cursor: default; }
 
@@ -368,10 +295,11 @@
       max-width: min(55vw, 880px);
       font-family: var(--font-display);
       line-height: 0.92;
-      letter-spacing: -0.035em;
+      letter-spacing: 0;
       color: var(--fg);
       text-wrap: balance;
       animation: headlineFloat var(--loop) ease-in-out infinite;
+      margin: 0;
     }
     .headline .line {
       display: block;
@@ -415,8 +343,6 @@
     @keyframes counterSpin { to { transform: rotate(-360deg); } }
     @keyframes globeDrift { to { transform: rotate(360deg); } }
     @keyframes pinPulse { 0%,100% { transform: translate(-50%, -50%) scale(0.78); opacity: 0.38; } 50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.84; } }
-    @keyframes grain { 0%,100% { opacity: 0.08; } 33% { opacity: 0.115; } 66% { opacity: 0.095; } }
-    @keyframes scanDrift { to { background-position: 0 24px; } }
     @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
     @keyframes headlineFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-1.5px); } }
     @keyframes titleIn {
@@ -448,30 +374,16 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .grain, .scanlines, .gate, .rings, .rings .ring, .labels, .label i,
+      .gate, .rings, .rings .ring, .labels, .label i,
       .globe, .globe .grid-slow, .globe .grid-fast, .city-pin::after,
       .headline, .headline .line, .rec { animation: none !important; }
       .headline .line { opacity: 1; transform: none; filter: none; }
       .gate { transform: translateY(-2vh); }
-      .grain { opacity: 0.06; }
     }
   </style>
 </head>
 <body>
   <main data-od-id="stage">
-    <div class="matte-top" aria-hidden="true"></div>
-    <div class="matte-bottom" aria-hidden="true"></div>
-    <div class="grain" aria-hidden="true"></div>
-    <div class="scanlines" aria-hidden="true"></div>
-    <div class="vignette" aria-hidden="true"></div>
-
-    <div class="corner tl" aria-hidden="true"></div>
-    <div class="corner tr" aria-hidden="true"></div>
-    <div class="corner bl" aria-hidden="true"></div>
-    <div class="corner br" aria-hidden="true"></div>
-
-    <div class="timecode" aria-hidden="true"><span class="rec"></span><span>00:00:00:00</span></div>
-
     <div class="chrome top" data-od-id="chrome">
       <div><strong>Así se ve el centro.</strong> — Atlas transmedia</div>
       <div class="rule" aria-hidden="true"></div>
@@ -538,8 +450,8 @@
               <span class="video-preview" role="dialog" aria-label="Videos de Barranquilla">
                 <span class="preview-head"><strong>Barranquilla</strong><span>2 fuentes / centro</span></span>
                 <span class="video-stack">
-                  <span class="video-frame wide"><iframe title="Barranquilla video principal" data-src="https://www.youtube.com/embed/5Q8Sq7YQrEE?autoplay=1&mute=1&loop=1&playlist=5Q8Sq7YQrEE&controls=1&playsinline=1&rel=0&modestbranding=1&enablejsapi=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></span>
-                  <span class="video-frame vertical"><iframe title="Barranquilla short" data-src="https://www.youtube.com/embed/yT4JEs4TVQg?autoplay=1&mute=1&loop=1&playlist=yT4JEs4TVQg&controls=1&playsinline=1&rel=0&modestbranding=1&enablejsapi=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></span>
+                  <span class="video-frame wide"><iframe title="Barranquilla video principal" data-src="https://www.youtube.com/embed/5Q8Sq7YQrEE?autoplay=1&loop=1&playlist=5Q8Sq7YQrEE&controls=1&playsinline=1&rel=0&modestbranding=1&enablejsapi=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></span>
+                  <span class="video-frame vertical"><iframe title="Barranquilla short" data-src="https://www.youtube.com/embed/yT4JEs4TVQg?autoplay=1&loop=1&playlist=yT4JEs4TVQg&controls=1&playsinline=1&rel=0&modestbranding=1&enablejsapi=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></span>
                 </span>
                 <span class="preview-note">Hover model A: city pin opens source footage. Atlas model C later expands into city clusters.</span>
               </span>
@@ -560,10 +472,10 @@
       Pasa por Barranquilla: el mapa se detiene y el archivo aparece como pantalla dentro del atlas.
     </div>
 
-    <div class="headline" data-od-id="headline">
+    <h1 class="headline" data-od-id="headline">
       <span class="line">Así se ve</span>
       <span class="line">el <em>centro.</em></span>
-    </div>
+    </h1>
 
     <div class="baseline" aria-hidden="true"></div>
 
