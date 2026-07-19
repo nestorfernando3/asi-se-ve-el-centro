@@ -211,7 +211,22 @@
     buildRuler();
   }
 
-  /* [T9] ruler */
+  function buildRuler() {
+    const track = document.getElementById('r-track');
+    track.innerHTML = '';
+    cities.filter(c => c !== centerCity)
+      .map(c => ({ c, d: distKm(centerCity, c) }))
+      .sort((a, b) => a.d - b.d)
+      .forEach(({ c, d }) => {
+        const el = document.createElement('button');
+        el.type = 'button';
+        el.className = 'r-chip';
+        el.setAttribute('aria-label', `Recentrar en ${c.name}, a ${fmtKm(d)} de ${centerCity.name}`);
+        el.innerHTML = `<i style="background:${colors[c.status]}"></i><b>${c.name}</b> ${fmtKm(d)}`;
+        el.addEventListener('click', () => recenter(c));
+        track.appendChild(el);
+      });
+  }
 
   // boot
   sizeFit();
