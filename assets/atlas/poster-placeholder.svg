@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-labelledby="title desc">
+  <title id="title">Vista previa local del Atlas relativo</title>
+  <desc id="desc">Placeholder editorial para el video del Atlas relativo.</desc>
+  <rect width="640" height="360" fill="#171008"/>
+  <g fill="none" stroke="#b83e29" stroke-opacity=".7">
+    <circle cx="320" cy="180" r="112" stroke-width="2"/>
+    <circle cx="320" cy="180" r="72" stroke-width="1" stroke-dasharray="3 8"/>
+    <path d="M208 180h224M320 68v224M241 105c47 45 47 105 0 150M399 105c-47 45-47 105 0 150" stroke-width="1" stroke-opacity=".55"/>
+  </g>
+  <circle cx="320" cy="180" r="5" fill="#b83e29"/>
+  <text x="320" y="328" fill="#f5efe0" fill-opacity=".78" font-family="monospace" font-size="14" letter-spacing="3" text-anchor="middle">ATLAS RELATIVO</text>
+</svg>

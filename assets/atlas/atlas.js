@@ -3,7 +3,7 @@
 (function () {
   const { R_EARTH, DEG, distKm, destPt, fmtKm } = window.AtlasGeo;
   const cities = window.ATLAS_CITIES;
-  const colors = { live: '#c1442a', next: '#1d150c', future: '#155e6b' };
+  const colors = { live: '#b83e29', next: '#1d150c', future: '#155e6b' };
   const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   let centerCity = cities[0];
@@ -133,6 +133,11 @@
     return g;
   });
 
+  function focusCenterHeading() {
+    const heading = document.getElementById('p-city');
+    if (heading) heading.focus({ preventScroll: true });
+  }
+
   function recenter(city) {
     if (city === centerCity) return;
     const from = projection.rotate();
@@ -143,6 +148,7 @@
     centerCity = city;
     staticGeo = computeGeo(city);
     updatePanel();
+    focusCenterHeading();
     if (timer) timer.stop();
     if (REDUCED) {
       projection.rotate(rotateFor(city));
@@ -173,7 +179,7 @@
     tabs.style.display = '';
     const current = tabsByCity[city.name] || 'long';
     const vid = city.video[current];
-    frame.innerHTML = `<img src="https://i.ytimg.com/vi/${vid}/hqdefault.jpg" alt="${city.name}">
+    frame.innerHTML = `<img src="assets/atlas/poster-placeholder.svg" alt="Vista previa local del video de ${city.name}">
       <button type="button" class="play" aria-label="Reproducir video de ${city.name}"><span></span></button>`;
     frame.querySelector('.play').addEventListener('click', () => {
       frame.innerHTML = `<iframe src="https://www.youtube.com/embed/${vid}?autoplay=1&mute=1&loop=1&playlist=${vid}&controls=1&playsinline=1&rel=0&modestbranding=1"
@@ -186,7 +192,11 @@
       t.className = 'tab' + (key === current ? ' active' : '');
       t.setAttribute('aria-pressed', key === current ? 'true' : 'false');
       t.textContent = label;
-      t.addEventListener('click', () => { tabsByCity[city.name] = key; renderFrame(city); });
+      t.addEventListener('click', () => {
+        tabsByCity[city.name] = key;
+        renderFrame(city);
+        focusCenterHeading();
+      });
       tabs.appendChild(t);
     });
   }

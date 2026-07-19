@@ -8,6 +8,8 @@
 
 ## Unreleased
 
+- Atlas relativo usa un poster SVG local para evitar la carga automática desde `i.ytimg.com`; la única excepción remota es el iframe de YouTube, creado después de un click explícito en Reproducir.
+
 ### UI refresh
 - Removed film-grain, scanline, vignette, matte-bar, corner, and timecode overlays from the atlas views.
 - Shifted typography to Montserrat and pushed palette cooler and cleaner across `index.html`, `projects.html`, and atlas variants.
