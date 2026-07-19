@@ -117,6 +117,7 @@ headlineFloat: 0%/100% y:0, 50% y:-1.5px
 | `asi-se-ve-el-centro-cinematic.html` | v2 | Full cinematic experience — dark palette, grain, scanlines, corner gates, timecode, 12s loop. | Stable |
 | `asi-se-ve-el-centro-hover-map-v2.html` | v3 | Interactive map with city pins + hover-to-reveal YouTube video panel. Barranquilla as origin. | Active |
 | `asi-se-ve-el-centro-atlas-hover.html` | v4 | Multi-city atlas hover (pattern C — comparison across cities). Ready for when more cities have video. | Preview |
+| `atlas-relativo.html` | v5 | Fork azimutal equidistante: el mundo se reorganiza alrededor de la ciudad seleccionada. Assets en `assets/atlas/` + `assets/vendor/`. | Active |
 
 ### Supporting files
 

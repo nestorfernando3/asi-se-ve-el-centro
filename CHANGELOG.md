@@ -1,5 +1,11 @@
 # Changelog
 
+## Atlas relativo — 2026-07-19
+- Nuevo fork `atlas-relativo.html`: proyección azimutal equidistante en vivo; cada ciudad clicada se convierte en el centro del mapa (d3-geo + world-atlas, todo vendoreado — cero CDN).
+- Anillos de distancia real cada 2.500 km, radios de brújula, regla de distancias clicable, panel con video lazy-load y tabs largo/short.
+- Soporte `prefers-reduced-motion`, layout responsive con panel bajo el mapa en móvil.
+- Módulo `assets/atlas/geo.js` con tests en `test/geo.test.js` (`node --test`).
+
 ## Unreleased
 
 ### UI refresh
