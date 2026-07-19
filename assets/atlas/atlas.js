@@ -4,6 +4,7 @@
   const { R_EARTH, DEG, distKm, destPt, fmtKm } = window.AtlasGeo;
   const cities = window.ATLAS_CITIES;
   const colors = { live: '#b83e29', next: '#1d150c', future: '#155e6b' };
+  const statusLabels = { live: 'viva', next: 'próxima', future: 'futura' };
   const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   let centerCity = cities[0];
@@ -108,7 +109,7 @@
     const g = enter.append('g').attr('class', 'city-dot')
       .attr('role', 'button')
       .attr('tabindex', 0)
-      .attr('aria-label', d => `${d.name}, ${d.status}. Recentrar el mapa.`);
+      .attr('aria-label', d => `${d.name}, ${statusLabels[d.status]}. Recentrar el mapa.`);
     g.append('circle').attr('class', 'halo')
       .attr('r', d => d.status === 'live' ? 11 : 7)
       .attr('fill', 'none')
@@ -183,7 +184,7 @@
       <button type="button" class="play" aria-label="Reproducir video de ${city.name}"><span></span></button>`;
     frame.querySelector('.play').addEventListener('click', () => {
       frame.innerHTML = `<iframe src="https://www.youtube.com/embed/${vid}?autoplay=1&mute=1&loop=1&playlist=${vid}&controls=1&playsinline=1&rel=0&modestbranding=1"
-        allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen title="${city.name}"></iframe>`;
+        allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen title="${current === 'long' ? 'Pieza larga' : 'Short'} de ${city.name}"></iframe>`;
     });
     tabs.innerHTML = '';
     [['long', 'Pieza larga'], ['short', 'Short']].forEach(([key, label]) => {
