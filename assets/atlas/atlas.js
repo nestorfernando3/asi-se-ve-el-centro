@@ -133,7 +133,35 @@
     return g;
   });
 
-  /* [T7] recenter */
+  function recenter(city) {
+    if (city === centerCity) return;
+    const from = projection.rotate();
+    let to = rotateFor(city);
+    let dLon = to[0] - from[0];
+    while (dLon > 180) dLon -= 360; while (dLon < -180) dLon += 360;
+    to = [from[0] + dLon, to[1]];
+    centerCity = city;
+    staticGeo = computeGeo(city);
+    updatePanel();
+    if (timer) timer.stop();
+    if (REDUCED) {
+      projection.rotate(rotateFor(city));
+      render();
+      return;
+    }
+    const interp = d3.interpolateArray(from, to);
+    const t0 = performance.now();
+    timer = d3.timer(now => {
+      const t = Math.min(1, (now - t0) / 1000);
+      projection.rotate(interp(d3.easeCubicInOut(t)));
+      render();
+      if (t >= 1) {
+        timer.stop();
+        projection.rotate(rotateFor(city));
+        render();
+      }
+    });
+  }
   /* [T8] panel + video */
   /* [T9] ruler */
 
