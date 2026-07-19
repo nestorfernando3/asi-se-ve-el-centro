@@ -150,9 +150,8 @@
       return;
     }
     const interp = d3.interpolateArray(from, to);
-    const t0 = performance.now();
     timer = d3.timer(now => {
-      const t = Math.min(1, (now - t0) / 1000);
+      const t = Math.min(1, now / 1000);
       projection.rotate(interp(d3.easeCubicInOut(t)));
       render();
       if (t >= 1) {
