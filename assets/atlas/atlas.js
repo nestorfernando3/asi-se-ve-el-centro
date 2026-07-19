@@ -119,11 +119,11 @@
       .attr('r', d => d.status === 'live' ? 4 : 3)
       .attr('fill', d => colors[d.status]);
     g.append('text').attr('class', 'city-name').attr('dx', 10).attr('dy', 3).text(d => d.name);
-    g.on('click', (e, d) => recenter(d));
+    g.on('click', (e, d) => recenter(d, { keyboard: e.detail === 0 }));
     g.on('keydown', (e, d) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        recenter(d);
+        recenter(d, { keyboard: true });
       }
     });
     g.on('mouseenter', (e, d) => {
@@ -133,12 +133,12 @@
     return g;
   });
 
-  function focusCenterHeading() {
+  function focusCenterHeading(keyboard = false) {
     const heading = document.getElementById('p-city');
-    if (heading) heading.focus({ preventScroll: true });
+    if (heading) heading.focus(keyboard ? undefined : { preventScroll: true });
   }
 
-  function recenter(city) {
+  function recenter(city, { keyboard = false } = {}) {
     if (city === centerCity) return;
     const from = projection.rotate();
     let to = rotateFor(city);
@@ -148,7 +148,7 @@
     centerCity = city;
     staticGeo = computeGeo(city);
     updatePanel();
-    focusCenterHeading();
+    focusCenterHeading(keyboard);
     if (timer) timer.stop();
     if (REDUCED) {
       projection.rotate(rotateFor(city));
@@ -195,7 +195,7 @@
       t.addEventListener('click', () => {
         tabsByCity[city.name] = key;
         renderFrame(city);
-        focusCenterHeading();
+        tabs.querySelector(`[aria-pressed="true"]`)?.focus();
       });
       tabs.appendChild(t);
     });
@@ -233,7 +233,7 @@
         el.className = 'r-chip';
         el.setAttribute('aria-label', `Recentrar en ${c.name}, a ${fmtKm(d)} de ${centerCity.name}`);
         el.innerHTML = `<i style="background:${colors[c.status]}"></i><b>${c.name}</b> ${fmtKm(d)}`;
-        el.addEventListener('click', () => recenter(c));
+        el.addEventListener('click', (e) => recenter(c, { keyboard: e.detail === 0 }));
         track.appendChild(el);
       });
   }
