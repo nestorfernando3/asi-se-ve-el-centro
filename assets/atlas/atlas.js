@@ -161,7 +161,56 @@
       }
     });
   }
-  /* [T8] panel + video */
+  const tabsByCity = {}; // recuerda tab por ciudad
+  function renderFrame(city) {
+    const frame = document.getElementById('p-frame');
+    const tabs = document.getElementById('p-tabs');
+    if (!city.video) {
+      frame.innerHTML = `<div class="soon mono">${city.status === 'next' ? 'EN PRODUCCIÓN' : 'FUTURA RUTA'}</div>`;
+      tabs.style.display = 'none';
+      return;
+    }
+    tabs.style.display = '';
+    const current = tabsByCity[city.name] || 'long';
+    const vid = city.video[current];
+    frame.innerHTML = `<img src="https://i.ytimg.com/vi/${vid}/hqdefault.jpg" alt="${city.name}">
+      <button type="button" class="play" aria-label="Reproducir video de ${city.name}"><span></span></button>`;
+    frame.querySelector('.play').addEventListener('click', () => {
+      frame.innerHTML = `<iframe src="https://www.youtube.com/embed/${vid}?autoplay=1&mute=1&loop=1&playlist=${vid}&controls=1&playsinline=1&rel=0&modestbranding=1"
+        allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen title="${city.name}"></iframe>`;
+    });
+    tabs.innerHTML = '';
+    [['long', 'Pieza larga'], ['short', 'Short']].forEach(([key, label]) => {
+      const t = document.createElement('button');
+      t.type = 'button';
+      t.className = 'tab' + (key === current ? ' active' : '');
+      t.setAttribute('aria-pressed', key === current ? 'true' : 'false');
+      t.textContent = label;
+      t.addEventListener('click', () => { tabsByCity[city.name] = key; renderFrame(city); });
+      tabs.appendChild(t);
+    });
+  }
+
+  function updatePanel() {
+    const c = centerCity;
+    document.getElementById('p-city').textContent = c.name;
+    document.getElementById('p-sub').innerHTML =
+      `${c.country} · ${Math.abs(c.lat).toFixed(2)}°${c.lat >= 0 ? 'N' : 'S'} ${Math.abs(c.lon).toFixed(2)}°${c.lon >= 0 ? 'E' : 'O'}` +
+      (c.status !== 'live' ? ` · <b>${c.status === 'next' ? 'próxima' : 'futura'}</b>` : '');
+    document.getElementById('hdr-proj').textContent = 'El mundo visto desde ' + c.name;
+    document.getElementById('r-title').textContent = 'Distancias desde ' + c.name + ' — km reales, de cerca a lejos';
+    renderFrame(c);
+    const q = document.getElementById('p-quote');
+    if (c.quote) { q.style.display = ''; q.innerHTML = `${c.quote}<span class="attrib">${c.attrib}</span>`; }
+    else q.style.display = 'none';
+    let nearest = null, nd = Infinity;
+    cities.forEach(o => { if (o !== c) { const d = distKm(c, o); if (d < nd) { nd = d; nearest = o; } } });
+    document.getElementById('p-meta').innerHTML =
+      `<div>Estado <span>${c.status === 'live' ? '● viva — 2 piezas' : c.status === 'next' ? 'próxima — en producción' : 'futura ruta'}</span></div>
+       <div>Ciudad más cercana <span>${nearest.name} · ${fmtKm(nd)}</span></div>`;
+    buildRuler();
+  }
+
   /* [T9] ruler */
 
   // boot
@@ -169,6 +218,7 @@
   projection.rotate(rotateFor(centerCity));
   gSphere.append('path').attr('class', 'sphere');
   staticGeo = computeGeo(centerCity);
+  updatePanel();
 
   fetch('assets/atlas/land-110m.json')
     .then(r => r.json())
