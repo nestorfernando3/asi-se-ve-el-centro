@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Así se ve el centro — Atlas relativo</title>
+<meta name="description" content="El mundo visto desde la ciudad que elijas. Proyección azimutal equidistante en vivo — atlas transmedia.">
+<style>
+  :root{
+    --paper:#f5efe0; --paper-2:#efe7d2; --ink:#1d150c; --muted:#7d6c54;
+    --line:rgba(29,21,12,.22); --faint:rgba(29,21,12,.08);
+    --rust:#c1442a; --sea:#155e6b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--paper);color:var(--ink);font-family:-apple-system,system-ui,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+  .mono{font-family:"SF Mono",Menlo,monospace;letter-spacing:.13em;text-transform:uppercase}
+  .serif{font-family:"Iowan Old Style",Charter,Georgia,serif}
+
+  header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 26px;border-bottom:1px solid var(--line);font-size:10px;color:var(--muted)}
+  header b{color:var(--ink)}
+  header .proj{color:var(--sea)}
+  header a{color:var(--muted);text-decoration:none}
+  header a:hover{color:var(--rust)}
+
+  .stage{flex:1;display:grid;grid-template-columns:1fr 350px;min-height:0}
+  .map{position:relative;min-width:0;min-height:0}
+  .map svg{display:block;width:100%;height:100%}
+  .map-hint{position:absolute;top:14px;left:50%;transform:translateX(-50%);font-size:9.5px;color:var(--muted);white-space:nowrap;z-index:2;background:rgba(245,239,224,.88);padding:4px 10px;border-radius:99px}
+  .map-hint b{color:var(--ink)}
+  .howto{position:absolute;left:20px;bottom:16px;font-size:9px;color:var(--muted);line-height:1.9;z-index:2;max-width:210px}
+  .howto b{color:var(--ink)}
+  .legend{position:absolute;right:20px;bottom:16px;font-size:9px;color:var(--muted);line-height:2;text-align:right;z-index:2}
+  .legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-left:8px}
+  .loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:10px;letter-spacing:.14em;z-index:1}
+
+  .land{fill:#e9dfc6;stroke:#1d150c;stroke-opacity:.45;stroke-width:.6}
+  .sphere{fill:none;stroke:#1d150c;stroke-opacity:.4}
+  .ring{fill:none;stroke:var(--sea);stroke-opacity:.25;stroke-dasharray:2 5}
+  .ring.major{stroke-opacity:.4;stroke-dasharray:none}
+  .ring-label{font-family:"SF Mono",Menlo,monospace;font-size:7.5px;fill:var(--sea);letter-spacing:.06em;paint-order:stroke;stroke:var(--paper);stroke-width:3px}
+  .spoke{fill:none;stroke:var(--ink);stroke-opacity:.1}
+  .spoke-label{font-family:"SF Mono",Menlo,monospace;font-size:8.5px;fill:var(--muted);paint-order:stroke;stroke:var(--paper);stroke-width:3px}
+  .city-name{font-family:"SF Mono",Menlo,monospace;font-size:8px;letter-spacing:.07em;fill:var(--ink);text-transform:uppercase;paint-order:stroke;stroke:var(--paper);stroke-width:3px}
+  .city-dot{cursor:pointer}
+  .center-tag{font-family:"SF Mono",Menlo,monospace;font-size:8.5px;letter-spacing:.1em;fill:var(--rust);text-transform:uppercase;paint-order:stroke;stroke:var(--paper);stroke-width:3px}
+  @keyframes breathe{0%,100%{stroke-opacity:.6}50%{stroke-opacity:.15}}
+  .center-ring{animation:breathe 2.6s ease-in-out infinite}
+
+  .panel{border-left:1px solid var(--line);padding:24px;display:flex;flex-direction:column;overflow:auto;background:var(--paper)}
+  .p-label{font-size:10px;color:var(--muted);display:flex;align-items:center;gap:8px}
+  .p-label::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--rust)}
+  .p-city{font-size:42px;line-height:1.02;margin:12px 0 4px;letter-spacing:-.01em}
+  .p-sub{font-size:10px;color:var(--muted);margin-bottom:16px}
+  .p-sub b{color:var(--sea)}
+  .frame{position:relative;background:#171008;border-radius:5px;overflow:hidden;aspect-ratio:16/9;box-shadow:0 16px 34px -16px rgba(29,21,12,.4)}
+  .frame img,.frame iframe{width:100%;height:100%;object-fit:cover;opacity:.94;border:0;display:block}
+  .frame .play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;cursor:pointer;background:none;border:0}
+  .frame .play span{width:46px;height:46px;border-radius:50%;background:rgba(245,239,224,.95);display:flex;align-items:center;justify-content:center}
+  .frame .play span::after{content:"";border-left:13px solid var(--ink);border-top:8px solid transparent;border-bottom:8px solid transparent;margin-left:3px}
+  .frame .soon{display:flex;align-items:center;justify-content:center;height:100%;color:rgba(245,239,224,.75);font-size:9.5px;letter-spacing:.14em}
+  .tabs{display:flex;gap:8px;margin:12px 0 14px}
+  .tab{flex:1;text-align:center;font-size:9px;padding:8px;border:1px solid var(--line);border-radius:3px;color:var(--muted);cursor:pointer}
+  .tab.active{color:var(--rust);border-color:var(--rust)}
+  blockquote{font-family:"Iowan Old Style",Charter,Georgia,serif;font-size:14px;line-height:1.6;color:#3d3125;border-left:2px solid var(--rust);padding-left:14px;margin-bottom:14px}
+  blockquote .attrib{display:block;padding-top:8px;font-family:"SF Mono",Menlo,monospace;font-size:8.5px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
+  .p-meta{margin-top:auto;padding-top:12px;border-top:1px solid var(--faint);font-size:9px;color:var(--muted);line-height:2}
+  .p-meta span{color:var(--ink)}
+
+  .ruler{border-top:1px solid var(--line);padding:9px 26px 12px;background:var(--paper-2)}
+  .ruler .r-title{font-size:9px;color:var(--muted);margin-bottom:8px}
+  .r-track{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+  .r-chip{flex:0 0 auto;display:flex;align-items:baseline;gap:7px;padding:6px 12px;border:1px solid var(--line);border-radius:99px;cursor:pointer;background:var(--paper);font-family:"SF Mono",Menlo,monospace;font-size:8.5px;letter-spacing:.06em;color:var(--muted);white-space:nowrap}
+  .r-chip:hover{border-color:var(--rust);color:var(--rust)}
+  .r-chip b{color:var(--ink);font-weight:600;text-transform:uppercase}
+  .r-chip:hover b{color:var(--rust)}
+  .r-chip i{width:6px;height:6px;border-radius:50%;align-self:center}
+
+  @media (max-width: 900px){
+    body{overflow:auto}
+    .stage{grid-template-columns:1fr;grid-template-rows:minmax(70vw,1fr) auto}
+    .panel{border-left:none;border-top:1px solid var(--line)}
+    .howto,.legend{display:none}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .center-ring{animation:none}
+  }
+</style>
+</head>
+<body>
+
+<header class="mono">
+  <span><b>Así se ve el centro.</b> — Atlas relativo</span>
+  <span class="proj" id="hdr-proj">El mundo visto desde Barranquilla</span>
+  <span><a href="index.html">← globo 360</a> · N.º 02</span>
+</header>
+
+<div class="stage">
+  <div class="map" id="map">
+    <div class="loading mono" id="loading">Cargando cartografía…</div>
+    <div class="map-hint mono" id="hint">Toca cualquier ciudad — el mundo entero se reorganiza a su alrededor</div>
+    <svg id="svg" role="img" aria-label="Mapa azimutal equidistante centrado en la ciudad seleccionada"></svg>
+    <div class="howto mono">
+      <b>Cómo leer:</b> los anillos son distancia real desde el centro (cada 2.500 km); los radios son rumbo de brújula. Nada aquí es decorativo.
+    </div>
+    <div class="legend mono">
+      viva <i style="background:var(--rust)"></i><br>
+      próxima <i style="background:var(--ink)"></i><br>
+      futura <i style="background:var(--sea)"></i>
+    </div>
+  </div>
+
+  <aside class="panel">
+    <span class="p-label mono">Centro actual</span>
+    <h2 class="p-city serif" id="p-city">Barranquilla</h2>
+    <div class="p-sub mono" id="p-sub"></div>
+    <div class="frame" id="p-frame"></div>
+    <div class="tabs mono" id="p-tabs"></div>
+    <blockquote id="p-quote"></blockquote>
+    <div class="p-meta mono" id="p-meta"></div>
+  </aside>
+</div>
+
+<div class="ruler">
+  <div class="r-title mono" id="r-title"></div>
+  <div class="r-track" id="r-track"></div>
+</div>
+
+<script src="assets/vendor/d3.min.js"></script>
+<script src="assets/vendor/topojson-client.min.js"></script>
+<script src="assets/atlas/geo.js"></script>
+<script src="assets/atlas/cities.js"></script>
+<script src="assets/atlas/atlas.js"></script>
+
+</body>
+</html>
