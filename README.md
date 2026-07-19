@@ -3,11 +3,23 @@
 > Transmedia project. Downtown visions from Colombian cities → the world.
 > Barranquilla is the origin point.
 
+This repository contains two coexisting web experiences:
+
+- `index.html` — the stable main experience, a rotating 3D globe.
+- `atlas-relativo.html` — the `atlas-relativo` branch experiment, an editorial
+  azimuthal map that lets each city become the centre. It does not replace
+  `main/index.html`.
+
 Rotating type ring around a wireframe globe. Clean, modern atlas with Montserrat, cooler palette, and hover-to-reveal video.
 
 🌐 **Live site:** [nestorfernando3.github.io/asi-se-ve-el-centro](https://nestorfernando3.github.io/asi-se-ve-el-centro/)
 📁 **GitHub:** [github.com/nestorfernando3/asi-se-ve-el-centro](https://github.com/nestorfernando3/asi-se-ve-el-centro)
 🎞️ **Proof pack:** [`projects.html`](projects.html)
+
+When the `atlas-relativo` branch is published through GitHub Pages, its direct
+entry point is [`atlas-relativo.html`](atlas-relativo.html):
+[Abrir Atlas relativo en GitHub Pages](https://nestorfernando3.github.io/asi-se-ve-el-centro/atlas-relativo.html).
+The source is available at [branch `atlas-relativo`](https://github.com/nestorfernando3/asi-se-ve-el-centro/tree/atlas-relativo).
 
 ---
 
@@ -16,6 +28,7 @@ Rotating type ring around a wireframe globe. Clean, modern atlas with Montserrat
 ```
 Así se ve el centro/
 ├── index.html                         ← 🟢 GitHub Pages entry — interactive map (v3 unified)
+├── atlas-relativo.html                 ← editorial relative-atlas experiment
 ├── README.md                          ← this file
 ├── DESIGN.md                          ← visual system, colors, architecture, city registry
 ├── projects.html                      ← funder-facing proof pack entry page
@@ -41,10 +54,31 @@ Así se ve el centro/
 ## How to use
 
 ### View in browser
-Open any `.html` file directly in a browser. No server needed.
+Open most `.html` files directly in a browser. `atlas-relativo.html` loads its
+local TopoJSON with `fetch`, so use a small local server for reliable browser
+behaviour:
+
+```bash
+python3 -m http.server 8000
+```
+
+Then open `http://localhost:8000/atlas-relativo.html`.
 
 ### 🌐 Live webapp
 **`index.html`** — served at [nestorfernando3.github.io/asi-se-ve-el-centro](https://nestorfernando3.github.io/asi-se-ve-el-centro/). Interactive map with 15 city pins, hover-to-reveal video, procedural audio drone, and a cleaner modern visual system.
+
+### Atlas relativo
+**`atlas-relativo.html`** — a no-build editorial map centred on Barranquilla by
+default. It includes 18 registered cities, real-distance rings, keyboard-accessible
+city controls, reduced-motion support, local D3/TopoJSON assets, and a video
+panel whose YouTube iframe is created only after an explicit play click.
+
+Run its focused checks with:
+
+```bash
+node --test test/geo.test.js
+node --check assets/atlas/atlas.js
+```
 
 ### 🎞️ Funder proof pack
 **`projects.html`** — reviewer-facing page for grants, residencies, and media labs. It frames the project as a silent documentary archive, explains the Barranquilla → Bogotá → Cartagena route, and links to bilingual packet source docs in `funding/`.
@@ -90,7 +124,23 @@ Current breakpoints: 920px (tablet), 480px (mobile). The map collapses to single
 
 ## Dependencies
 
-Zero. Every file is self-contained HTML+CSS+JS. No build step, no npm, no CDN at runtime. YouTube embeds require internet for video playback.
+Zero build dependencies. Every page is plain HTML+CSS+JS; the Atlas relativo
+experiment vendors D3, TopoJSON, and its land data under `assets/`. There is no
+automatic CDN request. YouTube embeds require internet only after the user
+chooses to play a video.
+
+## GitHub Pages deployment
+
+The workflow at [`.github/workflows/pages.yml`](.github/workflows/pages.yml)
+deploys the checked-out branch as a static GitHub Pages site when
+`atlas-relativo` is pushed. To enable it once in the repository, choose
+**Settings → Pages → Source → GitHub Actions**. The workflow preserves the
+existing `index.html` entry point and exposes the experiment at
+`/atlas-relativo.html`.
+
+The workflow has no build step: it uploads the repository root exactly as the
+static site source. Local assets stay local; only the deferred YouTube player
+uses a remote URL.
 
 ---
 
