@@ -32,7 +32,42 @@
   }
   const rotateFor = (c) => [-c.lon, -c.lat];
 
-  /* [T6] computeGeo + render */
+  function computeGeo(c) {
+    const rings = [], spokes = [], cardinals = [];
+    for (let d = 2500; d <= 20000; d += 2500) {
+      rings.push({ geo: d3.geoCircle().center([c.lon, c.lat]).radius((d / R_EARTH) * DEG)(), d, major: d % 5000 === 0 });
+    }
+    for (let b = 0; b < 360; b += 30) {
+      const coords = [];
+      for (let f = 0; f <= 40; f++) coords.push(destPt(c.lon, c.lat, b, (f / 40) * Math.PI));
+      spokes.push({ type: 'LineString', coordinates: coords });
+    }
+    [['N', 0], ['E', 90], ['S', 180], ['O', 270]].forEach(([t, b]) => {
+      cardinals.push({ t, ll: destPt(c.lon, c.lat, b, Math.PI * 0.965) });
+    });
+    return { rings, spokes, cardinals };
+  }
+
+  function render() {
+    gRings.selectAll('*').remove();
+    staticGeo.rings.forEach(r => {
+      gRings.append('path').attr('d', path(r.geo)).attr('class', 'ring' + (r.major ? ' major' : ''));
+      if (r.major) {
+        const pt = projection(destPt(centerCity.lon, centerCity.lat, 90, r.d / R_EARTH));
+        if (pt) gRings.append('text').attr('class', 'ring-label')
+          .attr('x', pt[0] + 6).attr('y', pt[1] - 4).text((r.d / 1000) + '.000 km');
+      }
+    });
+    gSpokes.selectAll('*').remove();
+    staticGeo.spokes.forEach(s => gSpokes.append('path').attr('d', path(s)).attr('class', 'spoke'));
+    staticGeo.cardinals.forEach(cd => {
+      const pt = projection(cd.ll);
+      if (pt) gSpokes.append('text').attr('class', 'spoke-label').attr('x', pt[0] - 3).attr('y', pt[1] + 3).text(cd.t);
+    });
+    if (land) gLand.select('path').attr('d', path(land));
+    gSphere.select('path').attr('d', path({ type: 'Sphere' }));
+    drawCities();
+  }
 
   function drawCities() {
     const prio = { live: 0, next: 1, future: 2 };
@@ -106,7 +141,7 @@
   sizeFit();
   projection.rotate(rotateFor(centerCity));
   gSphere.append('path').attr('class', 'sphere');
-  /* [T6-boot] staticGeo + updatePanel + render inicial */
+  staticGeo = computeGeo(centerCity);
 
   fetch('assets/atlas/land-110m.json')
     .then(r => r.json())
