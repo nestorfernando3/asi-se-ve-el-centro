@@ -132,8 +132,8 @@ chooses to play a video.
 ## GitHub Pages deployment
 
 The workflow at [`.github/workflows/pages.yml`](.github/workflows/pages.yml)
-deploys the checked-out branch as a static GitHub Pages site when
-`atlas-relativo` is pushed. To enable it once in the repository, choose
+deploys the checked-out branch as a static GitHub Pages site on every push to
+`atlas-relativo`. To enable it once in the repository, choose
 **Settings → Pages → Source → GitHub Actions**. The workflow preserves the
 existing `index.html` entry point and exposes the experiment at
 `/atlas-relativo.html`.
