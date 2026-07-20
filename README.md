@@ -54,9 +54,9 @@ Así se ve el centro/
 ## How to use
 
 ### View in browser
-Open most `.html` files directly in a browser. `atlas-relativo.html` loads its
-local TopoJSON with `fetch`, so use a small local server for reliable browser
-behaviour:
+Open most `.html` files directly in a browser. `atlas-relativo.html` also opens
+from `file://` using its schematic fallback; use a small local server when you
+want the full local TopoJSON cartography:
 
 ```bash
 python3 -m http.server 8000

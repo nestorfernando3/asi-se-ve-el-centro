@@ -246,18 +246,23 @@
   staticGeo = computeGeo(centerCity);
   updatePanel();
 
-  fetch('assets/atlas/land-110m.json')
-    .then(r => r.json())
-    .then(topo => {
-      land = topojson.feature(topo, topo.objects.land);
-      gLand.append('path').attr('class', 'land');
-      document.getElementById('loading').remove();
-      render();
-    })
-    .catch(() => {
-      document.getElementById('loading').textContent = 'Sin cartografía — mapa esquemático';
-      render();
-    });
+  const fallback = () => {
+    document.getElementById('loading').textContent = 'Sin cartografía — mapa esquemático';
+    render();
+  };
+  if (location.protocol === 'file:') {
+    fallback();
+  } else {
+    fetch('assets/atlas/land-110m.json')
+      .then(r => r.json())
+      .then(topo => {
+        land = topojson.feature(topo, topo.objects.land);
+        gLand.append('path').attr('class', 'land');
+        document.getElementById('loading').remove();
+        render();
+      })
+      .catch(fallback);
+  }
 
   window.addEventListener('resize', () => { sizeFit(); render(); });
 })();
