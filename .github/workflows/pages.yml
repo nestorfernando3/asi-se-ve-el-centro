@@ -1,5 +1,6 @@
 name: Deploy GitHub Pages
 
+# The repository's github-pages environment explicitly allows atlas-relativo.
 on:
   push:
     branches: [atlas-relativo]
