@@ -12,12 +12,12 @@ This repository contains two coexisting web experiences:
 
 Rotating type ring around a wireframe globe. Clean, modern atlas with Montserrat, cooler palette, and hover-to-reveal video.
 
-🌐 **Live site:** [nestorfernando3.github.io/asi-se-ve-el-centro](https://nestorfernando3.github.io/asi-se-ve-el-centro/)
+🌐 **Public atlas (new):** [Atlas relativo](https://nestorfernando3.github.io/asi-se-ve-el-centro/atlas-relativo.html)
+🌐 **Stable site:** [nestorfernando3.github.io/asi-se-ve-el-centro](https://nestorfernando3.github.io/asi-se-ve-el-centro/)
 📁 **GitHub:** [github.com/nestorfernando3/asi-se-ve-el-centro](https://github.com/nestorfernando3/asi-se-ve-el-centro)
 🎞️ **Proof pack:** [`projects.html`](projects.html)
 
-When the `atlas-relativo` branch is published through GitHub Pages, its direct
-entry point is [`atlas-relativo.html`](atlas-relativo.html):
+The deployed `atlas-relativo` branch exposes this direct public entry point:
 [Abrir Atlas relativo en GitHub Pages](https://nestorfernando3.github.io/asi-se-ve-el-centro/atlas-relativo.html).
 The source is available at [branch `atlas-relativo`](https://github.com/nestorfernando3/asi-se-ve-el-centro/tree/atlas-relativo).
 
