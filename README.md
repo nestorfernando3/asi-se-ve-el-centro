@@ -5,7 +5,8 @@
 
 Rotating type ring around a wireframe globe. Clean, modern atlas with Montserrat, cooler palette, and hover-to-reveal video.
 
-🌐 **Live site:** [nestorfernando3.github.io/asi-se-ve-el-centro](https://nestorfernando3.github.io/asi-se-ve-el-centro/)
+🌐 **Public atlas (new):** [Atlas relativo](https://nestorfernando3.github.io/asi-se-ve-el-centro/atlas-relativo.html)
+🌐 **Stable site:** [nestorfernando3.github.io/asi-se-ve-el-centro](https://nestorfernando3.github.io/asi-se-ve-el-centro/)
 📁 **GitHub:** [github.com/nestorfernando3/asi-se-ve-el-centro](https://github.com/nestorfernando3/asi-se-ve-el-centro)
 🎞️ **Proof pack:** [`projects.html`](projects.html)
 
