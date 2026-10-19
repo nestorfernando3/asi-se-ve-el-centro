@@ -8,6 +8,7 @@
 
 ## Unreleased
 
+- La home (`index.html`) enlaza al Atlas relativo desde la barra inferior, sin alterar la experiencia del globo.
 - Atlas relativo usa un poster SVG local para evitar la carga automática desde `i.ytimg.com`; la única excepción remota es el iframe de YouTube, creado después de un click explícito en Reproducir.
 
 ### UI refresh

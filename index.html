@@ -74,6 +74,8 @@
     .chrome.top { top: clamp(14px, 2.2vw, 26px); }
     .chrome.bottom { bottom: clamp(14px, 2.2vw, 24px); }
     .chrome strong { color: var(--fg); font-weight: 500; letter-spacing: 0.14em; }
+    .chrome a.atlas-link { color: inherit; text-decoration: none; pointer-events: auto; border-bottom: 1px solid currentColor; }
+    .chrome a.atlas-link:hover, .chrome a.atlas-link:focus-visible { color: var(--fg); }
     .chrome .rule { flex: 1; height: 1px; margin: 0 14px; background: rgba(234, 223, 208, 0.14); }
 
     .audio-indicator {
@@ -724,6 +726,8 @@
       <div>Hover reveals video</div>
       <div class="rule" aria-hidden="true"></div>
       <div>globo 360</div>
+      <div class="rule" aria-hidden="true"></div>
+      <a class="atlas-link" href="atlas-relativo.html">atlas relativo</a>
       <div class="rule" aria-hidden="true"></div>
       <span class="audio-indicator">♪ drone</span>
       <button class="audio-toggle" aria-label="Silenciar audio"><span class="on">♪</span><span class="off">♪̸</span></button>
