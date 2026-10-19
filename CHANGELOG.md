@@ -8,6 +8,8 @@
 
 ## Unreleased
 
+- Globo de la home rediseñado como carta náutica nocturna: costas reales de Natural Earth (`assets/globe/land-110m.js`), líneas de agua alrededor de las costas, trópicos y rótulos de mares, rutas de círculo máximo desde Barranquilla que se desvanecen en el horizonte, y atmósfera con brillo de borde.
+- Tipografía editorial con Fraunces para el título, la ciudad y las citas; grano de película sobre la escena.
 - La home (`index.html`) enlaza al Atlas relativo desde la barra inferior, sin alterar la experiencia del globo.
 - Atlas relativo usa un poster SVG local para evitar la carga automática desde `i.ytimg.com`; la única excepción remota es el iframe de YouTube, creado después de un click explícito en Reproducir.
 

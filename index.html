@@ -8,8 +8,10 @@
   <title>Así se ve el centro. — Globo transmedia</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..600&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="assets/vendor/topojson-client.min.js"></script>
+  <script src="assets/globe/land-110m.js"></script>
   <style>
     :root {
       --loop: 12s;
@@ -26,6 +28,7 @@
       --sea: #63a9a1;
       --paper-soft: rgba(241, 245, 248, 0.06);
 
+      --font-serif: 'Fraunces', 'Iowan Old Style', Georgia, serif;
       --font-display: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
       --font-body: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
       --font-mono: ui-monospace, 'IBM Plex Mono', 'JetBrains Mono', Menlo, monospace;
@@ -101,6 +104,28 @@
     .audio-toggle .off { display: none; }
     .audio-toggle.muted .on { display: none; }
     .audio-toggle.muted .off { display: inline; }
+
+    /* Grano de película y un resplandor cálido de horizonte detrás del globo. */
+    main::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 42% 38% at 34% 52%, rgba(224,105,87,0.07), transparent 70%),
+        radial-gradient(ellipse 50% 46% at 34% 50%, rgba(111,194,196,0.06), transparent 72%);
+    }
+    main::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 50;
+      pointer-events: none;
+      opacity: .07;
+      mix-blend-mode: overlay;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
 
     .stage {
       position: absolute;
@@ -235,9 +260,11 @@
       bottom: clamp(8px, 3vh, 38px);
       z-index: 2;
       max-width: min(680px, 64vw);
-      font-family: var(--font-display);
-      line-height: 0.92;
-      letter-spacing: 0;
+      font-family: var(--font-serif);
+      font-optical-sizing: auto;
+      line-height: 0.9;
+      letter-spacing: -0.02em;
+      text-shadow: 0 2px 30px rgba(5,11,16,0.85);
       text-wrap: balance;
       pointer-events: none;
       margin: 0;
@@ -248,9 +275,9 @@
       transform: translateY(0.35em);
       animation: titleIn var(--loop) cubic-bezier(.2,.7,.2,1) infinite;
     }
-    .headline .line:first-child { font-size: clamp(2rem, 4.4vw, 5.3rem); font-weight: 500; }
-    .headline .line:last-child { margin-top: .08em; font-size: clamp(2.7rem, 6.4vw, 8rem); animation-delay: .14s; }
-    .headline em { color: var(--accent); font-style: normal; font-weight: 800; }
+    .headline .line:first-child { font-size: clamp(2rem, 4.2vw, 5rem); font-weight: 300; color: rgba(241,236,226,0.92); }
+    .headline .line:last-child { margin-top: .04em; font-size: clamp(2.9rem, 6.8vw, 8.4rem); font-weight: 300; animation-delay: .14s; }
+    .headline em { color: var(--accent); font-style: italic; font-weight: 400; letter-spacing: -0.03em; }
 
     .field-note {
       position: absolute;
@@ -283,15 +310,16 @@
     }
     .note-title {
       margin-top: 8px;
-      font: 700 clamp(28px, 3.4vw, 54px)/0.92 var(--font-display);
-      letter-spacing: -0.01em;
+      font: 400 clamp(28px, 3.4vw, 52px)/0.95 var(--font-serif);
+      letter-spacing: -0.02em;
       text-wrap: balance;
     }
+    .field-note { text-shadow: 0 1px 18px rgba(5,11,16,0.95), 0 0 2px rgba(5,11,16,0.9); }
     .note-copy {
       margin-top: 12px;
       max-width: 34ch;
-      color: rgba(241,245,248,0.78);
-      font: 13px/1.55 var(--font-body);
+      color: rgba(241,236,226,0.8);
+      font: italic 300 14px/1.55 var(--font-serif);
     }
     .note-author {
       margin-top: 8px;
@@ -339,8 +367,8 @@
       gap: 14px;
     }
     .viewer-city {
-      font: 700 clamp(28px, 3vw, 42px)/0.95 var(--font-display);
-      letter-spacing: -0.01em;
+      font: italic 400 clamp(28px, 3vw, 42px)/0.95 var(--font-serif);
+      letter-spacing: -0.02em;
       text-align: right;
     }
     .viewer-frame {
@@ -433,8 +461,8 @@
       display: none;
     }
     .slate-title {
-      font: 700 clamp(26px, 3vw, 38px)/.92 var(--font-display);
-      letter-spacing: -.01em;
+      font: 400 clamp(26px, 3vw, 38px)/.95 var(--font-serif);
+      letter-spacing: -.02em;
       max-width: 13ch;
     }
     .slate-desc {
@@ -723,7 +751,7 @@
     </section>
 
     <div class="chrome bottom" data-od-id="chrome">
-      <div>Hover reveals video</div>
+      <div>Pasa el cursor para ver el video</div>
       <div class="rule" aria-hidden="true"></div>
       <div>globo 360</div>
       <div class="rule" aria-hidden="true"></div>
@@ -1025,7 +1053,12 @@
 
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 1000);
-      camera.position.set(0, 0, 14);
+      // Distancia de cámara que deja entrar el globo y su halo en cualquier proporción.
+      function fitCamera(aspect) {
+        const half = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+        camera.position.set(0, 0, (R * 1.2) / (half * Math.min(1, aspect)));
+      }
+      fitCamera(w / h);
 
       const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
       renderer.setSize(w, h);
@@ -1033,204 +1066,273 @@
       renderer.setClearColor(0x000000, 0);
       container.appendChild(renderer.domElement);
 
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+      // Luz cálida de farol desde arriba a la izquierda, contraluz marino detrás.
+      const ambientLight = new THREE.AmbientLight(0xbfd6dc, 0.42);
       scene.add(ambientLight);
-      const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
-      dirLight.position.set(5, 3, 8);
+      const dirLight = new THREE.DirectionalLight(0xffe4c4, 0.95);
+      dirLight.position.set(-6, 4, 7);
       scene.add(dirLight);
-      const warmLight = new THREE.DirectionalLight(0x6ea8b6, 1.2);
-      warmLight.position.set(-4, 1, 6);
+      const warmLight = new THREE.DirectionalLight(0x4f9aa6, 0.55);
+      warmLight.position.set(7, -2, -3);
       scene.add(warmLight);
 
-      // ===== Stylized globe — soft ink-wash continent fills =====
+      // ===== Carta náutica nocturna — costas reales de Natural Earth =====
+      // Mar profundo, costas en tinta clara y líneas de agua (waterlining)
+      // que se alejan de la orilla, como en las cartas grabadas del siglo XIX.
+      const landFeature = (window.topojson && window.LAND_110M)
+        ? topojson.feature(window.LAND_110M, window.LAND_110M.objects.land)
+        : null;
+
       function lx(lng, w) { return (lng + 180) / 360 * w; }
       function ly(lat, h) { return (90 - lat) / 180 * h; }
 
-      function drawContinentSoft(ctx, poly, fillColor, w, h) {
-        if (poly.length < 3) return;
-        ctx.beginPath();
-        poly.forEach((p, i) => {
-          const x = lx(p[0], w);
-          const y = ly(p[1], h);
-          i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      function landPath(w, h) {
+        const p = new Path2D();
+        if (!landFeature) return p;
+        const polys = [];
+        landFeature.features.forEach(f => {
+          const g = f.geometry;
+          if (!g) return;
+          if (g.type === 'Polygon') polys.push(g.coordinates);
+          else if (g.type === 'MultiPolygon') g.coordinates.forEach(c => polys.push(c));
         });
-        ctx.closePath();
-        ctx.fillStyle = fillColor;
-        ctx.fill();
+        // Los anillos que cruzan el antimeridiano (Fiyi, Chukotka) se desenrollan
+        // y se dibujan también desplazados 360°; los casquetes polares
+        // (Antártida) se cierran por el polo.
+        polys.forEach(rings => rings.forEach(ring => {
+          const pts = [];
+          let prev = null, offset = 0;
+          ring.forEach(([lng, lat]) => {
+            if (prev !== null) {
+              const d = lng + offset - prev;
+              if (d > 180) offset -= 360;
+              else if (d < -180) offset += 360;
+            }
+            prev = lng + offset;
+            pts.push([prev, lat]);
+          });
+          const net = pts[pts.length - 1][0] - pts[0][0];
+          if (Math.abs(net) > 180) {
+            const pole = pts.reduce((a, q) => a + q[1], 0) < 0 ? -90 : 90;
+            pts.push([pts[pts.length - 1][0], pole], [pts[0][0], pole]);
+          }
+          let min = Infinity, max = -Infinity;
+          pts.forEach(q => { min = Math.min(min, q[0]); max = Math.max(max, q[0]); });
+          [-360, 0, 360].forEach(shift => {
+            if (max + shift < -180 || min + shift > 180) return;
+            pts.forEach((q, i) => {
+              const x = lx(q[0] + shift, w), y = ly(q[1], h);
+              i === 0 ? p.moveTo(x, y) : p.lineTo(x, y);
+            });
+            p.closePath();
+          });
+        }));
+        return p;
+      }
+
+      // Ruido determinista: el grano no cambia entre recargas.
+      function rng(seed) {
+        return () => (seed = (seed * 16807) % 2147483647) / 2147483647;
       }
 
       function generateArtisticTexture(w, h) {
         const c = document.createElement('canvas');
         c.width = w; c.height = h;
         const ctx = c.getContext('2d');
+        const k = w / 4096; // escala de trazos
+        const land = landPath(w, h);
 
-        // Deep cool background
-        const bg = ctx.createRadialGradient(w/2, h*0.43, 0, w/2, h*0.43, w*0.65);
-        bg.addColorStop(0, '#203240');
-        bg.addColorStop(0.58, '#0f1921');
-        bg.addColorStop(1, '#050b10');
-        ctx.fillStyle = bg;
+        // 1. Mar: azul petróleo, más claro en el trópico.
+        const sea = ctx.createLinearGradient(0, 0, 0, h);
+        sea.addColorStop(0, '#07131b');
+        sea.addColorStop(0.36, '#0d2a35');
+        sea.addColorStop(0.5, '#113340');
+        sea.addColorStop(0.64, '#0d2a35');
+        sea.addColorStop(1, '#07131b');
+        ctx.fillStyle = sea;
         ctx.fillRect(0, 0, w, h);
 
-        // Continent polygons — [lng, lat] pairs
-        const NA = [ // North America
-          [-168,66],[-165,62],[-150,61],[-140,60],[-130,55],[-125,50],[-123,46],
-          [-120,40],[-116,33],[-110,30],[-105,25],[-100,20],[-97,18],[-92,16],
-          [-85,18],[-82,22],[-80,25],[-78,30],[-76,36],[-74,40],[-70,46],
-          [-67,46],[-65,48],[-58,50],[-56,53],[-60,56],[-68,58],[-76,62],
-          [-80,60],[-86,62],[-92,65],[-98,67],[-105,67],[-112,67],[-120,68],
-          [-130,65],[-138,62],[-145,60],[-155,62],[-163,64],[-168,66]
-        ];
-        const SA = [ // South America
-          [-77,8],[-75,12],[-71,11],[-62,9],[-58,6],[-53,5],[-44,0],
-          [-35,-5],[-35,-14],[-38,-18],[-42,-23],[-48,-28],[-56,-35],
-          [-60,-39],[-65,-44],[-68,-48],[-70,-53],[-72,-52],[-73,-46],
-          [-75,-39],[-76,-33],[-78,-28],[-80,-22],[-80,-18],[-79,-12],
-          [-76,-4],[-75,2],[-78,7],[-77,8]
-        ];
-        const EU = [ // Europe
-          [-10,36],[-8,42],[-9,44],[-5,48],[-5,52],[-2,54],[0,52],
-          [2,52],[5,54],[8,56],[10,56],[12,54],[14,55],[18,56],
-          [20,58],[22,60],[26,60],[28,58],[30,56],[28,54],[24,52],
-          [22,48],[20,44],[16,42],[12,40],[8,40],[5,38],[0,36],[-4,36],[-10,36]
-        ];
-        const AF = [ // Africa
-          [-17,15],[-17,20],[-16,28],[-13,32],[-10,35],[-5,36],[0,36],
-          [5,36],[8,36],[10,35],[12,34],[15,33],[18,33],[22,35],[25,33],
-          [28,32],[30,30],[32,28],[34,30],[36,28],[38,25],[40,20],[42,12],
-          [45,5],[48,0],[50,-5],[50,-10],[48,-14],[44,-17],[42,-20],
-          [40,-26],[36,-30],[32,-32],[28,-34],[24,-34],[20,-35],[16,-34],
-          [12,-34],[10,-30],[12,-22],[12,-16],[10,-10],[8,-5],[5,0],
-          [0,2],[-5,2],[-10,5],[-15,10],[-15,15],[-17,15]
-        ];
-        const AS = [ // Asia
-          [28,56],[34,58],[40,58],[44,56],[50,55],[54,58],[60,60],[66,60],
-          [70,58],[76,58],[82,60],[88,62],[96,66],[100,68],[110,68],
-          [120,70],[128,68],[132,66],[138,60],[140,52],[140,46],[138,40],
-          [134,36],[132,32],[130,28],[128,24],[124,22],[120,20],[116,18],
-          [110,14],[106,10],[104,4],[100,0],[96,-4],[92,-6],[86,-6],
-          [80,-4],[74,-4],[68,-4],[62,-4],[56,-4],[50,-4],[46,-4],
-          [40,-4],[36,-4],[32,-4],[28,0],[28,6],[28,10],[28,16],
-          [30,22],[30,28],[30,32],[28,38],[28,44],[28,50],[28,56]
-        ];
-        const AU = [ // Australia
-          [115,-15],[120,-15],[128,-14],[135,-12],[140,-12],[145,-15],
-          [148,-20],[150,-25],[150,-32],[148,-36],[145,-38],[140,-38],
-          [136,-35],[130,-32],[126,-32],[120,-30],[115,-28],[114,-24],
-          [114,-20],[115,-15]
-        ];
-        const GR = [[-55,65],[-50,68],[-45,72],[-40,76],[-30,82],[-20,80],[-18,76],[-25,72],[-35,70],[-42,68],[-50,66],[-55,65]];
-        const AN = [[-180,-82],[180,-82],[180,-90],[-180,-90]]; // Antarctica hint
-
-        const landPolys = [NA, SA, EU, AF, AS, AU, GR, AN];
-        const landColors = [
-          'rgba(111,168,182,0.18)',  // NA — steel blue
-          'rgba(92,147,139,0.16)',   // SA — sea glass
-          'rgba(111,168,182,0.18)',  // EU — steel blue
-          'rgba(99,169,161,0.17)',   // AF — sea glass
-          'rgba(127,160,175,0.18)',  // AS — cool gray-blue
-          'rgba(127,160,175,0.16)',  // AU — cool gray-blue
-          'rgba(94,130,146,0.12)',   // GR — slate
-          'rgba(94,130,146,0.08)'    // AN — slate
-        ];
-
-        landPolys.forEach((poly, i) => {
-          drawContinentSoft(ctx, poly, landColors[i], w, h);
-        });
-
-        function strokeContinentSoft(poly, strokeColor) {
-          if (poly.length < 3) return;
-          ctx.beginPath();
-          poly.forEach((p, i) => {
-            const x = lx(p[0], w);
-            const y = ly(p[1], h);
-            i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-          });
-          ctx.closePath();
-          ctx.strokeStyle = strokeColor;
-          ctx.stroke();
-        }
-
-        ctx.lineJoin = 'round';
-        ctx.lineCap = 'round';
-        ctx.lineWidth = 1.05;
-        landPolys.forEach((poly, i) => {
-          strokeContinentSoft(poly, i === 1 ? 'rgba(92,147,139,0.44)' : 'rgba(137,188,206,0.34)');
-        });
-
-        // Graticule
-        ctx.strokeStyle = 'rgba(137,188,206,0.08)';
-        ctx.lineWidth = 0.7;
+        // 2. Retícula fina sobre el mar.
+        ctx.strokeStyle = 'rgba(160,205,212,0.07)';
+        ctx.lineWidth = 1.2 * k;
         for (let lat = -75; lat <= 75; lat += 15) {
-          const y = ly(lat, h);
-          ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(0, ly(lat, h)); ctx.lineTo(w, ly(lat, h)); ctx.stroke();
         }
-        for (let lng = -165; lng <= 165; lng += 15) {
-          const x = lx(lng, w);
-          ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+        for (let lng = -165; lng <= 180; lng += 15) {
+          ctx.beginPath(); ctx.moveTo(lx(lng, w), 0); ctx.lineTo(lx(lng, w), h); ctx.stroke();
         }
 
-        // Equator
-        ctx.strokeStyle = 'rgba(127,160,175,0.18)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(0, ly(0, h)); ctx.lineTo(w, ly(0, h)); ctx.stroke();
+        // 3. Líneas de agua: anillos concéntricos que se desvanecen mar adentro.
+        const wl = document.createElement('canvas');
+        wl.width = w; wl.height = h;
+        const wctx = wl.getContext('2d');
+        wctx.lineJoin = 'round';
+        const RINGS = 9;
+        for (let i = RINGS; i >= 1; i--) {
+          const width = (6 + i * 11) * k;
+          const a = 0.6 * Math.pow(1 - (i - 1) / RINGS, 1.4);
+          wctx.globalCompositeOperation = 'source-over';
+          wctx.strokeStyle = `rgba(150,214,214,${a.toFixed(3)})`;
+          wctx.lineWidth = width;
+          wctx.stroke(land);
+          wctx.globalCompositeOperation = 'destination-out';
+          wctx.lineWidth = width - 3 * k;
+          wctx.stroke(land);
+        }
+        ctx.drawImage(wl, 0, 0);
 
-        // Tropics
-        ctx.strokeStyle = 'rgba(127,160,175,0.08)';
-        ctx.lineWidth = 0.6;
-        [23.4, -23.4].forEach(lat => {
-          ctx.beginPath();
-          ctx.moveTo(0, ly(lat, h)); ctx.lineTo(w, ly(lat, h)); ctx.stroke();
-        });
-
-        // Vignette
-        const vig = ctx.createRadialGradient(w/2, h*0.44, w*0.02, w/2, h*0.44, w*0.6);
-        vig.addColorStop(0, 'rgba(0,0,0,0)');
-        vig.addColorStop(1, 'rgba(0,0,0,0.34)');
-        ctx.fillStyle = vig;
+        // 4. Tierra: tinta tostada con grano de grabado.
+        ctx.save();
+        ctx.fillStyle = '#342d25';
+        ctx.fill(land, 'evenodd');
+        ctx.clip(land, 'evenodd');
+        const relief = ctx.createLinearGradient(0, 0, 0, h);
+        relief.addColorStop(0, 'rgba(214,201,176,0.20)');
+        relief.addColorStop(0.5, 'rgba(160,112,72,0.16)');
+        relief.addColorStop(1, 'rgba(214,201,176,0.22)');
+        ctx.fillStyle = relief;
         ctx.fillRect(0, 0, w, h);
+        const rand = rng(1903);
+        for (let n = 0; n < 90000 * k * k * 4; n++) {
+          const x = rand() * w, y = rand() * h;
+          ctx.fillStyle = rand() > 0.5 ? 'rgba(236,214,176,0.07)' : 'rgba(10,8,6,0.12)';
+          ctx.fillRect(x, y, 1.6 * k, 1.6 * k);
+        }
+        // Sombreado oblicuo (hachura) muy suave.
+        ctx.strokeStyle = 'rgba(236,214,176,0.05)';
+        ctx.lineWidth = 1.4 * k;
+        for (let x = -h; x < w; x += 9 * k) {
+          ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x + h, h); ctx.stroke();
+        }
+        // Retícula en tinta oscura sobre tierra.
+        ctx.strokeStyle = 'rgba(8,10,10,0.22)';
+        ctx.lineWidth = 1.2 * k;
+        for (let lat = -75; lat <= 75; lat += 15) {
+          ctx.beginPath(); ctx.moveTo(0, ly(lat, h)); ctx.lineTo(w, ly(lat, h)); ctx.stroke();
+        }
+        for (let lng = -165; lng <= 180; lng += 15) {
+          ctx.beginPath(); ctx.moveTo(lx(lng, w), 0); ctx.lineTo(lx(lng, w), h); ctx.stroke();
+        }
+        ctx.restore();
 
+        // 5. Línea de costa en tinta clara.
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = 'rgba(242,228,200,0.82)';
+        ctx.lineWidth = 2.4 * k;
+        ctx.stroke(land);
+
+        // 6. Ecuador y trópicos en rojo de imprenta, punteados.
+        ctx.setLineDash([14 * k, 10 * k]);
+        ctx.lineWidth = 2 * k;
+        ctx.strokeStyle = 'rgba(224,105,87,0.42)';
+        [23.44, -23.44].forEach(lat => {
+          ctx.beginPath(); ctx.moveTo(0, ly(lat, h)); ctx.lineTo(w, ly(lat, h)); ctx.stroke();
+        });
+        ctx.setLineDash([]);
+        ctx.strokeStyle = 'rgba(224,105,87,0.5)';
+        ctx.lineWidth = 2.4 * k;
+        ctx.beginPath(); ctx.moveTo(0, ly(0, h)); ctx.lineTo(w, ly(0, h)); ctx.stroke();
+
+        // 7. Rótulos de carta: mares y paralelos.
+        const serif = '"Fraunces", "Iowan Old Style", Georgia, serif';
+        function label(text, lng, lat, size, color, spacing, italic = true) {
+          ctx.save();
+          ctx.font = `${italic ? 'italic ' : ''}300 ${size * k}px ${serif}`;
+          ctx.fillStyle = color;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          if ('letterSpacing' in ctx) ctx.letterSpacing = `${spacing * k}px`;
+          ctx.fillText(text, lx(lng, w), ly(lat, h));
+          ctx.restore();
+        }
+        const seaInk = 'rgba(176,222,222,0.46)';
+        label('Mar Caribe', -73, 14.6, 30, seaInk, 6);
+        label('Océano Atlántico', -38, 26, 46, seaInk, 14);
+        label('Océano Pacífico', -122, 4, 50, seaInk, 16);
+        label('Océano Pacífico', 152, 18, 50, seaInk, 16);
+        label('Océano Índico', 78, -22, 46, seaInk, 14);
+        label('Golfo de México', -90, 24.6, 22, seaInk, 4);
+        label('Mediterráneo', 18, 35.2, 20, seaInk, 4);
+        const redInk = 'rgba(224,105,87,0.62)';
+        label('TRÓPICO DE CÁNCER', -48, 24.6, 15, redInk, 9, false);
+        label('TRÓPICO DE CÁNCER', 150, 24.6, 15, redInk, 9, false);
+        label('ECUADOR', -26, 1.3, 15, redInk, 12, false);
+        label('ECUADOR', 96, 1.3, 15, redInk, 12, false);
+        label('TRÓPICO DE CAPRICORNIO', -12, -22.3, 15, redInk, 9, false);
+
+        // 8. Grano de película sobre todo el mapa.
+        const rand2 = rng(7);
+        for (let n = 0; n < 60000 * k * k * 4; n++) {
+          ctx.fillStyle = `rgba(255,255,255,${(rand2() * 0.035).toFixed(3)})`;
+          ctx.fillRect(rand2() * w, rand2() * h, k * 1.5, k * 1.5);
+        }
         return c;
       }
 
-      const texCanvas = generateArtisticTexture(2048, 1024);
+      const maxTex = renderer.capabilities.maxTextureSize || 4096;
+      const TEX_W = maxTex >= 8192 ? 8192 : Math.min(4096, maxTex);
+      const texCanvas = generateArtisticTexture(TEX_W, TEX_W / 2);
       const tex = new THREE.CanvasTexture(texCanvas);
       tex.wrapS = THREE.RepeatWrapping;
+      tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+
+      // Los rótulos usan Fraunces: se redibujan cuando la fuente termina de cargar.
+      if (document.fonts && document.fonts.load) {
+        Promise.all([
+          document.fonts.load('italic 300 40px "Fraunces"'),
+          document.fonts.load('300 40px "Fraunces"')
+        ]).then(() => {
+          const fresh = generateArtisticTexture(TEX_W, TEX_W / 2);
+          texCanvas.getContext('2d').drawImage(fresh, 0, 0);
+          tex.needsUpdate = true;
+        }).catch(() => {});
+      }
 
       const globeMat = new THREE.MeshStandardMaterial({
         map: tex,
-        roughness: 0.46,
-        metalness: 0.02,
-        emissive: new THREE.Color(0x17323a),
-        emissiveIntensity: 0.16
+        roughness: 0.82,
+        metalness: 0.0,
+        emissive: new THREE.Color(0x0b2630),
+        emissiveIntensity: 0.35
       });
-      const globeGeom = new THREE.SphereGeometry(R, 72, 72);
+      const globeGeom = new THREE.SphereGeometry(R, 96, 96);
       const globe = new THREE.Mesh(globeGeom, globeMat);
       scene.add(globe);
 
-      // Atmosphere glow — warm
-      const glowMat = new THREE.MeshBasicMaterial({
-        color: 0x8fc6d5,
+      // Atmósfera: halo exterior y borde luminoso sobre la esfera (fresnel).
+      const haloMat = new THREE.ShaderMaterial({
+        uniforms: { glow: { value: new THREE.Color(0x5fb0b4) } },
+        vertexShader: 'varying vec3 vN; void main(){ vN = normalize(normalMatrix * normal); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+        fragmentShader: 'uniform vec3 glow; varying vec3 vN; void main(){ float i = pow(max(0.0, 0.66 - dot(vN, vec3(0.0, 0.0, 1.0))), 3.2); gl_FragColor = vec4(glow, 1.0) * i * 0.75; }',
+        side: THREE.BackSide,
+        blending: THREE.AdditiveBlending,
         transparent: true,
-        opacity: 0.12,
-        side: THREE.BackSide
+        depthWrite: false
       });
-      const glow = new THREE.Mesh(new THREE.SphereGeometry(R * 1.035, 48, 48), glowMat);
+      const glow = new THREE.Mesh(new THREE.SphereGeometry(R * 1.12, 64, 64), haloMat);
       scene.add(glow);
+      const rimMat = new THREE.ShaderMaterial({
+        uniforms: { rim: { value: new THREE.Color(0xf2c9a0) } },
+        vertexShader: 'varying vec3 vN; void main(){ vN = normalize(normalMatrix * normal); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+        fragmentShader: 'uniform vec3 rim; varying vec3 vN; void main(){ float f = pow(1.0 - max(0.0, dot(vN, vec3(0.0, 0.0, 1.0))), 3.5); gl_FragColor = vec4(rim, f * 0.55); }',
+        blending: THREE.AdditiveBlending,
+        transparent: true,
+        depthWrite: false
+      });
+      scene.add(new THREE.Mesh(new THREE.SphereGeometry(R * 1.003, 96, 96), rimMat));
 
       // Screen-readable graticule on top of texture.
       const gridGroup = new THREE.Group();
       const gridMat = new THREE.LineBasicMaterial({
         color: 0xd9edf7,
         transparent: true,
-        opacity: 0.22,
+        opacity: 0.06,
         depthWrite: false
       });
       const accentGridMat = new THREE.LineBasicMaterial({
-        color: 0x7fbfd2,
+        color: 0xe06957,
         transparent: true,
-        opacity: 0.38,
+        opacity: 0.32,
         depthWrite: false
       });
 
@@ -1256,8 +1358,10 @@
         gridGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), material));
       }
 
-      [-60, -30, 0, 30, 60].forEach(lat => addLatitude(lat, lat === 0 ? accentGridMat : gridMat));
-      [-150, -120, -90, -75, -60, -30, 0, 30, 60, 90, 120, 150, 180].forEach(lng => addLongitude(lng, lng === -75 ? accentGridMat : gridMat));
+      [-60, -30, 30, 60].forEach(lat => addLatitude(lat, gridMat));
+      // El meridiano de Barranquilla, en rojo: el origen de la ruta.
+      [-150, -120, -90, -60, -30, 0, 30, 60, 90, 120, 150, 180].forEach(lng => addLongitude(lng, gridMat));
+      addLongitude(-74.8, accentGridMat);
       globe.add(gridGroup);
 
       // City markers as invisible 3D objects for position tracking
@@ -1273,6 +1377,63 @@
         globe.add(obj);
         cityObjects.push(obj);
       });
+
+      // ===== RUTAS DESDE EL ORIGEN =====
+      // Arcos de círculo máximo, levantados sobre la superficie, que salen de
+      // Barranquilla hacia cada ciudad del atlas: el proyecto como itinerario.
+      const origin = cityRegistry.find(c => c.status === 'live') || cityRegistry[0];
+      const routeGroup = new THREE.Group();
+      const ORIGIN_COLOR = new THREE.Color(0xe06957);
+      const DEST_COLOR = new THREE.Color(0x8fd1cf);
+      // Cada ruta se desvanece al acercarse al horizonte del globo.
+      const routeMat = new THREE.ShaderMaterial({
+        uniforms: { opacity: { value: 0.85 } },
+        vertexShader: 'attribute vec3 tint; varying vec3 vT; varying float vF; void main(){ vT = tint; vec4 wp = modelMatrix * vec4(position, 1.0); vF = dot(normalize(wp.xyz), normalize(cameraPosition - wp.xyz)); gl_Position = projectionMatrix * viewMatrix * wp; }',
+        fragmentShader: 'uniform float opacity; varying vec3 vT; varying float vF; void main(){ gl_FragColor = vec4(vT, opacity * smoothstep(0.08, 0.5, vF)); }',
+        transparent: true,
+        depthWrite: false
+      });
+      const routeArcs = [];
+      cityRegistry.forEach(city => {
+        if (city === origin) return;
+        const a = pointOnSphere(origin.lat, origin.lng, 1);
+        const b = pointOnSphere(city.lat, city.lng, 1);
+        const angle = a.angleTo(b);
+        const steps = Math.max(12, Math.round(angle * 60));
+        const lift = 0.01 + angle * 0.025;
+        const pts = [], cols = [];
+        for (let i = 0; i <= steps; i++) {
+          const t = i / steps;
+          const sinA = Math.sin(angle);
+          const v = a.clone().multiplyScalar(Math.sin((1 - t) * angle) / sinA)
+            .add(b.clone().multiplyScalar(Math.sin(t * angle) / sinA));
+          v.normalize().multiplyScalar(R * (1.006 + lift * Math.sin(Math.PI * t)));
+          pts.push(v);
+          const col = ORIGIN_COLOR.clone().lerp(DEST_COLOR, t);
+          cols.push(col.r, col.g, col.b);
+        }
+        const geom = new THREE.BufferGeometry().setFromPoints(pts);
+        geom.setAttribute('tint', new THREE.Float32BufferAttribute(cols, 3));
+        geom.setDrawRange(0, 0);
+        routeGroup.add(new THREE.Line(geom, routeMat));
+        routeArcs.push({ geom, count: pts.length });
+      });
+      globe.add(routeGroup);
+
+      // Las rutas se trazan una a una al cargar (o de golpe con movimiento reducido).
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const routeStart = performance.now();
+      function growRoutes(now) {
+        let pending = false;
+        routeArcs.forEach((r, i) => {
+          const t = reduceMotion ? 1 : Math.min(1, Math.max(0, (now - routeStart - 400 - i * 90) / 1400));
+          const eased = 1 - Math.pow(1 - t, 3);
+          r.geom.setDrawRange(0, Math.ceil(eased * r.count));
+          if (t < 1) pending = true;
+        });
+        return pending;
+      }
+      let routesGrowing = true;
 
       // ===== DRAG TO ROTATE =====
       let isDragging = false;
@@ -1314,6 +1475,8 @@
 
       function animate() {
         animId = requestAnimationFrame(animate);
+
+        if (routesGrowing) routesGrowing = growRoutes(performance.now());
 
         // Momentum deceleration when not dragging
         if (!isDragging) {
@@ -1357,6 +1520,7 @@
         const nw = rect.width || 600;
         const nh = rect.height || 400;
         camera.aspect = nw / nh;
+        fitCamera(camera.aspect);
         camera.updateProjectionMatrix();
         renderer.setSize(nw, nh);
       }
