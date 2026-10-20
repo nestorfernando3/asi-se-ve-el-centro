@@ -8,7 +8,7 @@
   <title>Así se ve el centro. — Globo transmedia</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..600&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/site.css">
   <script>
     // Antes del primer estilo: si volvemos del atlas, la interfaz nace oculta.
@@ -230,10 +230,14 @@
       bottom: clamp(8px, 3vh, 38px);
       z-index: 2;
       max-width: min(680px, 64vw);
-      font-family: var(--font-serif);
-      font-optical-sizing: auto;
-      line-height: 0.9;
-      letter-spacing: -0.02em;
+      /* Voz de calle: un rótulo, no un titular de revista. */
+      font-family: var(--font-street);
+      font-stretch: 62%;
+      font-variation-settings: 'wdth' 62;
+      font-weight: 800;
+      text-transform: uppercase;
+      line-height: 0.84;
+      letter-spacing: 0;
       text-shadow: 0 2px 30px rgba(5,11,16,0.85);
       text-wrap: balance;
       pointer-events: none;
@@ -243,11 +247,23 @@
       display: block;
       opacity: 0;
       transform: translateY(0.35em);
-      animation: titleIn var(--loop) cubic-bezier(.2,.7,.2,1) infinite;
+      animation: signIn 900ms cubic-bezier(.2,.7,.2,1) 200ms both;
     }
-    .headline .line:first-child { font-size: clamp(2rem, 4.2vw, 5rem); font-weight: 300; color: rgba(241,236,226,0.92); }
-    .headline .line:last-child { margin-top: .04em; font-size: clamp(2.9rem, 6.8vw, 8.4rem); font-weight: 300; animation-delay: .14s; }
-    .headline em { color: var(--accent); font-style: italic; font-weight: 400; letter-spacing: -0.03em; }
+    .headline .line { font-size: clamp(3.2rem, 8.4vw, 9.6rem); }
+    .headline .line:last-child { animation-delay: .14s; }
+    /* El único acento es el punto final: el mismo rojo del pin de Barranquilla. */
+    .headline em {
+      display: inline-block;
+      width: .16em;
+      height: .16em;
+      margin-left: .05em;
+      border-radius: 50%;
+      background: var(--accent);
+      color: transparent;
+      font-style: normal;
+      overflow: hidden;
+      vertical-align: baseline;
+    }
 
     .field-note {
       position: absolute;
@@ -280,8 +296,8 @@
     }
     .note-title {
       margin-top: 8px;
-      font: 400 clamp(28px, 3.4vw, 52px)/0.95 var(--font-serif);
-      letter-spacing: -0.02em;
+      font: 400 clamp(26px, 3vw, 44px)/1 var(--font-chart-sc);
+      letter-spacing: 0.08em;
       text-wrap: balance;
     }
     .field-note { text-shadow: 0 1px 18px rgba(5,11,16,0.95), 0 0 2px rgba(5,11,16,0.9); }
@@ -289,7 +305,7 @@
       margin-top: 12px;
       max-width: 34ch;
       color: rgba(241,236,226,0.8);
-      font: italic 300 14px/1.55 var(--font-serif);
+      font: italic 400 15px/1.5 var(--font-chart);
     }
     .note-author {
       margin-top: 8px;
@@ -316,8 +332,8 @@
       gap: 14px;
     }
     .viewer-city {
-      font: italic 400 clamp(28px, 3vw, 42px)/0.95 var(--font-serif);
-      letter-spacing: -0.02em;
+      font: 400 clamp(22px, 2.4vw, 34px)/1 var(--font-chart-sc);
+      letter-spacing: 0.08em;
       text-align: right;
     }
     .viewer-frame {
@@ -410,14 +426,14 @@
       display: none;
     }
     .slate-title {
-      font: 400 clamp(26px, 3vw, 38px)/.95 var(--font-serif);
-      letter-spacing: -.02em;
+      font: 400 clamp(22px, 2.4vw, 30px)/1.1 var(--font-chart);
+      letter-spacing: 0;
       max-width: 13ch;
     }
     .slate-desc {
       margin-top: 10px;
       color: rgba(241,245,248,0.8);
-      font: 13px/1.55 var(--font-body);
+      font: italic 15px/1.5 var(--font-chart);
       letter-spacing: .04em;
       max-width: 30ch;
     }
@@ -498,10 +514,10 @@
 
     @keyframes pinPulse { 0%,100% { transform: translate(-50%, -50%) scale(0.78); opacity: 0.38; } 50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.84; } }
     @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
-    @keyframes titleIn {
-      0%, 8% { opacity: 0; transform: translateY(0.42em); filter: blur(2px); }
-      16%, 84% { opacity: 1; transform: translateY(0); filter: blur(0); }
-      100% { opacity: 0; transform: translateY(-0.04em); filter: blur(1px); }
+    /* El rótulo entra una vez y se queda: un letrero no parpadea. */
+    @keyframes signIn {
+      from { opacity: 0; transform: translateY(0.18em); }
+      to { opacity: 1; transform: none; }
     }
     @keyframes wavePulse {
       0%,100% { transform: translateX(-50%) scaleX(0.8); opacity: 0.3; }
@@ -603,7 +619,7 @@
 
         <h1 class="headline" data-od-id="headline">
           <span class="line">Así se ve</span>
-          <span class="line">el <em>centro.</em></span>
+          <span class="line">el centro<em>.</em></span>
         </h1>
         <div class="legend globe-legend" aria-hidden="true">
           <span><i class="dot is-live"></i>viva</span>
@@ -687,6 +703,7 @@
         pin.dataset.cityId = city.id;
         pin.setAttribute('aria-label', city.name + ': ' + (city.videos.length ? 'ver videos' : 'ruta ' + STATUS_LABEL[city.status]));
         pin.innerHTML = '<span class="pin-name"></span>';
+        pin.style.opacity = '0'; // visible solo cuando el globo lo pone de frente
         pinHost.appendChild(pin);
       });
 
@@ -1089,10 +1106,12 @@
         ctx.beginPath(); ctx.moveTo(0, ly(0, h)); ctx.lineTo(w, ly(0, h)); ctx.stroke();
 
         // 7. Rótulos de carta: mares y paralelos.
-        const serif = '"Fraunces", "Iowan Old Style", Georgia, serif';
+        // Convención de carta: agua en cursiva (mares), líneas y tierra en versalitas.
         function label(text, lng, lat, size, color, spacing, italic = true) {
           ctx.save();
-          ctx.font = `${italic ? 'italic ' : ''}300 ${size * k}px ${serif}`;
+          ctx.font = italic
+            ? `italic 400 ${size * k}px "IM Fell English", Georgia, serif`
+            : `400 ${size * k}px "IM Fell English SC", Georgia, serif`;
           ctx.fillStyle = color;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
@@ -1109,11 +1128,11 @@
         label('Golfo de México', -90, 24.6, 22, seaInk, 4);
         label('Mediterráneo', 18, 35.2, 20, seaInk, 4);
         const redInk = 'rgba(224,105,87,0.62)';
-        label('TRÓPICO DE CÁNCER', -48, 24.6, 15, redInk, 9, false);
-        label('TRÓPICO DE CÁNCER', 150, 24.6, 15, redInk, 9, false);
-        label('ECUADOR', -26, 1.3, 15, redInk, 12, false);
-        label('ECUADOR', 96, 1.3, 15, redInk, 12, false);
-        label('TRÓPICO DE CAPRICORNIO', -12, -22.3, 15, redInk, 9, false);
+        label('Trópico de Cáncer', -48, 24.7, 22, redInk, 8, false);
+        label('Trópico de Cáncer', 150, 24.7, 22, redInk, 8, false);
+        label('Ecuador', -26, 1.4, 22, redInk, 12, false);
+        label('Ecuador', 96, 1.4, 22, redInk, 12, false);
+        label('Trópico de Capricornio', -12, -22.2, 22, redInk, 8, false);
 
         // 8. Grano de película sobre todo el mapa.
         const rand2 = rng(7);
@@ -1131,11 +1150,11 @@
       tex.wrapS = THREE.RepeatWrapping;
       tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
 
-      // Los rótulos usan Fraunces: se redibujan cuando la fuente termina de cargar.
+      // Los rótulos usan IM Fell: se redibujan cuando la fuente termina de cargar.
       if (document.fonts && document.fonts.load) {
         Promise.all([
-          document.fonts.load('italic 300 40px "Fraunces"'),
-          document.fonts.load('300 40px "Fraunces"')
+          document.fonts.load('italic 400 40px "IM Fell English"'),
+          document.fonts.load('400 40px "IM Fell English SC"')
         ]).then(() => {
           const fresh = generateArtisticTexture(TEX_W, TEX_W / 2);
           texCanvas.getContext('2d').drawImage(fresh, 0, 0);

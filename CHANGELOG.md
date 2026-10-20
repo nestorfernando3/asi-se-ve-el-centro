@@ -8,6 +8,7 @@
 
 ## Unreleased
 
+- Tipografía repensada desde el proyecto: voz de calle (Archivo condensada, mayúsculas, como rótulos del centro) para el título y la marca; voz de carta (IM Fell: versalitas para ciudades, cursiva para mares y versos) siguiendo la convención cartográfica; monoespaciada para datos. El único acento del título es el punto final, en el rojo del pin de Barranquilla. El título entra una vez y ya no parpadea en bucle. Se retiran Fraunces y Montserrat.
 - Transición globo ⇄ atlas relativo como un solo mundo que cambia de proyección: la home entrega la cámara exacta del globo (centro, escala focal, distancia) y el atlas abre en perspectiva vertical en ese mismo lugar para desplegarse en azimutal equidistante; al volver, el atlas se cierra en la esfera y la home la retoma centrada en la misma ciudad (`?city=`). La barra superior se mantiene quieta con View Transitions; con movimiento reducido se navega sin animación.
 - Sistema visual único en `assets/site.css` (tokens, barra con navegación Globo / Atlas relativo, pie, lista de distancias, botones de pieza, leyenda y grano). El atlas relativo pasa a la carta náutica nocturna del globo: mar petróleo, tierra tostada, líneas de agua y anillos en rojo de imprenta; la regla de distancias vive ahora en su panel.
 - La home y el atlas relativo comparten un solo registro de ciudades (`assets/atlas/cities.js`), con id, estado y cita para las 18 ciudades; los pines del globo se generan desde ahí.

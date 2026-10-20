@@ -21,8 +21,16 @@
   --st-next: var(--cream);
   --st-future: var(--teal);
 
-  --font-serif: 'Fraunces', 'Iowan Old Style', Georgia, serif;
-  --font-sans: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  /* Tres voces tipográficas, tomadas del propio proyecto:
+     calle  — grotesca condensada, como rótulos del centro y tableros de buseta;
+     carta  — IM Fell (siglo XVII): versalitas para tierra (ciudades), cursiva para
+              agua (mares) y, por extensión, para los versos;
+     dato   — monoespaciada para kilómetros, coordenadas y controles. */
+  --font-street: 'Archivo', 'Arial Narrow', 'Helvetica Neue', sans-serif;
+  --font-chart: 'IM Fell English', 'Iowan Old Style', Georgia, serif;
+  --font-chart-sc: 'IM Fell English SC', 'IM Fell English', Georgia, serif;
+  --font-serif: var(--font-chart);
+  --font-sans: var(--font-street);
   --font-mono: ui-monospace, 'IBM Plex Mono', 'JetBrains Mono', Menlo, monospace;
 
   --gutter: clamp(16px, 2.8vw, 38px);
@@ -78,9 +86,11 @@ body::after {
   justify-self: start;
   color: var(--fg);
   text-decoration: none;
-  text-transform: none;
-  letter-spacing: -.01em;
-  font: 400 17px/1 var(--font-serif);
+  font: 800 15px/1 var(--font-street);
+  font-stretch: 62%;
+  font-variation-settings: 'wdth' 62;
+  text-transform: uppercase;
+  letter-spacing: .02em;
 }
 .brand em { color: var(--accent); font-style: normal; }
 .site-nav { display: flex; gap: 22px; }
@@ -117,7 +127,8 @@ body::after {
   letter-spacing: .16em;
   text-transform: uppercase;
 }
-.city-title { font: 400 clamp(28px, 3.4vw, 52px)/.95 var(--font-serif); letter-spacing: -.02em; margin: 0; }
+/* Topónimo: como en la carta, la tierra va en versalitas espaciadas. */
+.city-title { font: 400 clamp(26px, 3vw, 42px)/1 var(--font-chart-sc); letter-spacing: .08em; margin: 0; }
 .city-meta {
   color: rgba(224, 105, 87, 0.9);
   font: 9px/1.45 var(--font-mono);
@@ -127,7 +138,7 @@ body::after {
 .city-quote {
   margin: 0;
   color: rgba(241, 236, 226, 0.8);
-  font: italic 300 14px/1.55 var(--font-serif);
+  font: italic 400 15px/1.5 var(--font-chart);
 }
 .city-quote .attrib, .city-attrib {
   display: block;
