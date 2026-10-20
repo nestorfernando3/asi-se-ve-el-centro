@@ -22,10 +22,23 @@
   let projection = azProj;           // durante el morfismo se cambia por morphProj
   const path = d3.geoPath(projection);
 
+  // Mismas capas que el globo de la home: halo, mar, retícula, líneas de agua,
+  // tierra, trópicos, rutas desde Barranquilla y borde cálido.
+  const defs = svg.append('defs');
+  const halo = defs.append('radialGradient').attr('id', 'atlas-halo');
+  [[0.84, 0.0], [0.9, 0.34], [1, 0]].forEach(([o, a]) =>
+    halo.append('stop').attr('offset', o).attr('stop-color', '#5fb0b4').attr('stop-opacity', a));
+  const rim = defs.append('radialGradient').attr('id', 'atlas-rim');
+  [[0.72, 0], [1, 0.2]].forEach(([o, a]) =>
+    rim.append('stop').attr('offset', o).attr('stop-color', '#f2c9a0').attr('stop-opacity', a));
+
+  const gHalo   = svg.append('g');
   const gSea    = svg.append('g');
+  const gGrat   = svg.append('g');
   const gSpokes = svg.append('g');
   const gRings  = svg.append('g');
   const gLand   = svg.append('g');
+  const gLines  = svg.append('g');
   const gSphere = svg.append('g');
   const gLabels = svg.append('g'); // rótulos de anillos, por encima de la tierra
   const gCities = svg.append('g');
@@ -72,9 +85,18 @@
       const pt = projection(cd.ll);
       if (pt) gSpokes.append('text').attr('class', 'spoke-label').attr('x', pt[0] - 3).attr('y', pt[1] + 3).text(cd.t);
     });
-    gSea.select('path').attr('d', path({ type: 'Sphere' }));
+    const sphere = path({ type: 'Sphere' });
+    gSea.select('path').attr('d', sphere);
+    gGrat.select('path').attr('d', path(graticule));
     if (land) gLand.selectAll('path').attr('d', path(land));
-    gSphere.select('path').attr('d', path({ type: 'Sphere' }));
+    gLines.selectAll('path.parallel').attr('d', d => path(d));
+    gLines.selectAll('path.route').attr('d', d => path(d));
+    gSphere.select('path').attr('d', sphere);
+    // Halo y borde siguen al disco del mundo en cada cuadro del morfismo.
+    const [[x0, y0], [x1, y1]] = path.bounds({ type: 'Sphere' });
+    const disc = { cx: (x0 + x1) / 2, cy: (y0 + y1) / 2, r: (x1 - x0) / 2 };
+    gHalo.select('circle').attr('cx', disc.cx).attr('cy', disc.cy).attr('r', disc.r * 1.14);
+    gSphere.select('circle').attr('cx', disc.cx).attr('cy', disc.cy).attr('r', disc.r);
     drawCities();
   }
 
@@ -246,8 +268,19 @@
   // boot
   sizeFit();
   azProj.rotate(rotateFor(centerCity));
-  gSphere.append('path').attr('class', 'sphere');
+  const graticule = d3.geoGraticule().step([15, 15])();
+  const parallel = lat => ({ type: 'LineString', coordinates: d3.range(-180, 181, 3).map(l => [l, lat]) });
+  const origin = cities.find(c => c.status === 'live') || cities[0];
+  gHalo.append('circle').attr('fill', 'url(#atlas-halo)');
   gSea.append('path').attr('class', 'sea');
+  gGrat.append('path').attr('class', 'grat');
+  gLines.selectAll('path.parallel').data([parallel(23.44), parallel(-23.44), parallel(0)]).join('path')
+    .attr('class', (d, i) => 'parallel' + (i === 2 ? ' equator' : ''));
+  gLines.selectAll('path.route').data(cities.filter(c => c !== origin).map(c => ({
+    type: 'LineString', coordinates: [[origin.lon, origin.lat], [c.lon, c.lat]]
+  }))).join('path').attr('class', 'route');
+  gSphere.append('path').attr('class', 'sphere');
+  gSphere.append('circle').attr('class', 'rim').attr('fill', 'url(#atlas-rim)');
   staticGeo = computeGeo(centerCity);
   updatePanel();
 
@@ -292,7 +325,7 @@
   const morphProj = d3.geoProjection((l, p) => {
     const a = perspRaw(l, p), b = azRaw(l, p);
     return [a[0] + (b[0] - a[0]) * morphT, a[1] + (b[1] - a[1]) * morphT];
-  }).precision(0.5);
+  }).precision(1.2); // menos vértices por cuadro durante el morfismo
   const overlays = [gSpokes, gRings, gLabels, gCities, gCenter];
   const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
   const lerp = (a, b, t) => a + (b - a) * t;
@@ -321,7 +354,7 @@
       .clipAngle(lerp(limb, 179.9, t));
     projection = morphProj;
     path.projection(morphProj);
-    const o = smooth(0.55, 1, t);
+    const o = smooth(0.5, 0.95, t);
     overlays.forEach(g => g.attr('opacity', o));
     render();
   }
@@ -334,14 +367,19 @@
   }
   function runMorph(from, dir, duration, done) {
     const t0 = performance.now();
+    let finished = false;
+    const finish = () => { if (!finished) { finished = true; done(); } };
     const step = now => {
+      if (finished) return;
       const k = Math.min(1, (now - t0) / duration);
       const e = d3.easeCubicInOut(k);
       morphFrame(dir === 'open' ? e : 1 - e, from);
       if (k < 1) requestAnimationFrame(step);
-      else done();
+      else finish();
     };
     requestAnimationFrame(step);
+    // Salida de seguridad: sin cuadros (pestaña en segundo plano) el atlas igual termina.
+    setTimeout(finish, duration + 400);
   }
 
   // Llegada desde el globo: el primer cuadro reproduce el globo donde estaba.
@@ -350,13 +388,13 @@
   if (arrival && arrival.dir === 'to-atlas' && Date.now() - arrival.at < 4000 && !REDUCED) {
     document.documentElement.classList.add('is-arriving');
     morphFrame(0, arrival);
-    requestAnimationFrame(() => {
+    setTimeout(() => {
       document.documentElement.classList.add('is-arriving-run');
-      runMorph(arrival, 'open', 1500, () => {
+      runMorph(arrival, 'open', 1100, () => {
         endMorph();
         document.documentElement.classList.remove('is-arriving', 'is-arriving-run');
       });
-    });
+    }, 16);
   } else {
     document.documentElement.classList.remove('is-arriving');
     render();
@@ -384,7 +422,7 @@
       };
       if (timer) timer.stop();
       document.documentElement.classList.add('is-leaving');
-      runMorph(to, 'close', 1100, () => { location.href = target; });
+      runMorph(to, 'close', 850, () => { location.href = target; });
     });
   });
 

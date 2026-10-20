@@ -10,6 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/site.css">
+<link rel="prefetch" href="index.html">
 <script>
   // Antes del primer estilo: si llegamos desde el globo, el panel nace oculto.
   try {
@@ -52,6 +53,11 @@
   .wl-cut { fill: none; stroke: var(--sea-deep); stroke-linejoin: round; }
   .land { fill: #342d25; stroke: rgba(242,228,200,0.8); stroke-width: .7; stroke-linejoin: round; }
   .sphere { fill: none; stroke: rgba(127,190,196,0.45); stroke-width: 1; }
+  .rim { pointer-events: none; }
+  .grat { fill: none; stroke: rgba(160,205,212,0.09); stroke-width: .6; }
+  .parallel { fill: none; stroke: rgba(224,105,87,0.42); stroke-width: .8; stroke-dasharray: 5 4; }
+  .parallel.equator { stroke-opacity: .55; stroke-dasharray: none; }
+  .route { fill: none; stroke: rgba(224,105,87,0.38); stroke-width: .8; }
   .ring { fill: none; stroke: rgba(224,105,87,0.32); stroke-dasharray: 2 5; }
   .ring.major { stroke: rgba(224,105,87,0.5); stroke-dasharray: none; }
   .ring-label, .spoke-label, .city-name, .center-tag {
@@ -102,8 +108,8 @@
   html.is-arriving .panel, html.is-arriving .site-foot,
   html.is-arriving .map .legend, html.is-arriving .map-hint { opacity: 0; }
   html.is-arriving .panel { transform: translateX(24px); }
-  html.is-arriving-run .panel { transition-delay: 950ms; }
-  html.is-arriving-run .site-foot, html.is-arriving-run .map .legend, html.is-arriving-run .map-hint { transition-delay: 1200ms; }
+  html.is-arriving-run .panel { transition-delay: 600ms; }
+  html.is-arriving-run .site-foot, html.is-arriving-run .map .legend, html.is-arriving-run .map-hint { transition-delay: 800ms; }
   html.is-leaving .panel, html.is-leaving .site-foot,
   html.is-leaving .map .legend, html.is-leaving .map-hint { opacity: 0; transition-duration: 260ms; transition-delay: 0ms; }
   html.is-leaving .panel { transform: translateX(24px); }

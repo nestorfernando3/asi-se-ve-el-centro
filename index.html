@@ -10,6 +10,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/site.css">
+  <link rel="prefetch" href="atlas-relativo.html">
+  <link rel="prefetch" href="assets/vendor/d3.min.js">
+  <link rel="prefetch" href="assets/atlas/atlas.js">
   <script>
     // Antes del primer estilo: si volvemos del atlas, la interfaz nace oculta.
     try {
@@ -508,7 +511,7 @@
     .is-arriving main .field-note, .is-arriving main .headline, .is-arriving main .viewer,
     .is-arriving main .globe-legend, .is-arriving main .pin-layer, .is-arriving main .site-foot {
       opacity: 0;
-      transition-duration: 260ms;
+      transition-duration: 140ms;
     }
     main.is-leaving .viewer, .is-arriving main .viewer { transform: translateX(24px); }
 
@@ -1007,6 +1010,20 @@
         return () => (seed = (seed * 16807) % 2147483647) / 2147483647;
       }
 
+      // Grano en mosaico: unos miles de puntos en una tesela de 512 px, repetida por
+      // patrón. Antes eran millones de fillRect y la vuelta a la home tardaba segundos.
+      function grainTile(seed, count, colors, size) {
+        const t = document.createElement('canvas');
+        t.width = t.height = 512;
+        const g = t.getContext('2d');
+        const r = rng(seed);
+        for (let n = 0; n < count; n++) {
+          g.fillStyle = colors(r);
+          g.fillRect(r() * 512, r() * 512, size, size);
+        }
+        return t;
+      }
+
       function generateArtisticTexture(w, h) {
         const c = document.createElement('canvas');
         c.width = w; c.height = h;
@@ -1064,12 +1081,9 @@
         relief.addColorStop(1, 'rgba(214,201,176,0.22)');
         ctx.fillStyle = relief;
         ctx.fillRect(0, 0, w, h);
-        const rand = rng(1903);
-        for (let n = 0; n < 90000 * k * k * 4; n++) {
-          const x = rand() * w, y = rand() * h;
-          ctx.fillStyle = rand() > 0.5 ? 'rgba(236,214,176,0.07)' : 'rgba(10,8,6,0.12)';
-          ctx.fillRect(x, y, 1.6 * k, 1.6 * k);
-        }
+        ctx.fillStyle = ctx.createPattern(grainTile(1903, 5600,
+          r => r() > 0.5 ? 'rgba(236,214,176,0.07)' : 'rgba(10,8,6,0.12)', 1.6), 'repeat');
+        ctx.fillRect(0, 0, w, h);
         // Sombreado oblicuo (hachura) muy suave.
         ctx.strokeStyle = 'rgba(236,214,176,0.05)';
         ctx.lineWidth = 1.4 * k;
@@ -1105,7 +1119,16 @@
         ctx.lineWidth = 2.4 * k;
         ctx.beginPath(); ctx.moveTo(0, ly(0, h)); ctx.lineTo(w, ly(0, h)); ctx.stroke();
 
-        // 7. Rótulos de carta: mares y paralelos.
+        // 7. Grano de película sobre todo el mapa.
+        ctx.fillStyle = ctx.createPattern(grainTile(7, 3800,
+          r => `rgba(255,255,255,${(r() * 0.035).toFixed(3)})`, 1.5), 'repeat');
+        ctx.fillRect(0, 0, w, h);
+        return c;
+      }
+
+      // Rótulos aparte: si la fuente llega tarde, se repintan solo ellos sobre la base.
+      function drawChartLabels(ctx, w, h) {
+        const k = w / 4096;
         // Convención de carta: agua en cursiva (mares), líneas y tierra en versalitas.
         function label(text, lng, lat, size, color, spacing, italic = true) {
           ctx.save();
@@ -1134,18 +1157,20 @@
         label('Ecuador', 96, 1.4, 22, redInk, 12, false);
         label('Trópico de Capricornio', -12, -22.2, 22, redInk, 8, false);
 
-        // 8. Grano de película sobre todo el mapa.
-        const rand2 = rng(7);
-        for (let n = 0; n < 60000 * k * k * 4; n++) {
-          ctx.fillStyle = `rgba(255,255,255,${(rand2() * 0.035).toFixed(3)})`;
-          ctx.fillRect(rand2() * w, rand2() * h, k * 1.5, k * 1.5);
-        }
-        return c;
       }
 
       const maxTex = renderer.capabilities.maxTextureSize || 4096;
-      const TEX_W = maxTex >= 8192 ? 8192 : Math.min(4096, maxTex);
-      const texCanvas = generateArtisticTexture(TEX_W, TEX_W / 2);
+      // 4096 px bastan: el globo nunca muestra más de media textura en pantalla.
+      const TEX_W = Math.min(4096, maxTex);
+      const baseCanvas = generateArtisticTexture(TEX_W, TEX_W / 2);
+      const texCanvas = document.createElement('canvas');
+      texCanvas.width = TEX_W; texCanvas.height = TEX_W / 2;
+      const texCtx = texCanvas.getContext('2d');
+      function paintTexture() {
+        texCtx.drawImage(baseCanvas, 0, 0);
+        drawChartLabels(texCtx, TEX_W, TEX_W / 2);
+      }
+      paintTexture();
       const tex = new THREE.CanvasTexture(texCanvas);
       tex.wrapS = THREE.RepeatWrapping;
       tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
@@ -1156,8 +1181,7 @@
           document.fonts.load('italic 400 40px "IM Fell English"'),
           document.fonts.load('400 40px "IM Fell English SC"')
         ]).then(() => {
-          const fresh = generateArtisticTexture(TEX_W, TEX_W / 2);
-          texCanvas.getContext('2d').drawImage(fresh, 0, 0);
+          paintTexture();
           tex.needsUpdate = true;
         }).catch(() => {});
       }
@@ -1295,11 +1319,13 @@
 
       // Las rutas se trazan una a una al cargar (o de golpe con movimiento reducido).
       const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      // Al volver del atlas las rutas ya estaban trazadas allí: aparecen completas.
+      const routesInstant = document.documentElement.classList.contains('is-arriving');
       const routeStart = performance.now();
       function growRoutes(now) {
         let pending = false;
         routeArcs.forEach((r, i) => {
-          const t = reduceMotion ? 1 : Math.min(1, Math.max(0, (now - routeStart - 400 - i * 90) / 1400));
+          const t = (reduceMotion || routesInstant) ? 1 : Math.min(1, Math.max(0, (now - routeStart - 400 - i * 90) / 1400));
           const eased = 1 - Math.pow(1 - t, 3);
           r.geom.setDrawRange(0, Math.ceil(eased * r.count));
           if (t < 1) pending = true;
@@ -1457,7 +1483,6 @@
       storeGeom();
       new ResizeObserver(storeGeom).observe(container);
 
-      const leaveFade = { t: 0 };
       document.querySelectorAll('a[href="atlas-relativo.html"]').forEach(link => {
         link.addEventListener('click', e => {
           if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
@@ -1465,20 +1490,11 @@
           const target = 'atlas-relativo.html?city=' + encodeURIComponent(activeCityId);
           if (reduceMotion) { location.href = target; return; }
           isDragging = false; velX = 0; velY = 0; focusTarget = null;
+          // El atlas dibuja el mismo halo, retícula y rutas: no hay nada que apagar.
+          // Solo se aparta la interfaz y se navega en el siguiente instante.
+          saveJSON(MORPH_KEY, Object.assign(globeCamera(), { dir: 'to-atlas', at: Date.now() }));
           stage.classList.add('is-leaving');
-          // El halo y las rutas se apagan: en el atlas el mundo llega desnudo.
-          const t0 = performance.now();
-          (function fade(now) {
-            const k = Math.min(1, (now - t0) / 320);
-            haloMat.uniforms.strength.value = 1 - k;
-            rimMat.uniforms.strength.value = 1 - k;
-            routeMat.uniforms.opacity.value = 0.85 * (1 - k);
-            if (k < 1) requestAnimationFrame(fade);
-            else {
-              saveJSON(MORPH_KEY, Object.assign(globeCamera(), { dir: 'to-atlas', at: Date.now() }));
-              location.href = target;
-            }
-          })(t0);
+          setTimeout(() => { location.href = target; }, 140);
         });
       });
 
@@ -1486,7 +1502,8 @@
       const arrival = loadJSON(MORPH_KEY);
       try { sessionStorage.removeItem(MORPH_KEY); } catch (e) {}
       if (arrival && arrival.dir === 'to-globe' && Date.now() - arrival.at < 4000 && !reduceMotion) {
-        requestAnimationFrame(() => requestAnimationFrame(() => document.documentElement.classList.remove('is-arriving')));
+        // Temporizador y no rAF: si la pestaña no pinta, la interfaz no debe quedar oculta.
+        setTimeout(() => document.documentElement.classList.remove('is-arriving'), 40);
       } else {
         document.documentElement.classList.remove('is-arriving');
       }
