@@ -10,6 +10,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/site.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='5' fill='%23e06957'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  <link rel="preconnect" href="https://www.youtube.com">
+  <!-- Three.js se descarga desde ya, pero se ejecuta al final: la página pinta antes. -->
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" as="script">
   <link rel="prefetch" href="atlas-relativo.html">
   <link rel="prefetch" href="assets/vendor/d3.min.js">
   <link rel="prefetch" href="assets/atlas/atlas.js">
@@ -19,13 +24,12 @@
       var m = JSON.parse(sessionStorage.getItem('atlas-morph') || 'null');
       if (m && m.dir === 'to-globe' && Date.now() - m.at < 4000 && !matchMedia('(prefers-reduced-motion: reduce)').matches)
         document.documentElement.classList.add('is-arriving');
+      // De vuelta del atlas, el primer cuadro debe traer ya el globo: se retiene el
+      // pintado hasta que el script del globo haya corrido (sin esto, un destello vacío).
+      if (document.documentElement.classList.contains('is-arriving'))
+        document.write('<link rel="expect" href="#globe-ready" blocking="render">');
     } catch (e) {}
   </script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="assets/vendor/topojson-client.min.js"></script>
-  <script src="assets/globe/land-110m.js"></script>
-  <script src="assets/atlas/geo.js"></script>
-  <script src="assets/atlas/cities.js"></script>
   <style>
     /* Tokens y componentes comunes en assets/site.css; aquí solo lo propio del globo. */
     :root {
@@ -131,6 +135,9 @@
       width: 100% !important;
       height: 100% !important;
     }
+    /* Primera visita: el globo aparece con un fundido; de vuelta del atlas ya está ahí. */
+    #globe-container canvas.is-born { animation: globeIn 700ms cubic-bezier(.22,1,.36,1) both; }
+    @keyframes globeIn { from { opacity: 0; transform: scale(.985); } }
 
     .pin-layer {
       position: absolute;
@@ -147,11 +154,15 @@
       border: 0;
       border-radius: 50%;
       background: transparent;
+      left: 0;
+      top: 0;
+      /* El bucle del globo escribe la posición en transform (sin reflow); la escala de
+         hover va en su propia propiedad para que la posición nunca se anime. */
       transform: translate(-50%, -50%);
       pointer-events: auto;
       cursor: pointer;
       isolation: isolate;
-      transition: filter 200ms ease, opacity 200ms ease, transform 200ms ease;
+      transition: filter 200ms ease, opacity 200ms ease, scale 200ms ease;
     }
     .city-pin::before, .city-pin::after {
       content: '';
@@ -201,7 +212,7 @@
     .city-pin:hover,
     .city-pin:focus-visible {
       filter: brightness(1.3);
-      transform: translate(-50%, -50%) scale(1.08);
+      scale: 1.08;
       outline: none;
     }
     .city-pin:focus-visible::after { box-shadow: 0 0 0 3px rgba(241,245,248,0.24); }
@@ -588,7 +599,7 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .city-pin::after,
+      .city-pin::after, #globe-container canvas.is-born,
       .headline, .headline .line, .rec { animation: none !important; }
       .headline .line { opacity: 1; transform: none; filter: none; }
     }
@@ -661,6 +672,11 @@
       <button class="audio-toggle" aria-label="Silenciar audio"><span class="on">♪</span><span class="off">♪̸</span></button>
     </footer>
   </main>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="assets/vendor/topojson-client.min.js"></script>
+  <script src="assets/globe/land-110m.js"></script>
+  <script src="assets/atlas/geo.js"></script>
+  <script src="assets/atlas/cities.js"></script>
   <script>
     (() => {
       // ========== CITY REGISTRY ==========
@@ -916,7 +932,12 @@
       }, { passive: true });
 
       updateSlate('barranquilla');
-      setTimeout(() => showVideo(activeCityId), 0);
+      // El reproductor de YouTube pesa más que todo el sitio: entra cuando la página ya
+      // cargó y el hilo principal está libre, no compitiendo con el primer cuadro del globo.
+      const whenIdle = window.requestIdleCallback || (cb => setTimeout(cb, 200));
+      const bootVideo = () => whenIdle(() => showVideo(activeCityId), { timeout: 1500 });
+      if (document.readyState === 'complete') bootVideo();
+      else window.addEventListener('load', bootVideo, { once: true });
 
       // ========== 3D GLOBE ==========
       const container = document.getElementById('globe-container');
@@ -935,11 +956,14 @@
       }
       fitCamera(w / h);
 
-      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
       renderer.setSize(w, h);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.setClearColor(0x000000, 0);
       container.appendChild(renderer.domElement);
+      if (!document.documentElement.classList.contains('is-arriving')) renderer.domElement.classList.add('is-born');
+      // Solo se repinta cuando algo cambió: en reposo el globo no gasta GPU ni batería.
+      let needsRender = true;
 
       // Luz cálida de farol desde arriba a la izquierda, contraluz marino detrás.
       const ambientLight = new THREE.AmbientLight(0xbfd6dc, 0.42);
@@ -1183,6 +1207,7 @@
         ]).then(() => {
           paintTexture();
           tex.needsUpdate = true;
+          needsRender = true;
         }).catch(() => {});
       }
 
@@ -1396,12 +1421,38 @@
       // ===== ANIMATION LOOP =====
       const worldPos = new THREE.Vector3();
       const projected = new THREE.Vector3();
+      const pinEls = cityRegistry.map(city => pinLayer.querySelector(`[data-city-id="${city.id}"]`));
+      const pinShown = cityRegistry.map(() => null);
+      let boxW = container.clientWidth || w, boxH = container.clientHeight || h;
+      let lastRX = NaN, lastRY = NaN;
       let animId = null;
+
+      function placePins() {
+        cityRegistry.forEach((city, i) => {
+          const pin = pinEls[i];
+          if (!pin) return;
+          cityObjects[i].getWorldPosition(worldPos);
+          const front = worldPos.z > 0;
+          if (front !== pinShown[i]) {
+            pinShown[i] = front;
+            pin.style.opacity = front ? '1' : '0';
+            pin.style.pointerEvents = front ? 'auto' : 'none';
+          }
+          if (!front) return;
+          projected.copy(worldPos).project(camera);
+          const px = (projected.x + 1) / 2 * boxW;
+          const py = (1 - projected.y) / 2 * boxH;
+          pin.style.transform = `translate3d(${px.toFixed(1)}px, ${py.toFixed(1)}px, 0) translate(-50%, -50%)`;
+        });
+      }
 
       function animate() {
         animId = requestAnimationFrame(animate);
 
-        if (routesGrowing) routesGrowing = growRoutes(performance.now());
+        if (routesGrowing) {
+          routesGrowing = growRoutes(performance.now());
+          needsRender = true;
+        }
 
         if (focusTarget && !isDragging) {
           const t = Math.min(1, (performance.now() - focusTarget.start) / 1100);
@@ -1421,28 +1472,12 @@
           if (Math.abs(velY) < 0.0001) velY = 0;
         }
 
-        const rect = container.getBoundingClientRect();
-        const cw = rect.width || w;
-        const ch = rect.height || h;
-
-        cityRegistry.forEach((city, i) => {
-          const pin = pinLayer.querySelector(`[data-city-id="${city.id}"]`);
-          if (!pin) return;
-          cityObjects[i].getWorldPosition(worldPos);
-          if (worldPos.z > 0) {
-            pin.style.opacity = '1';
-            pin.style.pointerEvents = 'auto';
-            projected.copy(worldPos).project(camera);
-            const px = (projected.x + 1) / 2 * cw;
-            const py = (1 - projected.y) / 2 * ch;
-            pin.style.left = px + 'px';
-            pin.style.top = py + 'px';
-          } else {
-            pin.style.opacity = '0';
-            pin.style.pointerEvents = 'none';
-          }
-        });
-
+        const moved = globe.rotation.x !== lastRX || globe.rotation.y !== lastRY;
+        if (!moved && !needsRender) return;
+        lastRX = globe.rotation.x;
+        lastRY = globe.rotation.y;
+        needsRender = false;
+        placePins();
         renderer.render(scene, camera);
       }
       animate();
@@ -1452,10 +1487,13 @@
         const rect = container.getBoundingClientRect();
         const nw = rect.width || 600;
         const nh = rect.height || 400;
+        if (nw === boxW && nh === boxH && camera.aspect === nw / nh) return;
+        boxW = nw; boxH = nh;
         camera.aspect = nw / nh;
         fitCamera(camera.aspect);
         camera.updateProjectionMatrix();
         renderer.setSize(nw, nh);
+        needsRender = true;
       }
       window.addEventListener('resize', onResize);
       const ro = new ResizeObserver(onResize);
@@ -1496,6 +1534,14 @@
           stage.classList.add('is-leaving');
           setTimeout(() => { location.href = target; }, 140);
         });
+      });
+
+      // Volver con «atrás» restaura la página desde la caché tal como se fue: sin interfaz.
+      window.addEventListener('pageshow', e => {
+        if (!e.persisted) return;
+        stage.classList.remove('is-leaving');
+        document.documentElement.classList.remove('is-arriving');
+        needsRender = true;
       });
 
       // Llegada desde el atlas: el globo ya está donde el atlas se cerró; el resto aparece.
@@ -1575,5 +1621,6 @@
       });
     })();
   </script>
+  <span id="globe-ready" hidden></span>
 </body>
 </html>

@@ -18,34 +18,38 @@
   const hintEl = document.getElementById('hint');
   const HINT_DEFAULT = hintEl.textContent;
   const svg = d3.select('#svg');
-  const azProj = d3.geoAzimuthalEquidistant().precision(0.5);
+  // Precisión fina en reposo; durante las animaciones basta 2 px y d3 trabaja mucho menos.
+  const PRECISION = 0.5, ANIM_PRECISION = 2;
+  const azProj = d3.geoAzimuthalEquidistant().precision(PRECISION);
   let projection = azProj;           // durante el morfismo se cambia por morphProj
-  const path = d3.geoPath(projection);
 
-  // Mismas capas que el globo de la home: halo, mar, retícula, líneas de agua,
-  // tierra, trópicos, rutas desde Barranquilla y borde cálido.
-  const defs = svg.append('defs');
-  const halo = defs.append('radialGradient').attr('id', 'atlas-halo');
-  [[0.84, 0.0], [0.9, 0.34], [1, 0]].forEach(([o, a]) =>
-    halo.append('stop').attr('offset', o).attr('stop-color', '#5fb0b4').attr('stop-opacity', a));
-  const rim = defs.append('radialGradient').attr('id', 'atlas-rim');
-  [[0.72, 0], [1, 0.2]].forEach(([o, a]) =>
-    rim.append('stop').attr('offset', o).attr('stop-color', '#f2c9a0').attr('stop-opacity', a));
+  // Cartografía en <canvas>: mar, retícula, radios, anillos, tierra con líneas de agua,
+  // trópicos, rutas, halo y borde (las mismas capas del globo de la home). d3 dibuja
+  // directo en el contexto, sin armar cadenas SVG en cada cuadro. Encima, el SVG solo
+  // lleva lo que se lee o se toca: rótulos, ciudades y el centro.
+  const canvas = document.createElement('canvas');
+  canvas.className = 'carto';
+  canvas.setAttribute('aria-hidden', 'true');
+  mapEl.insertBefore(canvas, mapEl.querySelector('svg'));
+  const ctx = canvas.getContext('2d');
+  const path = d3.geoPath(projection, ctx);
+  const SPHERE = { type: 'Sphere' };
+  const SEA = getComputedStyle(document.documentElement).getPropertyValue('--sea-deep').trim() || '#0d2a35';
+  let overlayAlpha = 1; // radios y anillos se funden durante el morfismo
 
-  const gHalo   = svg.append('g');
-  const gSea    = svg.append('g');
-  const gGrat   = svg.append('g');
-  const gSpokes = svg.append('g');
-  const gRings  = svg.append('g');
-  const gLand   = svg.append('g');
-  const gLines  = svg.append('g');
-  const gSphere = svg.append('g');
-  const gLabels = svg.append('g'); // rótulos de anillos, por encima de la tierra
+  const gLabels = svg.append('g'); // rótulos de anillos y rumbos, por encima de la tierra
   const gCities = svg.append('g');
   const gCenter = svg.append('g');
 
+  // Tamaños en caché: leerlos en cada cuadro forzaría un reflow. El lienzo comparte
+  // origen con el mapa pero puede ser más grande (ver .carto en atlas-relativo.html).
+  let mapW = 0, cartoW = 0, cartoH = 0, dpr = 1;
   function sizeFit() {
-    const w = mapEl.clientWidth, h = mapEl.clientHeight;
+    const w = mapW = mapEl.clientWidth, h = mapEl.clientHeight;
+    cartoW = canvas.clientWidth; cartoH = canvas.clientHeight;
+    dpr = Math.min(2, window.devicePixelRatio || 1);
+    canvas.width = Math.round(cartoW * dpr);
+    canvas.height = Math.round(cartoH * dpr);
     svg.attr('viewBox', `0 0 ${w} ${h}`);
     azProj.translate([w / 2, h / 2]).scale(Math.min(w, h) * 0.94 / (2 * Math.PI));
   }
@@ -54,7 +58,10 @@
   function computeGeo(c) {
     const rings = [], spokes = [], cardinals = [];
     for (let d = 2500; d <= 20000; d += 2500) {
-      rings.push({ geo: d3.geoCircle().center([c.lon, c.lat]).radius((d / R_EARTH) * DEG)(), d, major: d % 5000 === 0 });
+      rings.push({
+        geo: d3.geoCircle().center([c.lon, c.lat]).radius((d / R_EARTH) * DEG)(), d, major: d % 5000 === 0,
+        labelLL: destPt(c.lon, c.lat, 90, d / R_EARTH)
+      });
     }
     for (let b = 0; b < 360; b += 30) {
       const coords = [];
@@ -64,76 +71,127 @@
     [['N', 0], ['E', 90], ['S', 180], ['O', 270]].forEach(([t, b]) => {
       cardinals.push({ t, ll: destPt(c.lon, c.lat, b, Math.PI * 0.965) });
     });
-    return { rings, spokes, cardinals };
+    // Distancias al centro, calculadas una vez por recentrado y no en cada cuadro.
+    const dist = new Map(cities.map(x => [x, distKm(c, x)]));
+    return { rings, spokes, cardinals, dist };
   }
 
-  function render() {
-    gRings.selectAll('*').remove();
-    gLabels.selectAll('*').remove();
-    staticGeo.rings.forEach(r => {
-      gRings.append('path').attr('d', path(r.geo)).attr('class', 'ring' + (r.major ? ' major' : ''));
-      // En mapas pequeños solo se rotula el anillo de 10.000 km.
-      if (r.major && r.d < 20000 && (mapEl.clientWidth >= 520 || r.d === 10000)) {
-        const pt = projection(destPt(centerCity.lon, centerCity.lat, 90, r.d / R_EARTH));
-        if (pt) gLabels.append('text').attr('class', 'ring-label')
-          .attr('x', pt[0] + 6).attr('y', pt[1] - 4).text((r.d / 1000) + '.000 km');
-      }
-    });
-    gSpokes.selectAll('*').remove();
-    staticGeo.spokes.forEach(s => gSpokes.append('path').attr('d', path(s)).attr('class', 'spoke'));
-    staticGeo.cardinals.forEach(cd => {
-      const pt = projection(cd.ll);
-      if (pt) gSpokes.append('text').attr('class', 'spoke-label').attr('x', pt[0] - 3).attr('y', pt[1] + 3).text(cd.t);
-    });
-    const sphere = path({ type: 'Sphere' });
-    gSea.select('path').attr('d', sphere);
-    gGrat.select('path').attr('d', path(graticule));
-    if (land) gLand.selectAll('path').attr('d', path(land));
-    gLines.selectAll('path.parallel').attr('d', d => path(d));
-    gLines.selectAll('path.route').attr('d', d => path(d));
-    gSphere.select('path').attr('d', sphere);
+  function strokeGeo(geo, color, width, dash) {
+    ctx.beginPath();
+    path(geo);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.setLineDash(dash || []);
+    ctx.stroke();
+  }
+
+  function drawCarto() {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, cartoW, cartoH);
+    ctx.lineJoin = 'round';
     // Halo y borde siguen al disco del mundo en cada cuadro del morfismo.
-    const [[x0, y0], [x1, y1]] = path.bounds({ type: 'Sphere' });
-    const disc = { cx: (x0 + x1) / 2, cy: (y0 + y1) / 2, r: (x1 - x0) / 2 };
-    gHalo.select('circle').attr('cx', disc.cx).attr('cy', disc.cy).attr('r', disc.r * 1.14);
-    gSphere.select('circle').attr('cx', disc.cx).attr('cy', disc.cy).attr('r', disc.r);
+    const [[x0, y0], [x1, y1]] = path.bounds(SPHERE);
+    const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, r = (x1 - x0) / 2;
+    if (!(r > 0)) return;
+    const haloR = r * 1.14;
+    const halo = ctx.createRadialGradient(cx, cy, 0, cx, cy, haloR);
+    halo.addColorStop(0.84, 'rgba(95,176,180,0)');
+    halo.addColorStop(0.9, 'rgba(95,176,180,0.34)');
+    halo.addColorStop(1, 'rgba(95,176,180,0)');
+    ctx.fillStyle = halo;
+    ctx.beginPath(); ctx.arc(cx, cy, haloR, 0, 2 * Math.PI); ctx.fill();
+
+    ctx.beginPath(); path(SPHERE); ctx.fillStyle = SEA; ctx.fill();
+    strokeGeo(graticule, 'rgba(160,205,212,0.09)', 0.6);
+
+    if (overlayAlpha > 0) {
+      ctx.globalAlpha = overlayAlpha;
+      ctx.beginPath(); staticGeo.spokes.forEach(g => path(g));
+      ctx.strokeStyle = 'rgba(241,236,226,0.08)'; ctx.lineWidth = 1; ctx.setLineDash([]); ctx.stroke();
+      staticGeo.rings.forEach(g => strokeGeo(g.geo,
+        g.major ? 'rgba(224,105,87,0.5)' : 'rgba(224,105,87,0.32)', 1, g.major ? null : [2, 5]));
+      ctx.globalAlpha = 1;
+    }
+
+    if (land) {
+      // Una sola proyección de la tierra por cuadro, reutilizada en todos sus trazos.
+      const shape = new Path2D();
+      path.context(shape); path(land); path.context(ctx);
+      ctx.setLineDash([]);
+      // Líneas de agua: anillos que se alejan de la costa, recortados con el color del mar.
+      for (let i = 5; i >= 1; i--) {
+        const w = 1.5 + i * 2.8;
+        ctx.strokeStyle = `rgba(150,214,214,${(0.55 * Math.pow(1 - (i - 1) / 5, 1.4)).toFixed(3)})`;
+        ctx.lineWidth = w; ctx.stroke(shape);
+        ctx.strokeStyle = SEA;
+        ctx.lineWidth = w - 0.9; ctx.stroke(shape);
+      }
+      ctx.fillStyle = '#342d25'; ctx.fill(shape);
+      ctx.strokeStyle = 'rgba(242,228,200,0.8)'; ctx.lineWidth = 0.7; ctx.stroke(shape);
+    }
+
+    strokeGeo(tropics, 'rgba(224,105,87,0.42)', 0.8, [5, 4]);
+    strokeGeo(equator, 'rgba(224,105,87,0.231)', 0.8);
+    ctx.beginPath(); routes.forEach(g => path(g));
+    ctx.strokeStyle = 'rgba(224,105,87,0.38)'; ctx.lineWidth = 0.8; ctx.setLineDash([]); ctx.stroke();
+    strokeGeo(SPHERE, 'rgba(127,190,196,0.45)', 1);
+    const rim = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+    rim.addColorStop(0.72, 'rgba(242,201,160,0)');
+    rim.addColorStop(1, 'rgba(242,201,160,0.2)');
+    ctx.fillStyle = rim;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2 * Math.PI); ctx.fill();
+  }
+
+  // Cada cuadro solo actualiza atributos: los elementos SVG se crean una vez.
+  function render() {
+    drawCarto();
+    // En mapas pequeños solo se rotula el anillo de 10.000 km.
+    const ringLabels = staticGeo.rings
+      .filter(r => r.major && r.d < 20000 && (mapW >= 520 || r.d === 10000))
+      .map(r => ({ r, pt: projection(r.labelLL) }))
+      .filter(x => x.pt);
+    gLabels.selectAll('text.ring-label').data(ringLabels).join('text').attr('class', 'ring-label')
+      .attr('x', x => x.pt[0] + 6).attr('y', x => x.pt[1] - 4).text(x => (x.r.d / 1000) + '.000 km');
+    const cardinals = staticGeo.cardinals.map(cd => ({ t: cd.t, pt: projection(cd.ll) })).filter(x => x.pt);
+    gLabels.selectAll('text.spoke-label').data(cardinals).join('text').attr('class', 'spoke-label')
+      .attr('x', x => x.pt[0] - 3).attr('y', x => x.pt[1] + 3).text(x => x.t);
     drawCities();
   }
 
   function drawCities() {
     const prio = { live: 0, next: 1, future: 2 };
     const placed = [];
+    const dist = staticGeo.dist;
+    const cp = projection([centerCity.lon, centerCity.lat]);
     const items = citySel.nodes().map(n => {
       const d = n.__data__;
       const pt = projection([d.lon, d.lat]);
       return { n, d, pt, vis: !!pt };
     }).filter(x => x.vis)
-      .sort((a, b) => (prio[a.d.status] - prio[b.d.status]) || (distKm(centerCity, b.d) - distKm(centerCity, a.d)));
+      .sort((a, b) => (prio[a.d.status] - prio[b.d.status]) || (dist.get(b.d) - dist.get(a.d)));
 
     items.forEach(({ n, d, pt }) => {
       const sel = d3.select(n);
       if (d === centerCity) { sel.style('display', 'none'); return; }
       sel.attr('transform', `translate(${pt[0]},${pt[1]})`).style('display', null);
       const label = sel.select('text');
-      const cp = projection([centerCity.lon, centerCity.lat]);
       const nearCenter = cp && Math.hypot(pt[0] - cp[0], pt[1] - cp[1]) < 85;
       const clash = nearCenter || placed.some(p => Math.abs(p.x - pt[0]) < 64 && Math.abs(p.y - pt[1]) < 13);
       label.style('display', clash ? 'none' : null);
       if (!clash) placed.push({ x: pt[0], y: pt[1] });
     });
-    citySel.nodes().forEach(n => {
-      if (!projection([n.__data__.lon, n.__data__.lat])) d3.select(n).style('display', 'none');
-    });
+    const shown = new Set(items.map(x => x.n));
+    citySel.nodes().forEach(n => { if (!shown.has(n)) d3.select(n).style('display', 'none'); });
 
-    gCenter.selectAll('*').remove();
-    const cp = projection([centerCity.lon, centerCity.lat]);
-    if (cp) {
-      const g = gCenter.append('g').attr('transform', `translate(${cp[0]},${cp[1]})`);
-      g.append('circle').attr('class', 'center-ring').attr('r', 16).attr('fill', 'none').attr('stroke', colors.live);
-      g.append('circle').attr('r', 4.5).attr('fill', colors.live);
-      g.append('text').attr('class', 'center-tag').attr('text-anchor', 'middle').attr('dy', 34).text('◉ ' + centerCity.name);
-    }
+    // El marcador del centro se mueve, no se recrea: así su latido no se reinicia.
+    centerMark.style('display', cp ? null : 'none');
+    if (cp) centerMark.attr('transform', `translate(${cp[0]},${cp[1]})`);
+    centerTag.text('◉ ' + centerCity.name);
   }
+  const centerMark = gCenter.append('g');
+  centerMark.append('circle').attr('class', 'center-ring').attr('r', 16).attr('fill', 'none').attr('stroke', colors.live);
+  centerMark.append('circle').attr('r', 4.5).attr('fill', colors.live);
+  const centerTag = centerMark.append('text').attr('class', 'center-tag').attr('text-anchor', 'middle').attr('dy', 34);
 
   const citySel = gCities.selectAll('g.city-dot').data(cities).join(enter => {
     const g = enter.append('g').attr('class', 'city-dot')
@@ -181,21 +239,23 @@
     updatePanel();
     focusCenterHeading(keyboard);
     if (timer) timer.stop();
+    azProj.precision(PRECISION);
     if (REDUCED) {
       projection.rotate(rotateFor(city));
       render();
       return;
     }
     const interp = d3.interpolateArray(from, to);
+    azProj.precision(ANIM_PRECISION);
     timer = d3.timer(now => {
       const t = Math.min(1, now / 1000);
       projection.rotate(interp(d3.easeCubicInOut(t)));
+      if (t < 1) { render(); return; }
+      timer.stop();
+      timer = null;
+      azProj.precision(PRECISION);
+      projection.rotate(rotateFor(city));
       render();
-      if (t >= 1) {
-        timer.stop();
-        projection.rotate(rotateFor(city));
-        render();
-      }
     });
   }
   const tabsByCity = {}; // recuerda tab por ciudad
@@ -270,30 +330,17 @@
   azProj.rotate(rotateFor(centerCity));
   const graticule = d3.geoGraticule().step([15, 15])();
   const parallel = lat => ({ type: 'LineString', coordinates: d3.range(-180, 181, 3).map(l => [l, lat]) });
+  const tropics = { type: 'MultiLineString', coordinates: [parallel(23.44).coordinates, parallel(-23.44).coordinates] };
+  const equator = parallel(0);
   const origin = cities.find(c => c.status === 'live') || cities[0];
-  gHalo.append('circle').attr('fill', 'url(#atlas-halo)');
-  gSea.append('path').attr('class', 'sea');
-  gGrat.append('path').attr('class', 'grat');
-  gLines.selectAll('path.parallel').data([parallel(23.44), parallel(-23.44), parallel(0)]).join('path')
-    .attr('class', (d, i) => 'parallel' + (i === 2 ? ' equator' : ''));
-  gLines.selectAll('path.route').data(cities.filter(c => c !== origin).map(c => ({
+  const routes = cities.filter(c => c !== origin).map(c => ({
     type: 'LineString', coordinates: [[origin.lon, origin.lat], [c.lon, c.lat]]
-  }))).join('path').attr('class', 'route');
-  gSphere.append('path').attr('class', 'sphere');
-  gSphere.append('circle').attr('class', 'rim').attr('fill', 'url(#atlas-rim)');
+  }));
   staticGeo = computeGeo(centerCity);
   updatePanel();
 
   function buildLand(topo) {
     land = topojson.feature(topo, topo.objects.land);
-    // Líneas de agua: anillos que se alejan de la costa, recortados con el color del mar.
-    for (let i = 5; i >= 1; i--) {
-      const w = 1.5 + i * 2.8;
-      gLand.append('path').attr('class', 'wl').attr('stroke-width', w)
-        .attr('stroke-opacity', (0.55 * Math.pow(1 - (i - 1) / 5, 1.4)).toFixed(3));
-      gLand.append('path').attr('class', 'wl-cut').attr('stroke-width', w - 0.9);
-    }
-    gLand.append('path').attr('class', 'land');
     document.getElementById('loading')?.remove();
   }
   const fallback = () => {
@@ -325,8 +372,8 @@
   const morphProj = d3.geoProjection((l, p) => {
     const a = perspRaw(l, p), b = azRaw(l, p);
     return [a[0] + (b[0] - a[0]) * morphT, a[1] + (b[1] - a[1]) * morphT];
-  }).precision(1.2); // menos vértices por cuadro durante el morfismo
-  const overlays = [gSpokes, gRings, gLabels, gCities, gCenter];
+  }).precision(ANIM_PRECISION); // menos vértices por cuadro durante el morfismo
+  const overlays = [gLabels, gCities, gCenter];
   const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
   const lerp = (a, b, t) => a + (b - a) * t;
 
@@ -354,7 +401,7 @@
       .clipAngle(lerp(limb, 179.9, t));
     projection = morphProj;
     path.projection(morphProj);
-    const o = smooth(0.5, 0.95, t);
+    const o = overlayAlpha = smooth(0.5, 0.95, t);
     overlays.forEach(g => g.attr('opacity', o));
     render();
   }
@@ -362,6 +409,7 @@
     morphT = 1;
     projection = azProj;
     path.projection(azProj);
+    overlayAlpha = 1;
     overlays.forEach(g => g.attr('opacity', null));
     render();
   }
@@ -420,11 +468,29 @@
         // escala focal: el disco visible mide s · tan(asin(1/P))
         s: fits ? g.s : Math.min(rect.width, rect.height) * 0.4 / Math.tan(Math.asin(1 / P))
       };
-      if (timer) timer.stop();
+      if (timer) { timer.stop(); timer = null; azProj.precision(PRECISION); }
       document.documentElement.classList.add('is-leaving');
       runMorph(to, 'close', 850, () => { location.href = target; });
     });
   });
 
-  window.addEventListener('resize', () => { sizeFit(); if (projection === azProj) render(); });
+  // Volver con «atrás» restaura la página desde la caché tal como se fue (cerrada en
+  // la esfera): se abre de nuevo sin morfismo.
+  window.addEventListener('pageshow', e => {
+    if (!e.persisted) return;
+    document.documentElement.classList.remove('is-leaving', 'is-arriving', 'is-arriving-run');
+    endMorph();
+  });
+
+  // Un render por cuadro como máximo al redimensionar.
+  let resizeQueued = false;
+  window.addEventListener('resize', () => {
+    if (resizeQueued) return;
+    resizeQueued = true;
+    requestAnimationFrame(() => {
+      resizeQueued = false;
+      sizeFit();
+      if (projection === azProj) render();
+    });
+  });
 })();
