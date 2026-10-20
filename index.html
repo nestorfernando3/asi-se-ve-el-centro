@@ -9,29 +9,28 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..600&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/site.css">
+  <script>
+    // Antes del primer estilo: si volvemos del atlas, la interfaz nace oculta.
+    try {
+      var m = JSON.parse(sessionStorage.getItem('atlas-morph') || 'null');
+      if (m && m.dir === 'to-globe' && Date.now() - m.at < 4000 && !matchMedia('(prefers-reduced-motion: reduce)').matches)
+        document.documentElement.classList.add('is-arriving');
+    } catch (e) {}
+  </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="assets/vendor/topojson-client.min.js"></script>
   <script src="assets/globe/land-110m.js"></script>
+  <script src="assets/atlas/geo.js"></script>
+  <script src="assets/atlas/cities.js"></script>
   <style>
+    /* Tokens y componentes comunes en assets/site.css; aquí solo lo propio del globo. */
     :root {
       --loop: 12s;
-      --matte: #050b10;
-      --ink: #0b1218;
-      --surface: #111a22;
-      --fg: #f1f5f8;
-      --muted: #92a2ae;
-      --dim: rgba(241, 245, 248, 0.22);
-      --line: rgba(241, 245, 248, 0.12);
-      --accent: #e06957;
-      --accent-soft: rgba(224, 105, 87, 0.18);
+      --ink: var(--night);
       --gold: #7fa0af;
-      --sea: #63a9a1;
-      --paper-soft: rgba(241, 245, 248, 0.06);
-
-      --font-serif: 'Fraunces', 'Iowan Old Style', Georgia, serif;
-      --font-display: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-      --font-body: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-      --font-mono: ui-monospace, 'IBM Plex Mono', 'JetBrains Mono', Menlo, monospace;
+      --font-display: var(--font-sans);
+      --font-body: var(--font-sans);
     }
 
     * { box-sizing: border-box; }
@@ -58,28 +57,6 @@
         linear-gradient(180deg, rgba(5,11,16,0.48), transparent 18%, transparent 78%, rgba(5,11,16,0.58)),
         var(--ink);
     }
-
-    .chrome {
-      position: absolute;
-      left: clamp(18px, 2.8vw, 38px);
-      right: clamp(18px, 2.8vw, 38px);
-      z-index: 35;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 14px;
-      font: 10px/1.45 var(--font-mono);
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--muted);
-      pointer-events: none;
-    }
-    .chrome.top { top: clamp(14px, 2.2vw, 26px); }
-    .chrome.bottom { bottom: clamp(14px, 2.2vw, 24px); }
-    .chrome strong { color: var(--fg); font-weight: 500; letter-spacing: 0.14em; }
-    .chrome a.atlas-link { color: inherit; text-decoration: none; pointer-events: auto; border-bottom: 1px solid currentColor; }
-    .chrome a.atlas-link:hover, .chrome a.atlas-link:focus-visible { color: var(--fg); }
-    .chrome .rule { flex: 1; height: 1px; margin: 0 14px; background: rgba(234, 223, 208, 0.14); }
 
     .audio-indicator {
       font: 9px var(--font-mono);
@@ -116,17 +93,6 @@
         radial-gradient(ellipse 42% 38% at 34% 52%, rgba(224,105,87,0.07), transparent 70%),
         radial-gradient(ellipse 50% 46% at 34% 50%, rgba(111,194,196,0.06), transparent 72%);
     }
-    main::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      z-index: 50;
-      pointer-events: none;
-      opacity: .07;
-      mix-blend-mode: overlay;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    }
-
     .stage {
       position: absolute;
       inset: clamp(54px, 8vh, 86px) clamp(20px, 4vw, 62px) clamp(70px, 10vh, 104px);
@@ -166,6 +132,7 @@
     .pin-layer {
       position: absolute;
       inset: 0;
+      overflow: hidden;
       z-index: 3;
       pointer-events: none;
     }
@@ -225,6 +192,8 @@
       animation-duration: 2.2s;
     }
     .city-pin.is-future::before { background: rgba(92,147,139,0.88); }
+    .city-pin.is-next::before { background: rgba(241,228,200,0.9); }
+    .city-pin.is-next::after { border-color: rgba(241,228,200,0.3); }
     .city-pin.is-future::after { border-color: rgba(92,147,139,0.28); }
     .city-pin:hover,
     .city-pin:focus-visible {
@@ -252,7 +221,8 @@
     }
     .city-pin:hover .pin-name,
     .city-pin:focus-visible .pin-name,
-    .city-pin.is-live .pin-name { opacity: 1; transform: translateY(0); }
+    .city-pin.is-live .pin-name,
+    .city-pin.is-selected .pin-name { opacity: 1; transform: translateY(0); }
 
     .headline {
       position: absolute;
@@ -328,27 +298,6 @@
       letter-spacing: 0.1em;
       text-transform: uppercase;
     }
-    .globe-hint {
-      position: absolute;
-      left: 0;
-      bottom: clamp(156px, 22vh, 210px);
-      z-index: 4;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      color: rgba(241,245,248,0.62);
-      font: 9px/1.4 var(--font-mono);
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      pointer-events: none;
-    }
-    .globe-hint::before {
-      content: '';
-      width: 34px;
-      height: 1px;
-      background: linear-gradient(90deg, var(--accent), transparent);
-    }
-
     .viewer {
       position: relative;
       align-self: stretch;
@@ -518,84 +467,34 @@
       grid-template-columns: 1fr 1fr;
       gap: 8px;
     }
-    .reel {
-      position: relative;
-      min-height: 44px;
-      border: 1px solid rgba(231,222,208,0.14);
-      color: rgba(231,222,208,0.6);
-      font: 9px/1.4 var(--font-mono);
-      letter-spacing: .14em;
-      text-transform: uppercase;
-      padding: 8px 10px;
-      background: rgba(231,222,208,0.025);
-      cursor: pointer;
-      transition: background 200ms ease, border-color 200ms ease, color 200ms ease;
-    }
-    .reel:focus-visible,
-    .city-tab:focus-visible,
-    .audio-toggle:focus-visible {
-      outline: 2px solid rgba(127,160,175,0.68);
-      outline-offset: 3px;
-    }
-    .reel.is-active {
-      color: var(--fg);
-      border-color: rgba(214,74,40,0.4);
-      background: rgba(214,74,40,0.06);
-    }
     .viewer:not(.has-videos) .reel-switch { display: none; }
-    .reel:hover:not(.is-active) {
-      background: rgba(214,74,40,0.03);
-      border-color: rgba(214,74,40,0.18);
-    }
-
     .atlas-note {
       color: var(--muted);
       font: 9px/1.55 var(--font-mono);
       letter-spacing: .12em;
       text-transform: uppercase;
     }
-    .city-rail {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 6px;
-      max-height: 118px;
-      overflow: auto;
-      padding-right: 2px;
-      overscroll-behavior: contain;
-    }
-    .city-rail::-webkit-scrollbar {
-      width: 4px;
-    }
-    .city-rail::-webkit-scrollbar-thumb {
-      background: rgba(127,160,175,0.28);
-    }
-    .city-tab {
-      min-height: 44px;
-      border: 1px solid rgba(231,222,208,0.12);
-      color: rgba(241,245,248,0.62);
-      background: rgba(231,222,208,0.025);
-      font: 8px/1.2 var(--font-mono);
-      letter-spacing: 0.1em;
+    .note-distance {
+      margin-top: 8px;
+      color: rgba(224,105,87,0.9);
+      font: 9px/1.45 var(--font-mono);
+      letter-spacing: .14em;
       text-transform: uppercase;
-      cursor: pointer;
-      transition: background 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease;
     }
-    .city-tab:hover {
-      color: var(--fg);
-      border-color: rgba(127,160,175,0.28);
-      background: rgba(127,160,175,0.055);
-      transform: translateY(-1px);
+    .globe-legend { position: absolute; right: 0; bottom: clamp(8px, 3vh, 38px); z-index: 4; }
+
+    /* Morfismo con el atlas: todo lo que no es el mundo se aparta. */
+    .field-note, .headline, .viewer, .globe-legend, .pin-layer, .site-foot {
+      transition: opacity 420ms ease, transform 600ms cubic-bezier(.22,1,.36,1);
     }
-    .city-tab.is-active {
-      color: var(--fg);
-      border-color: rgba(214,74,40,0.45);
-      background:
-        linear-gradient(90deg, rgba(214,74,40,0.12), rgba(127,160,175,0.055));
+    main.is-leaving .field-note, main.is-leaving .headline, main.is-leaving .viewer,
+    main.is-leaving .globe-legend, main.is-leaving .pin-layer, main.is-leaving .site-foot,
+    .is-arriving main .field-note, .is-arriving main .headline, .is-arriving main .viewer,
+    .is-arriving main .globe-legend, .is-arriving main .pin-layer, .is-arriving main .site-foot {
+      opacity: 0;
+      transition-duration: 260ms;
     }
-    .city-tab[data-status="future"]::after {
-      content: ' / ruta';
-      color: rgba(92,147,139,0.85);
-    }
+    main.is-leaving .viewer, .is-arriving main .viewer { transform: translateX(24px); }
 
     @keyframes pinPulse { 0%,100% { transform: translate(-50%, -50%) scale(0.78); opacity: 0.38; } 50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.84; } }
     @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
@@ -616,13 +515,11 @@
       .field-note { width: min(430px, 72vw); top: 10px; }
       .note-title { font-size: clamp(25px, 5vw, 38px); }
       .note-copy { display: none; }
-      .globe-hint { bottom: 126px; }
       .viewer { position: absolute; right: 0; bottom: 0; width: min(42vw, 220px); min-height: 0; z-index: 20; gap: 8px; }
       .viewer-header { display: none; }
       .viewer-frame { width: 100%; height: auto; aspect-ratio: 9 / 13; min-height: 230px; }
-      .city-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); max-height: 118px; }
-      .city-tab { min-height: 44px; font-size: 7.5px; }
-      .chrome { font-size: 8.5px; letter-spacing: .12em; }
+      .dist-list { max-height: 132px; }
+      .globe-legend { display: none; }
       .pin-name { display: none; }
     }
 
@@ -640,7 +537,6 @@
         top: 8px;
         width: min(310px, 82vw);
       }
-      .globe-hint { display: none; }
       .headline {
         left: 0;
         bottom: 4px;
@@ -668,9 +564,8 @@
         -webkit-box-orient: vertical;
         overflow: hidden;
       }
-      .city-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); max-height: none; }
-      .chrome .rule { display: none; }
-      .chrome.bottom { align-items: flex-end; }
+      .dist-list { max-height: none; }
+      .site-foot .rule { display: none; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -682,11 +577,14 @@
 </head>
 <body>
   <main data-od-id="stage">
-    <div class="chrome top" data-od-id="chrome">
-      <div><strong>Así se ve el centro.</strong> — Atlas transmedia</div>
-      <div class="rule" aria-hidden="true"></div>
-      <div>Barranquilla / ciudad origen</div>
-    </div>
+    <header class="site-bar is-overlay">
+      <a class="brand" href="index.html">Así se ve el centro<em>.</em></a>
+      <nav class="site-nav" aria-label="Vistas del atlas">
+        <a href="index.html" aria-current="page">Globo</a>
+        <a href="atlas-relativo.html">Atlas relativo</a>
+      </nav>
+      <span class="site-context">Barranquilla / ciudad origen</span>
+    </header>
 
     <section class="stage" aria-label="Mapa transmedia con video por ciudad">
       <div class="atlas" data-od-id="map-atlas">
@@ -695,36 +593,23 @@
         <div class="field-note" aria-live="polite">
           <div class="note-kicker">Ciudad seleccionada</div>
           <div class="note-title" data-note-title>Barranquilla</div>
+          <div class="note-distance" data-note-distance></div>
           <div class="note-copy" data-note-copy></div>
           <div class="note-author" data-note-author></div>
         </div>
 
         <div class="pin-layer" aria-label="Ciudades">
-          <button class="city-pin is-live" data-city-id="barranquilla" aria-label="Barranquilla: ver videos"><span class="pin-name">Barranquilla</span></button>
-          <button class="city-pin is-future" data-city-id="bogota" aria-label="Bogotá: próximamente"><span class="pin-name">Bogotá · próximo</span></button>
-          <button class="city-pin is-future" data-city-id="medellin" aria-label="Medellín: próximamente"><span class="pin-name">Medellín · próximo</span></button>
-          <button class="city-pin is-future" data-city-id="cali" aria-label="Cali: próximamente"><span class="pin-name">Cali · próximo</span></button>
-          <button class="city-pin is-future" data-city-id="cartagena" aria-label="Cartagena: próximamente"><span class="pin-name">Cartagena · próximo</span></button>
-          <button class="city-pin is-future" data-city-id="lima" aria-label="Lima: futura ruta"><span class="pin-name">Lima · futura</span></button>
-          <button class="city-pin is-future" data-city-id="cdmx" aria-label="Ciudad de México: futura ruta"><span class="pin-name">CDMX · futura</span></button>
-          <button class="city-pin is-future" data-city-id="nyc" aria-label="Nueva York: futura ruta"><span class="pin-name">NYC · futura</span></button>
-          <button class="city-pin is-future" data-city-id="londres" aria-label="Londres: futura ruta"><span class="pin-name">Londres · futura</span></button>
-          <button class="city-pin is-future" data-city-id="paris" aria-label="París: futura ruta"><span class="pin-name">París · futura</span></button>
-          <button class="city-pin is-future" data-city-id="barcelona" aria-label="Barcelona: futura ruta"><span class="pin-name">Barcelona · futura</span></button>
-          <button class="city-pin is-future" data-city-id="dakar" aria-label="Dakar: futura ruta"><span class="pin-name">Dakar · futura</span></button>
-          <button class="city-pin is-future" data-city-id="mumbai" aria-label="Mumbai: futura ruta"><span class="pin-name">Mumbai · futura</span></button>
-          <button class="city-pin is-future" data-city-id="tokio" aria-label="Tokio: futura ruta"><span class="pin-name">Tokio · futura</span></button>
-          <button class="city-pin is-future" data-city-id="sydney" aria-label="Sídney: futura ruta"><span class="pin-name">Sídney · futura</span></button>
-          <button class="city-pin is-future" data-city-id="kansas-city" aria-label="Kansas City: futura ruta"><span class="pin-name">Kansas City · futura</span></button>
-          <button class="city-pin is-future" data-city-id="dublin" aria-label="Dublín: futura ruta"><span class="pin-name">Dublín · futura</span></button>
-          <button class="city-pin is-future" data-city-id="rome" aria-label="Rome: futura ruta"><span class="pin-name">Rome · futura</span></button>
         </div>
 
         <h1 class="headline" data-od-id="headline">
           <span class="line">Así se ve</span>
           <span class="line">el <em>centro.</em></span>
         </h1>
-        <div class="globe-hint">arrastra el globo / elige ciudad</div>
+        <div class="legend globe-legend" aria-hidden="true">
+          <span><i class="dot is-live"></i>viva</span>
+          <span><i class="dot is-next"></i>próxima</span>
+          <span><i class="dot is-future"></i>futura</span>
+        </div>
       </div>
 
       <aside class="viewer has-videos" data-od-id="video-hover-panel" aria-label="Video de ciudad seleccionada">
@@ -745,102 +630,34 @@
         </div>
         <div class="reel-switch" aria-label="Cambiar video">
         </div>
-        <nav class="city-rail" aria-label="Seleccionar ciudad"></nav>
-        <div class="atlas-note">Desplaza el cursor sobre el globo para explorar.</div>
+        <div class="kicker" data-rail-title></div>
+        <nav class="dist-list" aria-label="Ciudades por distancia"></nav>
       </aside>
     </section>
 
-    <div class="chrome bottom" data-od-id="chrome">
-      <div>Pasa el cursor para ver el video</div>
-      <div class="rule" aria-hidden="true"></div>
-      <div>globo 360</div>
-      <div class="rule" aria-hidden="true"></div>
-      <a class="atlas-link" href="atlas-relativo.html">atlas relativo</a>
-      <div class="rule" aria-hidden="true"></div>
+    <footer class="site-foot is-overlay">
+      <span>Arrastra el globo · elige una ciudad · pasa el cursor sobre el visor para ver el video</span>
+      <span class="rule" aria-hidden="true"></span>
       <span class="audio-indicator">♪ drone</span>
       <button class="audio-toggle" aria-label="Silenciar audio"><span class="on">♪</span><span class="off">♪̸</span></button>
-    </div>
+    </footer>
   </main>
   <script>
     (() => {
       // ========== CITY REGISTRY ==========
-      const cityRegistry = [
-        { id: 'barranquilla', name: 'Barranquilla', lat: 10.97, lng: -74.80, status: 'live',
-          description: '"Con los cabellos al viento, la dulce piel encendida, y el andar sin descanso tal aire de gallardía que el alma de las palmeras se detiene a verla pasar."',
-          author: '— Meira Delmar, "Romance de Barranquilla"',
-          videos: [
-            { title: 'Así se ve el centro', id: '5Q8Sq7YQrEE' },
-            { title: 'Short', id: 'yT4JEs4TVQg' }
-          ] },
-        { id: 'bogota', name: 'Bogotá', lat: 4.71, lng: -74.07, status: 'future',
-          description: '"Ciudad a medio hacer, siempre a punto de parecerse a algo como una muchacha que comienza a menstruar, precaria, sin belleza alguna. La ciudad que amo se parece demasiado a mi vida."',
-          author: '— María Mercedes Carranza, "Bogotá, 1982"',
-          videos: [] },
-        { id: 'medellin', name: 'Medellín', lat: 6.25, lng: -75.57, status: 'future',
-          description: '"El maíz con las lluvias va creciendo / henchido de verdor y lozanía."',
-          author: '— Gregorio Gutiérrez González, "Memoria sobre el cultivo del maíz en Antioquia"',
-          videos: [] },
-        { id: 'cali', name: 'Cali', lat: 3.45, lng: -76.53, status: 'future',
-          description: '"Tu incesante rumor vine escuchando / desde la cumbre de lejana sierra."',
-          author: '— Jorge Isaacs, "Río Moro"',
-          videos: [] },
-        { id: 'cartagena', name: 'Cartagena', lat: 10.39, lng: -75.51, status: 'future',
-          description: '"Más hoy, plena de rancio desaliño, bien puedes inspirar ese cariño que uno les tiene a sus zapatos viejos."',
-          author: '— Luis Carlos López, "A mi ciudad nativa"',
-          videos: [] },
-        { id: 'lima', name: 'Lima', lat: -12.05, lng: -77.04, status: 'future',
-          description: '"Santa Rosa de Lima, que atormentadamente / tus favores sepultas en umbroso rincón."',
-          author: '— José Santos Chocano, "Plegaria lírica"',
-          videos: [] },
-        { id: 'cdmx', name: 'Ciudad de México', lat: 19.43, lng: -99.13, status: 'future',
-          description: '"De la famosa México el asiento, archivo de toda grandeza y ornamento, del mundo la riqueza y el tesoro."',
-          author: '— Bernardo de Balbuena, "La grandeza mexicana" (1604)',
-          videos: [] },
-        { id: 'nyc', name: 'Nueva York', lat: 40.71, lng: -74.01, status: 'future',
-          description: '"Asesinado por el cielo, entre las formas que van hacia la sierpe y las formas que buscan el cristal."',
-          author: '— Federico García Lorca, "Poeta en Nueva York"',
-          videos: [] },
-        { id: 'londres', name: 'Londres', lat: 51.51, lng: -0.13, status: 'future',
-          description: '"I wander thro\' each charter\'d street, near where the charter\'d Thames does flow. And mark in every face I meet marks of weakness, marks of woe."',
-          author: '— William Blake, "London" (1794)',
-          videos: [] },
-        { id: 'paris', name: 'París', lat: 48.86, lng: 2.35, status: 'future',
-          description: '"Paris change! mais rien dans ma mélancolie n\'a bougé! palais neufs, échafaudages, blocs, vieux faubourgs, tout pour moi devient allégorie."',
-          author: '— Charles Baudelaire, "Le Cygne"',
-          videos: [] },
-        { id: 'barcelona', name: 'Barcelona', lat: 41.39, lng: 2.17, status: 'future',
-          description: '"Los imagino al mediodía, por la avenida de los tilos, la capota del coche salpicada de sol, y la música fundiéndose al rumor de los neumáticos."',
-          author: '— Jaime Gil de Biedma, "Barcelona ja no es bona"',
-          videos: [] },
-        { id: 'dakar', name: 'Dakar', lat: 14.72, lng: -17.47, status: 'future',
-          description: '"Je contemple toits et collines dans la brume. Dans la paix – les cheminées sont graves et nues."',
-          author: '— Léopold Sédar Senghor, "Chants d\'ombre"',
-          videos: [] },
-        { id: 'mumbai', name: 'Mumbai', lat: 19.08, lng: 72.88, status: 'future',
-          description: '"The morning is a long straight line of flavours, a longitude of tastes along which the city stretches and wakes."',
-          author: '— Arun Kolatkar, "Kala Ghoda Poems"',
-          videos: [] },
-        { id: 'tokio', name: 'Tokio', lat: 35.68, lng: 139.69, status: 'future',
-          description: '"Furu ike ya / kawazu tobikomu / mizu no oto."',
-          author: '— Matsuo Bashō, haiku del estanque viejo',
-          videos: [] },
-        { id: 'sydney', name: 'Sídney', lat: -33.87, lng: 151.21, status: 'future',
-          description: '"All the life and light and beauty / that belong to Sydney-Side."',
-          author: '— Henry Lawson, "Sydney-Side"',
-          videos: [] },
-        { id: 'kansas-city', name: 'Kansas City', lat: 39.10, lng: -94.58, status: 'future',
-          description: '"A signalman in a tower, the outpost of Kansas City, keeps his place at a window."',
-          author: '— Carl Sandburg, "Still Life"',
-          videos: [] },
-        { id: 'dublin', name: 'Dublín', lat: 53.35, lng: -6.26, status: 'future',
-          description: '"Hunt the hare and turn her down the rocky road / and all the way to Dublin."',
-          author: '— D. K. Gavan, "The Rocky Road to Dublin"',
-          videos: [] },
-        { id: 'rome', name: 'Rome', lat: 41.90, lng: 12.50, status: 'future',
-          description: '"Around... surge awful ruins, prone, august, and hoar."',
-          author: '— Isa Blagden, "Rome. 1870"',
-          videos: [] }
-      ];
+      // Fuente única compartida con el atlas relativo: assets/atlas/cities.js
+      const { distKm, fmtKm } = window.AtlasGeo;
+      const cityRegistry = window.ATLAS_CITIES.map(c => ({
+        id: c.id, name: c.name, country: c.country, lat: c.lat, lng: c.lon, status: c.status,
+        description: c.quote || '', author: c.attrib || '',
+        videos: c.video ? [
+          { title: 'Así se ve el centro', id: c.video.long },
+          { title: 'Short', id: c.video.short }
+        ] : []
+      }));
+      const STATUS_LABEL = { live: 'viva', next: 'próxima', future: 'futura' };
+      const kmBetween = (a, b) => distKm({ lat: a.lat, lon: a.lng }, { lat: b.lat, lon: b.lng });
+      const origin = cityRegistry.find(c => c.status === 'live') || cityRegistry[0];
 
       // ========== VIDEO VIEWER ==========
       const stage = document.querySelector('main');
@@ -857,7 +674,21 @@
       const noteAuthor = document.querySelector('[data-note-author]');
       const activeCityLabel = document.querySelector('[data-active-city-label]');
       const reelSwitch = document.querySelector('.reel-switch');
-      const cityRail = document.querySelector('.city-rail');
+      const cityRail = document.querySelector('.dist-list');
+      const railTitle = document.querySelector('[data-rail-title]');
+      const noteDistance = document.querySelector('[data-note-distance]');
+      const pinHost = document.querySelector('.pin-layer');
+
+      // Pines generados desde el registro: una ciudad nueva en cities.js aparece sola.
+      cityRegistry.forEach(city => {
+        const pin = document.createElement('button');
+        pin.type = 'button';
+        pin.className = 'city-pin is-' + city.status;
+        pin.dataset.cityId = city.id;
+        pin.setAttribute('aria-label', city.name + ': ' + (city.videos.length ? 'ver videos' : 'ruta ' + STATUS_LABEL[city.status]));
+        pin.innerHTML = '<span class="pin-name"></span>';
+        pinHost.appendChild(pin);
+      });
 
       let activeCityId = 'barranquilla';
       let activeVideoIndex = 0;
@@ -905,20 +736,33 @@
         posterCity.textContent = city.name;
         activeCityLabel.textContent = city.name;
         noteTitle.textContent = city.name;
+        noteDistance.textContent = city === origin
+          ? 'Ciudad origen · ' + city.videos.length + ' piezas'
+          : fmtKm(kmBetween(origin, city)) + ' desde ' + origin.name + ' · ' + STATUS_LABEL[city.status];
         noteCopy.textContent = city.description;
         noteAuthor.textContent = city.author || statusLabel;
         viewerSlate.style.setProperty('--poster-glow', posterVars[0]);
         viewerSlate.style.setProperty('--poster-core', posterVars[1]);
         viewerShell.classList.toggle('has-videos', hasVideos);
         renderReels(city);
+        renderRuler(city);
+        updatePinNames(city);
         updateActiveControls(cityId);
+      }
+
+      // Cada pin muestra su distancia real a la ciudad elegida.
+      function updatePinNames(from) {
+        pinHost.querySelectorAll('.city-pin').forEach(pin => {
+          const c = cityById(pin.dataset.cityId);
+          pin.querySelector('.pin-name').textContent = c === from ? c.name : c.name + ' · ' + fmtKm(kmBetween(from, c));
+        });
       }
 
       function updateActiveControls(cityId) {
         document.querySelectorAll('.city-pin').forEach(pin => {
           pin.classList.toggle('is-selected', pin.dataset.cityId === cityId);
         });
-        document.querySelectorAll('.city-tab').forEach(tab => {
+        document.querySelectorAll('.dist-row').forEach(tab => {
           tab.classList.toggle('is-active', tab.dataset.cityId === cityId);
         });
       }
@@ -927,7 +771,7 @@
         reelSwitch.innerHTML = '';
         city.videos.forEach((video, i) => {
           const button = document.createElement('button');
-          button.className = 'reel' + (i === activeVideoIndex ? ' is-active' : '');
+          button.className = 'reel btn-tab' + (i === activeVideoIndex ? ' is-active' : '');
           button.type = 'button';
           button.dataset.videoIndex = i;
           button.textContent = city.name + ' / ' + video.title;
@@ -936,13 +780,24 @@
         });
       }
 
-      function renderCityRail() {
-        cityRail.innerHTML = cityRegistry.map(city =>
-          '<button class="city-tab" type="button" data-city-id="' + city.id + '" data-status="' + city.status + '">' + city.name + '</button>'
-        ).join('');
-        cityRail.querySelectorAll('.city-tab').forEach(tab => {
-          tab.addEventListener('click', () => selectCity(tab.dataset.cityId));
-        });
+      // Regla de distancias: el resto del atlas, de cerca a lejos desde la ciudad elegida.
+      function renderRuler(from) {
+        railTitle.textContent = 'Desde ' + from.name + ', de cerca a lejos';
+        cityRail.innerHTML = '';
+        cityRegistry.filter(c => c !== from)
+          .map(c => ({ c, d: kmBetween(from, c) }))
+          .sort((x, y) => x.d - y.d)
+          .forEach(({ c, d }) => {
+            const tab = document.createElement('button');
+            tab.type = 'button';
+            tab.className = 'dist-row';
+            tab.dataset.cityId = c.id;
+            tab.dataset.status = c.status;
+            tab.setAttribute('aria-label', c.name + ', ' + STATUS_LABEL[c.status] + ', a ' + fmtKm(d) + ' de ' + from.name);
+            tab.innerHTML = '<span class="dot" aria-hidden="true"></span><span>' + c.name + '</span><span class="km">' + fmtKm(d) + '</span>';
+            tab.addEventListener('click', () => selectCity(c.id));
+            cityRail.appendChild(tab);
+          });
       }
 
       function clearVideo() {
@@ -1016,6 +871,7 @@
         activeVideoIndex = 0;
         clearVideo();
         updateSlate(cityId);
+        focusGlobeOn(city);
       }
 
       document.querySelectorAll('.city-pin').forEach(pin => {
@@ -1039,9 +895,8 @@
         stage.classList.add('is-touch-revealed');
       }, { passive: true });
 
-      renderCityRail();
       updateSlate('barranquilla');
-      setTimeout(() => showVideo('barranquilla'), 0);
+      setTimeout(() => showVideo(activeCityId), 0);
 
       // ========== 3D GLOBE ==========
       const container = document.getElementById('globe-container');
@@ -1301,9 +1156,9 @@
 
       // Atmósfera: halo exterior y borde luminoso sobre la esfera (fresnel).
       const haloMat = new THREE.ShaderMaterial({
-        uniforms: { glow: { value: new THREE.Color(0x5fb0b4) } },
+        uniforms: { glow: { value: new THREE.Color(0x5fb0b4) }, strength: { value: 1 } },
         vertexShader: 'varying vec3 vN; void main(){ vN = normalize(normalMatrix * normal); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-        fragmentShader: 'uniform vec3 glow; varying vec3 vN; void main(){ float i = pow(max(0.0, 0.66 - dot(vN, vec3(0.0, 0.0, 1.0))), 3.2); gl_FragColor = vec4(glow, 1.0) * i * 0.75; }',
+        fragmentShader: 'uniform vec3 glow; uniform float strength; varying vec3 vN; void main(){ float i = pow(max(0.0, 0.66 - dot(vN, vec3(0.0, 0.0, 1.0))), 3.2); gl_FragColor = vec4(glow, 1.0) * i * 0.75 * strength; }',
         side: THREE.BackSide,
         blending: THREE.AdditiveBlending,
         transparent: true,
@@ -1312,9 +1167,9 @@
       const glow = new THREE.Mesh(new THREE.SphereGeometry(R * 1.12, 64, 64), haloMat);
       scene.add(glow);
       const rimMat = new THREE.ShaderMaterial({
-        uniforms: { rim: { value: new THREE.Color(0xf2c9a0) } },
+        uniforms: { rim: { value: new THREE.Color(0xf2c9a0) }, strength: { value: 1 } },
         vertexShader: 'varying vec3 vN; void main(){ vN = normalize(normalMatrix * normal); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-        fragmentShader: 'uniform vec3 rim; varying vec3 vN; void main(){ float f = pow(1.0 - max(0.0, dot(vN, vec3(0.0, 0.0, 1.0))), 3.5); gl_FragColor = vec4(rim, f * 0.55); }',
+        fragmentShader: 'uniform vec3 rim; uniform float strength; varying vec3 vN; void main(){ float f = pow(1.0 - max(0.0, dot(vN, vec3(0.0, 0.0, 1.0))), 3.5); gl_FragColor = vec4(rim, f * 0.55 * strength); }',
         blending: THREE.AdditiveBlending,
         transparent: true,
         depthWrite: false
@@ -1381,7 +1236,6 @@
       // ===== RUTAS DESDE EL ORIGEN =====
       // Arcos de círculo máximo, levantados sobre la superficie, que salen de
       // Barranquilla hacia cada ciudad del atlas: el proyecto como itinerario.
-      const origin = cityRegistry.find(c => c.status === 'live') || cityRegistry[0];
       const routeGroup = new THREE.Group();
       const ORIGIN_COLOR = new THREE.Color(0xe06957);
       const DEST_COLOR = new THREE.Color(0x8fd1cf);
@@ -1435,6 +1289,31 @@
       }
       let routesGrowing = true;
 
+      // ===== GIRAR HACIA LA CIUDAD ELEGIDA =====
+      const TILT = 0.65;
+      let focusTarget = null;
+      function focusGlobeOn(city) {
+        const y = Math.PI / 2 - (city.lng + 180) * Math.PI / 180;
+        const x = Math.max(-TILT, Math.min(TILT, city.lat * Math.PI / 180));
+        let dy = (y - globe.rotation.y) % (Math.PI * 2);
+        if (dy > Math.PI) dy -= Math.PI * 2;
+        if (dy < -Math.PI) dy += Math.PI * 2;
+        focusTarget = {
+          y: globe.rotation.y + dy, x,
+          fromY: globe.rotation.y, fromX: globe.rotation.x, start: performance.now()
+        };
+        velX = 0; velY = 0;
+        if (reduceMotion) {
+          globe.rotation.set(focusTarget.x, focusTarget.y, 0);
+          focusTarget = null;
+        }
+      }
+      // ?city=<id> llega desde el atlas: el globo abre mirando esa ciudad.
+      const startCity = cityById(new URLSearchParams(location.search).get('city')) || origin;
+      globe.rotation.set(Math.max(-TILT, Math.min(TILT, startCity.lat * Math.PI / 180)),
+        Math.PI / 2 - (startCity.lng + 180) * Math.PI / 180, 0);
+      if (startCity !== origin) { activeCityId = startCity.id; clearVideo(); updateSlate(startCity.id); }
+
       // ===== DRAG TO ROTATE =====
       let isDragging = false;
       let prevX = 0, prevY = 0;
@@ -1444,6 +1323,7 @@
       container.addEventListener('pointerdown', (e) => {
         isDragging = true;
         dragActive = false;
+        focusTarget = null;
         prevX = e.clientX;
         prevY = e.clientY;
         velX = 0;
@@ -1458,7 +1338,7 @@
         if (Math.abs(dx) > 2 || Math.abs(dy) > 2) dragActive = true;
         globe.rotation.y += dx * 0.008;
         globe.rotation.x += dy * 0.005;
-        globe.rotation.x = Math.max(-0.5, Math.min(0.5, globe.rotation.x));
+        globe.rotation.x = Math.max(-TILT, Math.min(TILT, globe.rotation.x));
         velX = dx * 0.008;
         velY = dy * 0.005;
         prevX = e.clientX;
@@ -1477,6 +1357,14 @@
         animId = requestAnimationFrame(animate);
 
         if (routesGrowing) routesGrowing = growRoutes(performance.now());
+
+        if (focusTarget && !isDragging) {
+          const t = Math.min(1, (performance.now() - focusTarget.start) / 1100);
+          const e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+          globe.rotation.y = focusTarget.fromY + (focusTarget.y - focusTarget.fromY) * e;
+          globe.rotation.x = focusTarget.fromX + (focusTarget.x - focusTarget.fromX) * e;
+          if (t >= 1) focusTarget = null;
+        }
 
         // Momentum deceleration when not dragging
         if (!isDragging) {
@@ -1527,6 +1415,62 @@
       window.addEventListener('resize', onResize);
       const ro = new ResizeObserver(onResize);
       ro.observe(container);
+
+      // ===== MORFISMO GLOBO ⇄ ATLAS RELATIVO =====
+      // La home entrega al atlas la cámara exacta del globo (centro, escala focal y
+      // distancia); allí el mismo mundo pasa de perspectiva a azimutal equidistante.
+      const MORPH_KEY = 'atlas-morph', GEOM_KEY = 'globe-geom';
+      function saveJSON(key, value) { try { sessionStorage.setItem(key, JSON.stringify(value)); } catch (e) {} }
+      function loadJSON(key) { try { return JSON.parse(sessionStorage.getItem(key) || 'null'); } catch (e) { return null; } }
+      function globeCamera() {
+        const rect = container.getBoundingClientRect();
+        const half = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+        let lng = -90 - THREE.MathUtils.radToDeg(globe.rotation.y);
+        lng = ((lng + 180) % 360 + 360) % 360 - 180;
+        return {
+          lng, lat: THREE.MathUtils.radToDeg(globe.rotation.x),
+          cx: rect.left + rect.width / 2, cy: rect.top + rect.height / 2,
+          s: (rect.height / 2) / half, P: camera.position.z / R,
+          vw: innerWidth, vh: innerHeight
+        };
+      }
+      const storeGeom = () => saveJSON(GEOM_KEY, globeCamera());
+      storeGeom();
+      new ResizeObserver(storeGeom).observe(container);
+
+      const leaveFade = { t: 0 };
+      document.querySelectorAll('a[href="atlas-relativo.html"]').forEach(link => {
+        link.addEventListener('click', e => {
+          if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+          e.preventDefault();
+          const target = 'atlas-relativo.html?city=' + encodeURIComponent(activeCityId);
+          if (reduceMotion) { location.href = target; return; }
+          isDragging = false; velX = 0; velY = 0; focusTarget = null;
+          stage.classList.add('is-leaving');
+          // El halo y las rutas se apagan: en el atlas el mundo llega desnudo.
+          const t0 = performance.now();
+          (function fade(now) {
+            const k = Math.min(1, (now - t0) / 320);
+            haloMat.uniforms.strength.value = 1 - k;
+            rimMat.uniforms.strength.value = 1 - k;
+            routeMat.uniforms.opacity.value = 0.85 * (1 - k);
+            if (k < 1) requestAnimationFrame(fade);
+            else {
+              saveJSON(MORPH_KEY, Object.assign(globeCamera(), { dir: 'to-atlas', at: Date.now() }));
+              location.href = target;
+            }
+          })(t0);
+        });
+      });
+
+      // Llegada desde el atlas: el globo ya está donde el atlas se cerró; el resto aparece.
+      const arrival = loadJSON(MORPH_KEY);
+      try { sessionStorage.removeItem(MORPH_KEY); } catch (e) {}
+      if (arrival && arrival.dir === 'to-globe' && Date.now() - arrival.at < 4000 && !reduceMotion) {
+        requestAnimationFrame(() => requestAnimationFrame(() => document.documentElement.classList.remove('is-arriving')));
+      } else {
+        document.documentElement.classList.remove('is-arriving');
+      }
 
       // ========== AUDIO DRONE ==========
       let audioCtx = null, droneStarted = false;

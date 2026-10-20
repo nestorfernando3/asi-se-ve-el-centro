@@ -8,6 +8,10 @@
 
 ## Unreleased
 
+- Transición globo ⇄ atlas relativo como un solo mundo que cambia de proyección: la home entrega la cámara exacta del globo (centro, escala focal, distancia) y el atlas abre en perspectiva vertical en ese mismo lugar para desplegarse en azimutal equidistante; al volver, el atlas se cierra en la esfera y la home la retoma centrada en la misma ciudad (`?city=`). La barra superior se mantiene quieta con View Transitions; con movimiento reducido se navega sin animación.
+- Sistema visual único en `assets/site.css` (tokens, barra con navegación Globo / Atlas relativo, pie, lista de distancias, botones de pieza, leyenda y grano). El atlas relativo pasa a la carta náutica nocturna del globo: mar petróleo, tierra tostada, líneas de agua y anillos en rojo de imprenta; la regla de distancias vive ahora en su panel.
+- La home y el atlas relativo comparten un solo registro de ciudades (`assets/atlas/cities.js`), con id, estado y cita para las 18 ciudades; los pines del globo se generan desde ahí.
+- Home: distancias reales en pines y ficha de ciudad, regla de distancias ordenada por km en lugar de la cuadrícula de botones, el globo gira hacia la ciudad elegida y una leyenda de estados (viva, próxima, futura).
 - Globo de la home rediseñado como carta náutica nocturna: costas reales de Natural Earth (`assets/globe/land-110m.js`), líneas de agua alrededor de las costas, trópicos y rótulos de mares, rutas de círculo máximo desde Barranquilla que se desvanecen en el horizonte, y atmósfera con brillo de borde.
 - Tipografía editorial con Fraunces para el título, la ciudad y las citas; grano de película sobre la escena.
 - La home (`index.html`) enlaza al Atlas relativo desde la barra inferior, sin alterar la experiencia del globo.

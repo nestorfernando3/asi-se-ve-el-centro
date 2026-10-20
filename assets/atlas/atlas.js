@@ -3,11 +3,13 @@
 (function () {
   const { R_EARTH, DEG, distKm, destPt, fmtKm } = window.AtlasGeo;
   const cities = window.ATLAS_CITIES;
-  const colors = { live: '#b83e29', next: '#1d150c', future: '#155e6b' };
+  const colors = { live: '#e06957', next: '#f1e4c8', future: '#63a9a1' }; // = estados en assets/site.css
   const statusLabels = { live: 'viva', next: 'próxima', future: 'futura' };
   const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  let centerCity = cities[0];
+  // ?city=<id> llega desde el globo: el atlas abre centrado en la ciudad elegida allí.
+  const cityParam = new URLSearchParams(location.search).get('city');
+  let centerCity = cities.find(c => c.id === cityParam) || cities[0];
   let land = null;
   let staticGeo = null;
   let timer = null;
@@ -16,20 +18,23 @@
   const hintEl = document.getElementById('hint');
   const HINT_DEFAULT = hintEl.textContent;
   const svg = d3.select('#svg');
-  const projection = d3.geoAzimuthalEquidistant().precision(0.5);
+  const azProj = d3.geoAzimuthalEquidistant().precision(0.5);
+  let projection = azProj;           // durante el morfismo se cambia por morphProj
   const path = d3.geoPath(projection);
 
+  const gSea    = svg.append('g');
   const gSpokes = svg.append('g');
   const gRings  = svg.append('g');
   const gLand   = svg.append('g');
   const gSphere = svg.append('g');
+  const gLabels = svg.append('g'); // rótulos de anillos, por encima de la tierra
   const gCities = svg.append('g');
   const gCenter = svg.append('g');
 
   function sizeFit() {
     const w = mapEl.clientWidth, h = mapEl.clientHeight;
     svg.attr('viewBox', `0 0 ${w} ${h}`);
-    projection.translate([w / 2, h / 2]).scale(Math.min(w, h) * 0.94 / (2 * Math.PI));
+    azProj.translate([w / 2, h / 2]).scale(Math.min(w, h) * 0.94 / (2 * Math.PI));
   }
   const rotateFor = (c) => [-c.lon, -c.lat];
 
@@ -51,11 +56,13 @@
 
   function render() {
     gRings.selectAll('*').remove();
+    gLabels.selectAll('*').remove();
     staticGeo.rings.forEach(r => {
       gRings.append('path').attr('d', path(r.geo)).attr('class', 'ring' + (r.major ? ' major' : ''));
-      if (r.major) {
+      // En mapas pequeños solo se rotula el anillo de 10.000 km.
+      if (r.major && r.d < 20000 && (mapEl.clientWidth >= 520 || r.d === 10000)) {
         const pt = projection(destPt(centerCity.lon, centerCity.lat, 90, r.d / R_EARTH));
-        if (pt) gRings.append('text').attr('class', 'ring-label')
+        if (pt) gLabels.append('text').attr('class', 'ring-label')
           .attr('x', pt[0] + 6).attr('y', pt[1] - 4).text((r.d / 1000) + '.000 km');
       }
     });
@@ -65,7 +72,8 @@
       const pt = projection(cd.ll);
       if (pt) gSpokes.append('text').attr('class', 'spoke-label').attr('x', pt[0] - 3).attr('y', pt[1] + 3).text(cd.t);
     });
-    if (land) gLand.select('path').attr('d', path(land));
+    gSea.select('path').attr('d', path({ type: 'Sphere' }));
+    if (land) gLand.selectAll('path').attr('d', path(land));
     gSphere.select('path').attr('d', path({ type: 'Sphere' }));
     drawCities();
   }
@@ -190,7 +198,7 @@
     [['long', 'Pieza larga'], ['short', 'Short']].forEach(([key, label]) => {
       const t = document.createElement('button');
       t.type = 'button';
-      t.className = 'tab' + (key === current ? ' active' : '');
+      t.className = 'btn-tab' + (key === current ? ' is-active' : '');
       t.setAttribute('aria-pressed', key === current ? 'true' : 'false');
       t.textContent = label;
       t.addEventListener('click', () => {
@@ -209,16 +217,11 @@
       `${c.country} · ${Math.abs(c.lat).toFixed(2)}°${c.lat >= 0 ? 'N' : 'S'} ${Math.abs(c.lon).toFixed(2)}°${c.lon >= 0 ? 'E' : 'O'}` +
       (c.status !== 'live' ? ` · <b>${c.status === 'next' ? 'próxima' : 'futura'}</b>` : '');
     document.getElementById('hdr-proj').textContent = 'El mundo visto desde ' + c.name;
-    document.getElementById('r-title').textContent = 'Distancias desde ' + c.name + ' — km reales, de cerca a lejos';
+    document.getElementById('r-title').textContent = 'Desde ' + c.name + ', de cerca a lejos';
     renderFrame(c);
     const q = document.getElementById('p-quote');
     if (c.quote) { q.style.display = ''; q.innerHTML = `${c.quote}<span class="attrib">${c.attrib}</span>`; }
     else q.style.display = 'none';
-    let nearest = null, nd = Infinity;
-    cities.forEach(o => { if (o !== c) { const d = distKm(c, o); if (d < nd) { nd = d; nearest = o; } } });
-    document.getElementById('p-meta').innerHTML =
-      `<div>Estado <span>${c.status === 'live' ? '● viva — 2 piezas' : c.status === 'next' ? 'próxima — en producción' : 'futura ruta'}</span></div>
-       <div>Ciudad más cercana <span>${nearest.name} · ${fmtKm(nd)}</span></div>`;
     buildRuler();
   }
 
@@ -231,9 +234,10 @@
       .forEach(({ c, d }) => {
         const el = document.createElement('button');
         el.type = 'button';
-        el.className = 'r-chip';
+        el.className = 'dist-row';
+        el.dataset.status = c.status;
         el.setAttribute('aria-label', `Recentrar en ${c.name}, a ${fmtKm(d)} de ${centerCity.name}`);
-        el.innerHTML = `<i style="background:${colors[c.status]}"></i><b>${c.name}</b> ${fmtKm(d)}`;
+        el.innerHTML = `<span class="dot" aria-hidden="true"></span><span>${c.name}</span><span class="km">${fmtKm(d)}</span>`;
         el.addEventListener('click', (e) => recenter(c, { keyboard: e.detail === 0 }));
         track.appendChild(el);
       });
@@ -241,28 +245,148 @@
 
   // boot
   sizeFit();
-  projection.rotate(rotateFor(centerCity));
+  azProj.rotate(rotateFor(centerCity));
   gSphere.append('path').attr('class', 'sphere');
+  gSea.append('path').attr('class', 'sea');
   staticGeo = computeGeo(centerCity);
   updatePanel();
 
+  function buildLand(topo) {
+    land = topojson.feature(topo, topo.objects.land);
+    // Líneas de agua: anillos que se alejan de la costa, recortados con el color del mar.
+    for (let i = 5; i >= 1; i--) {
+      const w = 1.5 + i * 2.8;
+      gLand.append('path').attr('class', 'wl').attr('stroke-width', w)
+        .attr('stroke-opacity', (0.55 * Math.pow(1 - (i - 1) / 5, 1.4)).toFixed(3));
+      gLand.append('path').attr('class', 'wl-cut').attr('stroke-width', w - 0.9);
+    }
+    gLand.append('path').attr('class', 'land');
+    document.getElementById('loading')?.remove();
+  }
   const fallback = () => {
     document.getElementById('loading').textContent = 'Sin cartografía — mapa esquemático';
     render();
   };
-  if (location.protocol === 'file:') {
-    fallback();
-  } else {
-    fetch('assets/atlas/land-110m.json')
-      .then(r => r.json())
-      .then(topo => {
-        land = topojson.feature(topo, topo.objects.land);
-        gLand.append('path').attr('class', 'land');
-        document.getElementById('loading').remove();
-        render();
-      })
-      .catch(fallback);
+  // La cartografía llega por <script> (sincrónica, sirve también en file://);
+  // así el primer cuadro ya tiene costas y el morfismo desde el globo no parpadea.
+  if (window.LAND_110M) {
+    buildLand(window.LAND_110M);
+  } else if (location.protocol !== 'file:') {
+    fetch('assets/atlas/land-110m.json').then(r => r.json()).then(t => { buildLand(t); render(); }).catch(fallback);
   }
 
-  window.addEventListener('resize', () => { sizeFit(); render(); });
+  // ===== MORFISMO GLOBO ⇄ ATLAS =====
+  // El mismo mundo cambia de proyección: perspectiva vertical (la cámara de Three.js
+  // del globo de la home, en su posición exacta de pantalla) mezclada con la
+  // azimutal equidistante de este atlas.
+  const MORPH_KEY = 'atlas-morph';
+  const GEOM_KEY = 'globe-geom';
+  const TILT_DEG = 0.65 * DEG; // inclinación máxima del globo de la home
+  const azRaw = d3.geoAzimuthalEquidistantRaw;
+  let morphT = 1, morphP = 2.9; // P = distancia de la cámara en radios terrestres
+  // Lo que ve una cámara a P radios del centro: x = X / Z en el plano de imagen.
+  const perspRaw = (l, p) => {
+    const cosc = Math.cos(p) * Math.cos(l), z = morphP - cosc;
+    return [Math.cos(p) * Math.sin(l) / z, Math.sin(p) / z];
+  };
+  const morphProj = d3.geoProjection((l, p) => {
+    const a = perspRaw(l, p), b = azRaw(l, p);
+    return [a[0] + (b[0] - a[0]) * morphT, a[1] + (b[1] - a[1]) * morphT];
+  }).precision(0.5);
+  const overlays = [gSpokes, gRings, gLabels, gCities, gCenter];
+  const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+  const lerp = (a, b, t) => a + (b - a) * t;
+
+  function readJSON(store, key) {
+    try { return JSON.parse(store.getItem(key) || 'null'); } catch (e) { return null; }
+  }
+  function writeJSON(store, key, value) {
+    try { store.setItem(key, JSON.stringify(value)); } catch (e) { /* almacenamiento bloqueado */ }
+  }
+
+  // Un cuadro del morfismo: t = 0 globo, t = 1 atlas.
+  function morphFrame(t, from) {
+    const rect = mapEl.getBoundingClientRect();
+    morphT = t;
+    morphP = from.P;
+    const limb = Math.acos(1 / from.P) * DEG;
+    const endScale = azProj.scale(), endT = azProj.translate(), endR = azProj.rotate();
+    let r0 = -from.lng; // vuelta más corta en longitud
+    while (r0 - endR[0] > 180) r0 -= 360;
+    while (r0 - endR[0] < -180) r0 += 360;
+    morphProj
+      .rotate([lerp(r0, endR[0], t), lerp(-from.lat, endR[1], t), 0])
+      .scale(lerp(from.s, endScale, t))
+      .translate([lerp(from.cx - rect.left, endT[0], t), lerp(from.cy - rect.top, endT[1], t)])
+      .clipAngle(lerp(limb, 179.9, t));
+    projection = morphProj;
+    path.projection(morphProj);
+    const o = smooth(0.55, 1, t);
+    overlays.forEach(g => g.attr('opacity', o));
+    render();
+  }
+  function endMorph() {
+    morphT = 1;
+    projection = azProj;
+    path.projection(azProj);
+    overlays.forEach(g => g.attr('opacity', null));
+    render();
+  }
+  function runMorph(from, dir, duration, done) {
+    const t0 = performance.now();
+    const step = now => {
+      const k = Math.min(1, (now - t0) / duration);
+      const e = d3.easeCubicInOut(k);
+      morphFrame(dir === 'open' ? e : 1 - e, from);
+      if (k < 1) requestAnimationFrame(step);
+      else done();
+    };
+    requestAnimationFrame(step);
+  }
+
+  // Llegada desde el globo: el primer cuadro reproduce el globo donde estaba.
+  const arrival = readJSON(sessionStorage, MORPH_KEY);
+  try { sessionStorage.removeItem(MORPH_KEY); } catch (e) { /* nada */ }
+  if (arrival && arrival.dir === 'to-atlas' && Date.now() - arrival.at < 4000 && !REDUCED) {
+    document.documentElement.classList.add('is-arriving');
+    morphFrame(0, arrival);
+    requestAnimationFrame(() => {
+      document.documentElement.classList.add('is-arriving-run');
+      runMorph(arrival, 'open', 1500, () => {
+        endMorph();
+        document.documentElement.classList.remove('is-arriving', 'is-arriving-run');
+      });
+    });
+  } else {
+    document.documentElement.classList.remove('is-arriving');
+    render();
+  }
+
+  // Salida hacia el globo: el atlas se cierra en la esfera y la home la retoma.
+  document.querySelectorAll('a[href="index.html"]').forEach(link => {
+    link.addEventListener('click', e => {
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+      e.preventDefault();
+      const target = 'index.html?city=' + encodeURIComponent(centerCity.id);
+      const lat = Math.max(-TILT_DEG, Math.min(TILT_DEG, centerCity.lat));
+      writeJSON(sessionStorage, MORPH_KEY, { dir: 'to-globe', city: centerCity.id, at: Date.now() });
+      if (REDUCED) { location.href = target; return; }
+      const rect = mapEl.getBoundingClientRect();
+      const g = readJSON(sessionStorage, GEOM_KEY);
+      const fits = g && Math.abs(g.vw - innerWidth) < 3 && Math.abs(g.vh - innerHeight) < 3;
+      const P = fits ? g.P : 2.9;
+      const to = {
+        lng: centerCity.lon, lat, P,
+        cx: fits ? g.cx : rect.left + rect.width / 2,
+        cy: fits ? g.cy : rect.top + rect.height / 2,
+        // escala focal: el disco visible mide s · tan(asin(1/P))
+        s: fits ? g.s : Math.min(rect.width, rect.height) * 0.4 / Math.tan(Math.asin(1 / P))
+      };
+      if (timer) timer.stop();
+      document.documentElement.classList.add('is-leaving');
+      runMorph(to, 'close', 1100, () => { location.href = target; });
+    });
+  });
+
+  window.addEventListener('resize', () => { sizeFit(); if (projection === azProj) render(); });
 })();

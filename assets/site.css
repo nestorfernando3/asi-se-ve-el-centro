@@ -1,0 +1,211 @@
+/* Así se ve el centro — sistema visual compartido.
+   Carta náutica nocturna: mar petróleo, tinta cálida, rojo de imprenta.
+   Lo usan index.html (globo) y atlas-relativo.html. */
+
+:root {
+  --matte: #050b10;
+  --night: #0b1218;
+  --sea-deep: #0f2e3a;
+  --surface: #111a22;
+  --fg: #f1ece2;
+  --muted: #92a2ae;
+  --line: rgba(241, 236, 226, 0.12);
+  --line-strong: rgba(241, 236, 226, 0.22);
+  --accent: #e06957;
+  --teal: #63a9a1;
+  --teal-ink: rgba(127, 190, 196, 0.82);
+  --cream: #f1e4c8;
+
+  /* Estados de ciudad: los mismos en pines, puntos, listas y leyendas. */
+  --st-live: var(--accent);
+  --st-next: var(--cream);
+  --st-future: var(--teal);
+
+  --font-serif: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+  --font-sans: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-mono: ui-monospace, 'IBM Plex Mono', 'JetBrains Mono', Menlo, monospace;
+
+  --gutter: clamp(16px, 2.8vw, 38px);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--night);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+}
+
+/* Grano de película sobre toda la página. */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  opacity: .07;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+:focus-visible { outline: 2px solid rgba(127, 190, 196, 0.7); outline-offset: 3px; }
+
+/* Transición entre documentos: la barra se queda quieta; el mundo cambia de proyección
+   en cada página (ver atlas.js e index.html), y la raíz apenas se funde. */
+@view-transition { navigation: auto; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 160ms; }
+.site-bar { view-transition-name: site-bar; }
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+}
+
+/* ── Barra superior: marca, navegación entre vistas, contexto ── */
+.site-bar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 18px;
+  padding: 14px var(--gutter);
+  color: var(--muted);
+  font: 10px/1.45 var(--font-mono);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+.site-bar.is-overlay { position: absolute; top: 0; left: 0; right: 0; z-index: 35; }
+.brand {
+  justify-self: start;
+  color: var(--fg);
+  text-decoration: none;
+  text-transform: none;
+  letter-spacing: -.01em;
+  font: 400 17px/1 var(--font-serif);
+}
+.brand em { color: var(--accent); font-style: normal; }
+.site-nav { display: flex; gap: 22px; }
+.site-nav a {
+  color: var(--muted);
+  text-decoration: none;
+  padding: 6px 0;
+  border-bottom: 1px solid transparent;
+  transition: color 180ms ease, border-color 180ms ease;
+}
+.site-nav a:hover { color: var(--fg); }
+.site-nav a[aria-current="page"] { color: var(--fg); border-bottom-color: var(--accent); }
+.site-context { justify-self: end; text-align: right; }
+
+/* ── Pie: indicación de uso y controles ── */
+.site-foot {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px var(--gutter);
+  color: var(--muted);
+  font: 9px/1.5 var(--font-mono);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+.site-foot.is-overlay { position: absolute; left: 0; right: 0; bottom: 0; z-index: 35; pointer-events: none; }
+.site-foot .rule { flex: 1; height: 1px; background: var(--line); }
+.site-foot b { color: var(--fg); font-weight: 500; }
+
+/* ── Texto ── */
+.kicker {
+  color: var(--teal-ink);
+  font: 9px/1.45 var(--font-mono);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+.city-title { font: 400 clamp(28px, 3.4vw, 52px)/.95 var(--font-serif); letter-spacing: -.02em; margin: 0; }
+.city-meta {
+  color: rgba(224, 105, 87, 0.9);
+  font: 9px/1.45 var(--font-mono);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+.city-quote {
+  margin: 0;
+  color: rgba(241, 236, 226, 0.8);
+  font: italic 300 14px/1.55 var(--font-serif);
+}
+.city-quote .attrib, .city-attrib {
+  display: block;
+  margin-top: 8px;
+  color: rgba(145, 157, 167, 0.82);
+  font: normal 9px/1.45 var(--font-mono);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+/* ── Botón de pieza (largo / short) ── */
+.btn-tab {
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  background: rgba(241, 236, 226, 0.025);
+  color: rgba(241, 236, 226, 0.6);
+  font: 9px/1.4 var(--font-mono);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 200ms ease, border-color 200ms ease, color 200ms ease;
+}
+.btn-tab:hover:not(.is-active) { border-color: rgba(224, 105, 87, 0.2); background: rgba(224, 105, 87, 0.03); }
+.btn-tab.is-active { color: var(--fg); border-color: rgba(224, 105, 87, 0.45); background: rgba(224, 105, 87, 0.07); }
+
+/* ── Lista de distancias: una tabla corta, no una botonera ── */
+.dist-list {
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  border-top: 1px solid var(--line);
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(127, 160, 175, 0.28) transparent;
+}
+.dist-row {
+  display: grid;
+  grid-template-columns: 8px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 34px;
+  padding: 0 6px 0 2px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  color: rgba(241, 236, 226, 0.72);
+  font: 9px/1.2 var(--font-mono);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  text-align: left;
+  cursor: pointer;
+  transition: background 180ms ease, color 180ms ease;
+}
+.dist-row .km { color: var(--muted); font-variant-numeric: tabular-nums; letter-spacing: .06em; }
+.dist-row:hover { color: var(--fg); background: rgba(127, 160, 175, 0.06); }
+.dist-row:hover .km { color: var(--accent); }
+@media (max-width: 920px) { .dist-row { min-height: 44px; } }
+
+/* ── Punto de estado y leyenda ── */
+.dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--st-future); }
+.dot.is-live, [data-status="live"] > .dot { background: var(--st-live); }
+.dot.is-next, [data-status="next"] > .dot { background: var(--st-next); }
+.legend {
+  display: grid;
+  gap: 6px;
+  justify-items: end;
+  color: var(--muted);
+  font: 9px/1 var(--font-mono);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+.legend span { display: flex; align-items: center; gap: 8px; }
+.legend .dot { order: 2; }
+
+@media (max-width: 560px) {
+  .site-bar { grid-template-columns: 1fr auto; }
+  .site-context { display: none; }
+  .site-nav { gap: 14px; }
+}
