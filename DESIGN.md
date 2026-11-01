@@ -164,7 +164,7 @@ Map coordinates in `%(x, y)` relative to the SVG world map (1000×560 viewBox).
 | City | X% | Y% | Status | Video URL |
 |---|---|---|---|---|---|
 | Barranquilla | 31.6% | 59.2% | **Live** | `5Q8Sq7YQrEE`, `yT4JEs4TVQg` |
-| Bogotá | 32.8% | 64% | Pending | — |
+| Bogotá | 32.8% | 64% | **Live** | `Fjgs4aaMxSI`, `6CD4CkhWgO4` |
 | Medellín | 31.1% | 63% | Pending | — |
 | Cali | 29.5% | 70.5% | Planned | — |
 | Cartagena | 31.5% | 56.3% | Planned | — |
