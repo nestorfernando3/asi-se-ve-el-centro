@@ -28,3 +28,21 @@ yarn-error.log*
 .vscode/
 .idea/
 
+.superpowers/
+
+# ── Material interno: el repositorio es público ──
+# En funding/ solo se versiona el paquete para evaluadores; todo lo demás
+# (presupuesto en borrador, tracker de convocatorias, contactos, correos)
+# queda fuera de git por defecto, incluido cualquier archivo nuevo.
+funding/*
+!funding/one-page-treatment.md
+!funding/artist-statement.md
+!funding/route-proposal.md
+
+# Notas de trabajo, planes y laboratorios ajenos al sitio
+docs/
+Laboratorio prueba/
+propuesta-*.html
+
+# Sitio armado por scripts/build-site.sh
+_site/

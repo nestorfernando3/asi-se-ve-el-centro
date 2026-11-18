@@ -32,7 +32,8 @@ Así se ve el centro/
 ├── README.md                          ← this file
 ├── DESIGN.md                          ← visual system, colors, architecture, city registry
 ├── projects.html                      ← funder-facing proof pack entry page
-├── funding/                           ← bilingual treatment, artist statement, route, budget, target tracker
+├── funding/                           ← reviewer packet: treatment, artist statement, route (internal drafts are git-ignored)
+├── scripts/build-site.sh              ← assembles the public site (allowlist) for GitHub Pages
 ├── assets/proof/                      ← temporary concept board + proof assets
 ├── frames/                            ← device frames for multi-screen prototypes
 │   ├── iphone-15-pro.html             ← 390×844 with Dynamic Island
@@ -138,9 +139,16 @@ deploys the checked-out branch as a static GitHub Pages site on every push to
 existing `index.html` entry point and exposes the experiment at
 `/atlas-relativo.html`.
 
-The workflow has no build step: it uploads the repository root exactly as the
-static site source. Local assets stay local; only the deferred YouTube player
-uses a remote URL.
+The workflow does not publish the repository root. `scripts/build-site.sh`
+copies an explicit allowlist into `_site/` (the three public pages, `assets/`
+and the reviewer packet in `funding/`) and stops the deploy if any internal
+file slips in. Draft budgets, grant trackers, outreach notes, `docs/` and old
+versions stay out of the site; most of them are also git-ignored. To preview
+exactly what will be published:
+
+```bash
+sh scripts/build-site.sh && python3 -m http.server 8000 -d _site
+```
 
 ---
 
