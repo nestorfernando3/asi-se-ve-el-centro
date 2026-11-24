@@ -1,14 +1,18 @@
 /* Registro de ciudades del atlas. Coordenadas WGS84.
    status: live (con video) | next (en producción) | future (ruta futura).
    video: { long, short } = IDs de YouTube.
+   poster: { long, short } = fotograma local de cada pieza (assets/posters/); sin él,
+   el visor usa el póster genérico y no pide nada a YouTube.
    Fuente única: la usan index.html (globo) y atlas-relativo.html. */
 window.ATLAS_CITIES = [
   { id:'barranquilla', name:'Barranquilla', country:'Colombia', lat:10.9639, lon:-74.7964, status:'live',
     video:{ long:'5Q8Sq7YQrEE', short:'yT4JEs4TVQg' },
+    poster:{ long:'assets/posters/barranquilla-long.jpg', short:'assets/posters/barranquilla-short.jpg' },
     quote:'“Con los cabellos al viento, la dulce piel encendida, y el andar sin descanso tal aire de gallardía que el alma de las palmeras se detiene a verla pasar.”',
     attrib:'— Meira Delmar, “Romance de Barranquilla”' },
   { id:'bogota', name:'Bogotá',      country:'Colombia', lat:4.7110,  lon:-74.0721, status:'live',
     video:{ long:'Fjgs4aaMxSI', short:'6CD4CkhWgO4' },
+    poster:{ long:'assets/posters/bogota-long.jpg', short:'assets/posters/bogota-short.jpg' },
     quote:'“Ciudad a medio hacer, siempre a punto de parecerse a algo como una muchacha que comienza a menstruar, precaria, sin belleza alguna. La ciudad que amo se parece demasiado a mi vida.”',
     attrib:'— María Mercedes Carranza, “Bogotá, 1982”' },
   { id:'medellin', name:'Medellín',    country:'Colombia', lat:6.2442,  lon:-75.5812, status:'next',

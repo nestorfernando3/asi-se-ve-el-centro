@@ -8,6 +8,13 @@
 
 ## Unreleased
 
+- Video solo a pedido: la home ya no carga YouTube al abrir. Globo y atlas comparten un visor (`assets/atlas/video.js`) con póster local y botón Reproducir; el reproductor llega desde `youtube-nocookie.com` después del clic, con sonido, y las piezas se llaman igual en las dos vistas («Pieza larga» y «Short»). Cada pieza de Barranquilla y Bogotá tiene su póster local en `assets/posters/` (fotograma de la propia pieza, recortado sin franjas), enlazado desde `cities.js`.
+- Se retira el drone sonoro: no llegaba a sonar porque el video se cargaba antes, y competía con el audio de las piezas.
+- Pines agrupados en el globo: los que caen uno sobre otro (Colombia, Europa) se reúnen bajo el de más rango con la cuenta (+4) y una lista para elegir, navegable con teclado. Los pines ocultos detrás del globo o dentro de un grupo salen del orden de tabulación.
+- Lupa del centro en el atlas relativo: los vecinos a menos de 2.500 km se ven en un disco aparte con escala radial de raíz cuadrada y se eligen ahí; en pantallas verticales va bajo el disco del mundo.
+- Móvil: deslizar en vertical sobre el globo desplaza la página (solo el gesto lateral lo gira); el verso de la ciudad aparece bajo el visor; las ayudas ya no hablan de pasar el cursor.
+- Letra mínima de 11 px en interfaz y 10 px en rótulos del mapa; los rótulos de anillo y de ciudad recalculan sus choques con el nuevo tamaño y la pista del atlas pasa a la esquina para no pisar la «N».
+
 - Bogotá pasa a ciudad viva: pieza larga «Domingo en el centro · Bogotá» (`Fjgs4aaMxSI`) y Short «A Slice of centro · Bogotá» (`6CD4CkhWgO4`), grabados en la Carrera Séptima el 23 de agosto de 2026.
 - Transición globo ⇄ atlas sin retraso: la textura del globo usa grano en mosaico, una base en caché y 4096 px (de ~950 ms a pocos ms, y ya no se genera dos veces); la home navega a los 140 ms sin apagar halo ni rutas, porque el atlas dibuja los mismos (halo, borde cálido, retícula de 15°, trópicos y ecuador, rutas desde Barranquilla); precarga del atlas; morfismo de 1,1 s (ida) y 0,85 s (vuelta) con salidas por temporizador para que la interfaz nunca quede oculta.
 - Tipografía repensada desde el proyecto: voz de calle (Archivo condensada, mayúsculas, como rótulos del centro) para el título y la marca; voz de carta (IM Fell: versalitas para ciudades, cursiva para mares y versos) siguiendo la convención cartográfica; monoespaciada para datos. El único acento del título es el punto final, en el rojo del pin de Barranquilla. El título entra una vez y ya no parpadea en bucle. Se retiran Fraunces y Montserrat.

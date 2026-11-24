@@ -10,7 +10,7 @@ This repository contains two coexisting web experiences:
   azimuthal map that lets each city become the centre. It does not replace
   `main/index.html`.
 
-Rotating type ring around a wireframe globe. Clean, modern atlas with Montserrat, cooler palette, and hover-to-reveal video.
+A night-chart globe and a relative atlas share one visual system (`assets/site.css`) and one video viewer (`assets/atlas/video.js`): a local poster first, and YouTube's no-cookie player only after the visitor presses Play.
 
 🌐 **Public atlas (new):** [Atlas relativo](https://nestorfernando3.github.io/asi-se-ve-el-centro/atlas-relativo.html)
 🌐 **Stable site:** [nestorfernando3.github.io/asi-se-ve-el-centro](https://nestorfernando3.github.io/asi-se-ve-el-centro/)
@@ -66,7 +66,7 @@ python3 -m http.server 8000
 Then open `http://localhost:8000/atlas-relativo.html`.
 
 ### 🌐 Live webapp
-**`index.html`** — served at [nestorfernando3.github.io/asi-se-ve-el-centro](https://nestorfernando3.github.io/asi-se-ve-el-centro/). Interactive map with 15 city pins, hover-to-reveal video, procedural audio drone, and a cleaner modern visual system.
+**`index.html`** — served at [nestorfernando3.github.io/asi-se-ve-el-centro](https://nestorfernando3.github.io/asi-se-ve-el-centro/). Interactive globe with 18 city pins (pins that overlap on screen group into a pickable list), click-to-play video, and real distances from the chosen city.
 
 ### Atlas relativo
 **`atlas-relativo.html`** — a no-build editorial map centred on Barranquilla by

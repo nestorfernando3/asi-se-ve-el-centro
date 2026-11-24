@@ -12,7 +12,6 @@
   <link rel="stylesheet" href="assets/site.css">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='5' fill='%23e06957'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://cdnjs.cloudflare.com">
-  <link rel="preconnect" href="https://www.youtube.com">
   <!-- Three.js se descarga desde ya, pero se ejecuta al final: la página pinta antes. -->
   <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" as="script">
   <link rel="prefetch" href="atlas-relativo.html">
@@ -65,30 +64,6 @@
         var(--ink);
     }
 
-    .audio-indicator {
-      font: 9px var(--font-mono);
-      color: var(--muted);
-      letter-spacing: 0.1em;
-      opacity: 0;
-      transition: opacity 400ms ease;
-    }
-    .audio-indicator.is-active { opacity: 0.7; }
-
-    .audio-toggle {
-      width: 44px;
-      min-height: 44px;
-      background: none;
-      border: 1px solid rgba(241,245,248,0.2);
-      color: var(--muted);
-      font: 9px var(--font-mono);
-      padding: 2px 6px;
-      cursor: pointer;
-      pointer-events: auto;
-    }
-    .audio-toggle .off { display: none; }
-    .audio-toggle.muted .on { display: none; }
-    .audio-toggle.muted .off { display: inline; }
-
     /* Grano de película y un resplandor cálido de horizonte detrás del globo. */
     main::before {
       content: '';
@@ -125,7 +100,8 @@
       justify-content: center;
       z-index: 1;
       cursor: grab;
-      touch-action: none;
+      /* El dedo que baja o sube desplaza la página; el que va de lado gira el globo. */
+      touch-action: pan-y;
     }
     #globe-container:active {
       cursor: grabbing;
@@ -231,7 +207,7 @@
       color: rgba(241,245,248,0.74);
       background: rgba(3,2,1,0.72);
       border: 1px solid rgba(241,245,248,0.16);
-      font: 9px/1 var(--font-mono);
+      font: 11px/1 var(--font-mono);
       letter-spacing: 0.12em;
       text-transform: uppercase;
       white-space: nowrap;
@@ -245,6 +221,40 @@
     .city-pin:focus-visible .pin-name,
     .city-pin.is-live .pin-name,
     .city-pin.is-selected .pin-name { opacity: 1; transform: translateY(0); }
+
+    /* Ciudades que en pantalla caen una sobre otra: el pin de más rango las agrupa,
+       lleva la cuenta y abre una lista para elegir. */
+    .pin-more {
+      position: absolute;
+      left: calc(50% + 5px);
+      top: calc(50% + 3px);
+      min-width: 18px;
+      height: 18px;
+      padding: 0 4px;
+      border: 1px solid var(--line-strong);
+      border-radius: 9px;
+      background: var(--night);
+      color: var(--fg);
+      font: 600 11px/16px var(--font-mono);
+      text-align: center;
+      pointer-events: none;
+    }
+    .pin-more:empty { display: none; }
+    .pin-menu {
+      position: absolute;
+      left: 0;
+      top: 0;
+      z-index: 6;
+      width: 230px;
+      padding: 4px 10px;
+      background: rgba(11,18,24,0.97);
+      border: 1px solid var(--line-strong);
+      box-shadow: 0 18px 50px rgba(0,0,0,0.45);
+    }
+    .pin-menu[hidden] { display: none; }
+    .pin-menu .dist-row { width: 100%; }
+    .pin-menu .dist-row:last-child { border-bottom: 0; }
+    .pin-menu .dist-row:focus-visible { outline-offset: -2px; }
 
     .headline {
       position: absolute;
@@ -311,7 +321,7 @@
     }
     .note-kicker,
     .viewer-kicker {
-      font: 9px/1.45 var(--font-mono);
+      font: 11px/1.45 var(--font-mono);
       letter-spacing: 0.16em;
       text-transform: uppercase;
       color: rgba(127,160,175,0.82);
@@ -332,7 +342,7 @@
     .note-author {
       margin-top: 8px;
       color: rgba(145,157,167,0.82);
-      font: 9px/1.45 var(--font-mono);
+      font: 11px/1.45 var(--font-mono);
       letter-spacing: 0.1em;
       text-transform: uppercase;
     }
@@ -452,53 +462,27 @@
       letter-spacing: 0;
       max-width: 13ch;
     }
-    .slate-desc {
-      margin-top: 10px;
-      color: rgba(241,245,248,0.8);
-      font: italic 15px/1.5 var(--font-chart);
-      letter-spacing: .04em;
-      max-width: 30ch;
-    }
     .slate-meta {
       margin-top: 8px;
-      color: rgba(145,157,167,0.7);
-      font: 8px/1.4 var(--font-mono);
+      color: rgba(145,157,167,0.82);
+      font: 11px/1.4 var(--font-mono);
       letter-spacing: .14em;
       text-transform: uppercase;
     }
-    .video-stack {
+    /* Visor: póster local y Reproducir (assets/atlas/video.js); YouTube entra tras el clic.
+       Las ciudades sin piezas muestran la pizarra con su estado. */
+    .video-slot {
       position: absolute;
       inset: 12px;
       z-index: 4;
-      opacity: 0;
-      transform: scale(1.03);
-      transition: opacity 260ms ease, transform 600ms cubic-bezier(.22,1,.36,1);
-    }
-    .clip {
-      position: absolute;
-      inset: 0;
-      overflow: hidden;
       border: 1px solid rgba(231,222,208,0.12);
-      background: #060403;
     }
-    .clip iframe {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      border: 0;
-    }
-    .viewer-frame.has-video:hover .video-stack,
-    .viewer-frame.has-video:focus-within .video-stack,
-    main.is-video-open .viewer-frame .video-stack,
-    main.is-touch-revealed .viewer-frame .video-stack {
-      opacity: 1;
-      transform: scale(1);
-    }
-    .viewer-frame.has-video:hover .slate,
-    .viewer-frame.has-video:focus-within .slate,
-    main.is-video-open .viewer-frame .slate,
-    main.is-touch-revealed .viewer-frame .slate { opacity: 0; }
+    .viewer:not(.has-videos) .video-slot,
+    .viewer.has-videos .slate { display: none; }
+    /* Mientras suena una pieza, la viñeta del marco no oscurece el video. */
+    .viewer-frame:has(.is-playing)::before { opacity: 0; }
+    /* El verso va en la nota de campo; en pantallas angostas, bajo el visor. */
+    .viewer-quote { display: none; }
 
     .reel-switch {
       display: grid;
@@ -506,16 +490,10 @@
       gap: 8px;
     }
     .viewer:not(.has-videos) .reel-switch { display: none; }
-    .atlas-note {
-      color: var(--muted);
-      font: 9px/1.55 var(--font-mono);
-      letter-spacing: .12em;
-      text-transform: uppercase;
-    }
     .note-distance {
       margin-top: 8px;
       color: rgba(224,105,87,0.9);
-      font: 9px/1.45 var(--font-mono);
+      font: 11px/1.45 var(--font-mono);
       letter-spacing: .14em;
       text-transform: uppercase;
     }
@@ -541,10 +519,6 @@
       from { opacity: 0; transform: translateY(0.18em); }
       to { opacity: 1; transform: none; }
     }
-    @keyframes wavePulse {
-      0%,100% { transform: translateX(-50%) scaleX(0.8); opacity: 0.3; }
-      50% { transform: translateX(-50%) scaleX(1.15); opacity: 0.7; }
-    }
 
     @media (max-width: 920px) {
       .stage { grid-template-columns: 1fr; inset: 56px 18px 72px; gap: 12px; }
@@ -552,7 +526,8 @@
       .headline { bottom: 2vh; max-width: 82vw; }
       .field-note { width: min(430px, 72vw); top: 10px; }
       .note-title { font-size: clamp(25px, 5vw, 38px); }
-      .note-copy { display: none; }
+      .note-copy, .note-author { display: none; }
+      .viewer-quote { display: block; margin: 4px 0 10px; font-size: 14px; }
       .viewer { position: absolute; right: 0; bottom: 0; width: min(42vw, 220px); min-height: 0; z-index: 20; gap: 8px; }
       .viewer-header { display: none; }
       .viewer-frame { width: 100%; height: auto; aspect-ratio: 9 / 13; min-height: 230px; }
@@ -596,12 +571,6 @@
       }
       .slate-title { max-width: 16ch; }
       .poster-art { height: 36%; }
-      .slate-desc {
-        display: -webkit-box;
-        -webkit-line-clamp: 4;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-      }
       .dist-list { max-height: none; }
       .site-foot .rule { display: none; }
     }
@@ -641,6 +610,7 @@
 
         <div class="pin-layer" aria-label="Ciudades">
         </div>
+        <div class="pin-menu" role="menu" hidden></div>
 
         <h1 class="headline" data-od-id="headline">
           <span class="line">Así se ve</span>
@@ -658,29 +628,25 @@
           <span class="viewer-kicker">Visor de ciudad</span>
           <strong class="viewer-city" data-active-city-label>Barranquilla</strong>
         </div>
-        <div class="viewer-frame" tabindex="0" aria-label="Hover para revelar video">
-          <div class="video-stack" aria-label="Video">
-            <div class="clip"></div>
-          </div>
-          <div class="slate" aria-hidden="true">
-            <div class="poster-art"><span class="poster-city" data-poster-city>Barranquilla</span></div>
+        <div class="viewer-frame">
+          <div class="video-slot vframe"></div>
+          <div class="slate">
+            <div class="poster-art" aria-hidden="true"></div>
             <div class="slate-title">Barranquilla abre el mapa.</div>
-            <div class="slate-desc">—</div>
-            <div class="slate-meta">Hover sobre el globo para revelar el video</div>
+            <div class="slate-meta"></div>
           </div>
         </div>
-        <div class="reel-switch" aria-label="Cambiar video">
+        <div class="reel-switch" role="group" aria-label="Elegir pieza">
         </div>
+        <blockquote class="city-quote viewer-quote" data-viewer-quote></blockquote>
         <div class="kicker" data-rail-title></div>
         <nav class="dist-list" aria-label="Ciudades por distancia"></nav>
       </aside>
     </section>
 
     <footer class="site-foot is-overlay">
-      <span>Arrastra el globo · elige una ciudad · pasa el cursor sobre el visor para ver el video</span>
+      <span>Gira el globo · elige una ciudad · reproduce su pieza</span>
       <span class="rule" aria-hidden="true"></span>
-      <span class="audio-indicator">♪ drone</span>
-      <button class="audio-toggle" aria-label="Silenciar audio"><span class="on">♪</span><span class="off">♪̸</span></button>
     </footer>
   </main>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -688,6 +654,7 @@
   <script src="assets/globe/land-110m.js"></script>
   <script src="assets/atlas/geo.js"></script>
   <script src="assets/atlas/cities.js"></script>
+  <script src="assets/atlas/video.js"></script>
   <script>
     (() => {
       // ========== CITY REGISTRY ==========
@@ -696,34 +663,38 @@
       const cityRegistry = window.ATLAS_CITIES.map(c => ({
         id: c.id, name: c.name, country: c.country, lat: c.lat, lng: c.lon, status: c.status,
         description: c.quote || '', author: c.attrib || '',
-        videos: c.video ? [
-          { title: 'Así se ve el centro', id: c.video.long },
-          { title: 'Short', id: c.video.short }
-        ] : []
+        video: c.video || null, poster: c.poster || null
       }));
       const STATUS_LABEL = { live: 'viva', next: 'próxima', future: 'futura' };
       const kmBetween = (a, b) => distKm({ lat: a.lat, lon: a.lng }, { lat: b.lat, lon: b.lng });
+      const pieceCount = c => c.video ? Object.keys(c.video).length : 0;
       const origin = cityRegistry.find(c => c.status === 'live') || cityRegistry[0];
 
-      // ========== VIDEO VIEWER ==========
+      // ========== VISOR DE CIUDAD ==========
+      // Visor común con el atlas (assets/atlas/video.js): póster local y Reproducir;
+      // YouTube no recibe ninguna petición hasta ese clic.
       const stage = document.querySelector('main');
       const viewerShell = document.querySelector('.viewer');
-      const viewer = document.querySelector('.viewer-frame');
-      const viewerStack = viewer.querySelector('.video-stack');
-      const viewerSlate = viewer.querySelector('.slate');
+      const viewerSlate = viewerShell.querySelector('.slate');
+      const videoSlot = viewerShell.querySelector('.video-slot');
       const slateTitle = viewerSlate.querySelector('.slate-title');
-      const slateDesc = viewerSlate.querySelector('.slate-desc');
       const slateMeta = viewerSlate.querySelector('.slate-meta');
-      const posterCity = viewerSlate.querySelector('[data-poster-city]');
       const noteTitle = document.querySelector('[data-note-title]');
       const noteCopy = document.querySelector('[data-note-copy]');
       const noteAuthor = document.querySelector('[data-note-author]');
+      const noteDistance = document.querySelector('[data-note-distance]');
+      const viewerQuote = document.querySelector('[data-viewer-quote]');
       const activeCityLabel = document.querySelector('[data-active-city-label]');
       const reelSwitch = document.querySelector('.reel-switch');
-      const cityRail = document.querySelector('.dist-list');
+      const cityRail = viewerShell.querySelector('.dist-list');
       const railTitle = document.querySelector('[data-rail-title]');
-      const noteDistance = document.querySelector('[data-note-distance]');
       const pinHost = document.querySelector('.pin-layer');
+
+      function pinLabel(city, more) {
+        const base = city.name + ', ' + STATUS_LABEL[city.status];
+        if (!more) return base;
+        return base + ', con ' + more + (more === 1 ? ' ciudad cercana' : ' ciudades cercanas') + ': elegir una';
+      }
 
       // Pines generados desde el registro: una ciudad nueva en cities.js aparece sola.
       cityRegistry.forEach(city => {
@@ -731,16 +702,17 @@
         pin.type = 'button';
         pin.className = 'city-pin is-' + city.status;
         pin.dataset.cityId = city.id;
-        pin.setAttribute('aria-label', city.name + ': ' + (city.videos.length ? 'ver videos' : 'ruta ' + STATUS_LABEL[city.status]));
-        pin.innerHTML = '<span class="pin-name"></span>';
-        pin.style.opacity = '0'; // visible solo cuando el globo lo pone de frente
+        pin.setAttribute('aria-label', pinLabel(city, 0));
+        pin.innerHTML = '<span class="pin-name"></span><span class="pin-more" aria-hidden="true"></span>';
+        // Visible y enfocable solo cuando el globo lo pone de frente (ver placePins).
+        pin.style.opacity = '0';
+        pin.inert = true;
+        pin.tabIndex = -1;
         pinHost.appendChild(pin);
       });
 
       let activeCityId = 'barranquilla';
-      let activeVideoIndex = 0;
-      let videoRevealed = false;
-      let videoRenderToken = 0;
+      let shownCityId = null;
 
       function cityById(cityId) {
         return cityRegistry.find(c => c.id === cityId);
@@ -773,28 +745,31 @@
       function updateSlate(cityId) {
         const city = cityById(cityId);
         if (!city) return;
-        const hasVideos = city.videos.length > 0;
-        const statusLabel = hasVideos ? 'archivo disponible' : city.status === 'future' ? 'ruta futura' : 'en registro';
         const posterVars = cityPosterVars(cityId);
-
-        slateTitle.textContent = hasVideos ? city.name + ' abre el mapa.' : city.name + ' queda en espera.';
-        slateDesc.textContent = city.description;
-        slateMeta.textContent = city.author || statusLabel;
-        posterCity.textContent = city.name;
+        slateTitle.textContent = city.name + ' queda en espera.';
+        slateMeta.textContent = city.status === 'next' ? 'En producción' : 'Ruta futura';
         activeCityLabel.textContent = city.name;
         noteTitle.textContent = city.name;
         noteDistance.textContent = city === origin
-          ? 'Ciudad origen · ' + city.videos.length + ' piezas'
+          ? 'Ciudad origen · ' + pieceCount(city) + ' piezas'
           : fmtKm(kmBetween(origin, city)) + ' desde ' + origin.name + ' · ' + STATUS_LABEL[city.status];
         noteCopy.textContent = city.description;
-        noteAuthor.textContent = city.author || statusLabel;
+        noteAuthor.textContent = city.author;
+        viewerQuote.textContent = city.description;
+        if (city.author) {
+          const attrib = document.createElement('span');
+          attrib.className = 'attrib';
+          attrib.textContent = city.author;
+          viewerQuote.appendChild(attrib);
+        }
+        viewerQuote.hidden = !city.description;
         viewerSlate.style.setProperty('--poster-glow', posterVars[0]);
         viewerSlate.style.setProperty('--poster-core', posterVars[1]);
-        viewerShell.classList.toggle('has-videos', hasVideos);
-        renderReels(city);
+        viewerShell.classList.toggle('has-videos', CityVideo.render(videoSlot, reelSwitch, city));
         renderRuler(city);
         updatePinNames(city);
         updateActiveControls(cityId);
+        shownCityId = cityId;
       }
 
       // Cada pin muestra su distancia real a la ciudad elegida.
@@ -806,24 +781,11 @@
       }
 
       function updateActiveControls(cityId) {
-        document.querySelectorAll('.city-pin').forEach(pin => {
+        pinHost.querySelectorAll('.city-pin').forEach(pin => {
           pin.classList.toggle('is-selected', pin.dataset.cityId === cityId);
         });
-        document.querySelectorAll('.dist-row').forEach(tab => {
-          tab.classList.toggle('is-active', tab.dataset.cityId === cityId);
-        });
-      }
-
-      function renderReels(city) {
-        reelSwitch.innerHTML = '';
-        city.videos.forEach((video, i) => {
-          const button = document.createElement('button');
-          button.className = 'reel btn-tab' + (i === activeVideoIndex ? ' is-active' : '');
-          button.type = 'button';
-          button.dataset.videoIndex = i;
-          button.textContent = city.name + ' / ' + video.title;
-          button.addEventListener('click', () => showVideo(city.id, i));
-          reelSwitch.appendChild(button);
+        cityRail.querySelectorAll('.dist-row').forEach(row => {
+          row.classList.toggle('is-active', row.dataset.cityId === cityId);
         });
       }
 
@@ -835,120 +797,43 @@
           .map(c => ({ c, d: kmBetween(from, c) }))
           .sort((x, y) => x.d - y.d)
           .forEach(({ c, d }) => {
-            const tab = document.createElement('button');
-            tab.type = 'button';
-            tab.className = 'dist-row';
-            tab.dataset.cityId = c.id;
-            tab.dataset.status = c.status;
-            tab.setAttribute('aria-label', c.name + ', ' + STATUS_LABEL[c.status] + ', a ' + fmtKm(d) + ' de ' + from.name);
-            tab.innerHTML = '<span class="dot" aria-hidden="true"></span><span>' + c.name + '</span><span class="km">' + fmtKm(d) + '</span>';
-            tab.addEventListener('click', () => selectCity(c.id));
-            cityRail.appendChild(tab);
+            const row = document.createElement('button');
+            row.type = 'button';
+            row.className = 'dist-row';
+            row.dataset.cityId = c.id;
+            row.dataset.status = c.status;
+            row.setAttribute('aria-label', c.name + ', ' + STATUS_LABEL[c.status] + ', a ' + fmtKm(d) + ' de ' + from.name);
+            row.innerHTML = '<span class="dot" aria-hidden="true"></span><span>' + c.name + '</span><span class="km">' + fmtKm(d) + '</span>';
+            row.addEventListener('click', () => selectCity(c.id));
+            cityRail.appendChild(row);
           });
       }
 
-      function clearVideo() {
-        videoRenderToken++;
-        viewer.classList.remove('has-video');
-        stage.classList.remove('is-video-open', 'is-touch-revealed');
-        viewerStack.style.opacity = '';
-        viewerStack.style.transform = '';
-        const clip = viewerStack.querySelector('.clip');
-        clip.innerHTML = '';
-      }
-
-      function iframeURL(videoId, autoplay) {
-      return 'https://www.youtube.com/embed/' + videoId + '?' +
-          (autoplay ? 'autoplay=1&' : '') +
-          'loop=1&playlist=' + videoId + '&controls=1&playsinline=1&rel=0&modestbranding=1&enablejsapi=1';
-      }
-
-      function showVideo(cityId, videoIndex) {
-        const city = cityById(cityId);
-        if (!city || city.videos.length === 0) return;
-        const vi = videoIndex != null ? videoIndex : activeVideoIndex;
-        const video = city.videos[vi];
-        if (!video) return;
-
-        const clip = viewerStack.querySelector('.clip');
-        const existing = clip.querySelector('iframe');
-        const sameSrc = existing && existing.src.includes(video.id);
-
-        if (sameSrc && activeCityId === cityId) {
-          viewer.classList.add('has-video');
-          stage.classList.add('is-video-open');
-          return;
-        }
-
-        // Stop drone on first video reveal
-        if (!videoRevealed) {
-          videoRevealed = true;
-          stopDrone();
-        }
-
-        activeVideoIndex = vi;
-        activeCityId = cityId;
-        updateSlate(cityId);
-        viewer.classList.add('has-video');
-        stage.classList.add('is-video-open');
-        const renderToken = ++videoRenderToken;
-
-        viewerStack.style.opacity = '0';
-        viewerStack.style.transform = 'scale(1.03)';
-
-        setTimeout(() => {
-          if (renderToken !== videoRenderToken || activeCityId !== cityId) return;
-          const html = '<iframe title="' + video.title + '" src="' + iframeURL(video.id, true) + '" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>';
-          clip.innerHTML = html;
-
-          viewerStack.style.opacity = '1';
-          viewerStack.style.transform = 'scale(1)';
-
-          reelSwitch.querySelectorAll('.reel').forEach((btn, i) => {
-            btn.classList.toggle('is-active', i === vi);
-          });
-        }, 260);
-      }
-
-      // Click any pin → show city info in slate
       function selectCity(cityId) {
         const city = cityById(cityId);
         if (!city) return;
+        closePinMenu(false);
         activeCityId = cityId;
-        activeVideoIndex = 0;
-        clearVideo();
-        updateSlate(cityId);
+        // Volver a elegir la ciudad que ya está en el visor no corta su pieza.
+        if (shownCityId !== cityId) updateSlate(cityId);
         focusGlobeOn(city);
+        needsRender = true; // la elegida encabeza su grupo de pines
       }
 
-      document.querySelectorAll('.city-pin').forEach(pin => {
-        pin.addEventListener('click', () => selectCity(pin.dataset.cityId));
+      // Un pin solo elige su ciudad; un pin agrupado abre la lista de las que reúne.
+      pinHost.querySelectorAll('.city-pin').forEach((pin, i) => {
+        pin.addEventListener('click', () => {
+          const group = pinGroups[i];
+          if (group && group.length > 1) {
+            if (menuSeed === i) closePinMenu(true);
+            else openPinMenu(i);
+          } else {
+            selectCity(pin.dataset.cityId);
+          }
+        });
       });
 
-      // Hover on live pin reveals its own video
-      document.querySelectorAll('.city-pin.is-live').forEach(pin => {
-        pin.addEventListener('pointerenter', () => {
-          if (activeCityId === pin.dataset.cityId) showVideo(pin.dataset.cityId);
-        });
-        pin.addEventListener('focusin', () => {
-          if (activeCityId === pin.dataset.cityId) showVideo(pin.dataset.cityId);
-        });
-      });
-
-      viewer.addEventListener('pointerenter', () => showVideo(activeCityId));
-      viewer.addEventListener('focusin', () => showVideo(activeCityId));
-      viewer.addEventListener('touchstart', () => {
-        showVideo(activeCityId);
-        stage.classList.add('is-touch-revealed');
-      }, { passive: true });
-
-      updateSlate('barranquilla');
-      // El reproductor de YouTube pesa más que todo el sitio: entra cuando la página ya
-      // cargó y el hilo principal está libre, no compitiendo con el primer cuadro del globo.
-      const whenIdle = window.requestIdleCallback || (cb => setTimeout(cb, 200));
-      const bootVideo = () => whenIdle(() => showVideo(activeCityId), { timeout: 1500 });
-      if (document.readyState === 'complete') bootVideo();
-      else window.addEventListener('load', bootVideo, { once: true });
+      updateSlate(activeCityId);
 
       // ========== 3D GLOBE ==========
       const container = document.getElementById('globe-container');
@@ -1393,7 +1278,7 @@
       const startCity = cityById(new URLSearchParams(location.search).get('city')) || origin;
       globe.rotation.set(Math.max(-TILT, Math.min(TILT, startCity.lat * Math.PI / 180)),
         Math.PI / 2 - (startCity.lng + 180) * Math.PI / 180, 0);
-      if (startCity !== origin) { activeCityId = startCity.id; clearVideo(); updateSlate(startCity.id); }
+      if (startCity !== origin) { activeCityId = startCity.id; updateSlate(startCity.id); }
 
       // ===== DRAG TO ROTATE =====
       let isDragging = false;
@@ -1415,7 +1300,8 @@
       container.addEventListener('pointermove', (e) => {
         if (!isDragging) return;
         const dx = e.clientX - prevX;
-        const dy = e.clientY - prevY;
+        // Con el dedo solo se gira de lado: lo vertical desplaza la página (touch-action).
+        const dy = e.pointerType === 'touch' ? 0 : e.clientY - prevY;
         if (Math.abs(dx) > 2 || Math.abs(dy) > 2) dragActive = true;
         globe.rotation.y += dx * 0.008;
         globe.rotation.x += dy * 0.005;
@@ -1428,6 +1314,7 @@
 
       container.addEventListener('pointerup', () => { isDragging = false; });
       container.addEventListener('pointerleave', () => { isDragging = false; });
+      container.addEventListener('pointercancel', () => { isDragging = false; });
 
       // ===== ANIMATION LOOP =====
       const worldPos = new THREE.Vector3();
@@ -1438,24 +1325,163 @@
       let lastRX = NaN, lastRY = NaN;
       let animId = null;
 
+      // Pines en pantalla. Los que caen dentro del área sensible de otro se agrupan:
+      // el de más rango (la elegida, luego vivas, próximas y futuras) queda visible con
+      // la cuenta y abre una lista. Los ocultos (detrás del globo o en un grupo) salen
+      // del foco del teclado; la lista de distancias sigue llegando a todas.
+      const COARSE = window.matchMedia('(pointer: coarse)');
+      const RANK = { live: 1, next: 2, future: 3 };
+      const pinPts = cityRegistry.map(() => null);
+      const pinMore = cityRegistry.map(() => -1);
+      let pinGroups = cityRegistry.map(() => null);
+      let pendingFocus = -1;
+
       function placePins() {
+        cityRegistry.forEach((city, i) => {
+          cityObjects[i].getWorldPosition(worldPos);
+          if (worldPos.z <= 0) { pinPts[i] = null; return; }
+          projected.copy(worldPos).project(camera);
+          pinPts[i] = [(projected.x + 1) / 2 * boxW, (1 - projected.y) / 2 * boxH];
+        });
+        const hit = COARSE.matches ? 44 : 24;
+        const rank = i => cityRegistry[i].id === activeCityId ? 0 : RANK[cityRegistry[i].status];
+        const order = cityRegistry.map((c, i) => i).filter(i => pinPts[i])
+          .sort((a, b) => rank(a) - rank(b) || a - b);
+        const groups = cityRegistry.map(() => null);
+        const taken = new Set();
+        order.forEach(i => {
+          if (taken.has(i)) return;
+          taken.add(i);
+          const g = [i];
+          order.forEach(j => {
+            if (taken.has(j)) return;
+            if (Math.hypot(pinPts[j][0] - pinPts[i][0], pinPts[j][1] - pinPts[i][1]) < hit) {
+              taken.add(j);
+              g.push(j);
+            }
+          });
+          groups[i] = g;
+        });
+        pinGroups = groups;
+
         cityRegistry.forEach((city, i) => {
           const pin = pinEls[i];
           if (!pin) return;
-          cityObjects[i].getWorldPosition(worldPos);
-          const front = worldPos.z > 0;
-          if (front !== pinShown[i]) {
-            pinShown[i] = front;
-            pin.style.opacity = front ? '1' : '0';
-            pin.style.pointerEvents = front ? 'auto' : 'none';
+          const visible = !!groups[i];
+          if (visible !== pinShown[i]) {
+            pinShown[i] = visible;
+            pin.style.opacity = visible ? '1' : '0';
+            pin.style.pointerEvents = visible ? 'auto' : 'none';
+            pin.inert = !visible;
+            pin.tabIndex = visible ? 0 : -1;
           }
-          if (!front) return;
-          projected.copy(worldPos).project(camera);
-          const px = (projected.x + 1) / 2 * boxW;
-          const py = (1 - projected.y) / 2 * boxH;
-          pin.style.transform = `translate3d(${px.toFixed(1)}px, ${py.toFixed(1)}px, 0) translate(-50%, -50%)`;
+          const more = visible ? groups[i].length - 1 : 0;
+          if (more !== pinMore[i]) {
+            pinMore[i] = more;
+            pin.querySelector('.pin-more').textContent = more ? '+' + more : '';
+            pin.setAttribute('aria-label', pinLabel(city, more));
+            if (more) pin.setAttribute('aria-haspopup', 'menu');
+            else { pin.removeAttribute('aria-haspopup'); pin.removeAttribute('aria-expanded'); }
+          }
+          if (visible) {
+            pin.style.transform = `translate3d(${pinPts[i][0].toFixed(1)}px, ${pinPts[i][1].toFixed(1)}px, 0) translate(-50%, -50%)`;
+          }
         });
+
+        // La lista abierta sigue a su pin; si el grupo se deshizo, se cierra.
+        if (menuSeed >= 0) {
+          if (!groups[menuSeed] || groups[menuSeed].length < 2) closePinMenu(false);
+          else positionPinMenu();
+        }
+        if (pendingFocus >= 0 && groups[pendingFocus]) {
+          pinEls[pendingFocus].focus({ preventScroll: true });
+          pendingFocus = -1;
+        }
       }
+
+      // ===== LISTA DE UN GRUPO DE PINES =====
+      const pinMenu = document.querySelector('.pin-menu');
+      let menuSeed = -1, menuW = 0, menuH = 0;
+
+      function openPinMenu(i) {
+        closePinMenu(false);
+        const seed = cityRegistry[i];
+        const from = cityById(activeCityId);
+        const members = [i].concat(pinGroups[i].slice(1)
+          .sort((a, b) => kmBetween(seed, cityRegistry[a]) - kmBetween(seed, cityRegistry[b])));
+        pinMenu.textContent = '';
+        members.forEach(j => {
+          const c = cityRegistry[j];
+          const here = c === from;
+          const km = here ? 'elegida' : fmtKm(kmBetween(from, c));
+          const row = document.createElement('button');
+          row.type = 'button';
+          row.className = 'dist-row';
+          row.dataset.status = c.status;
+          row.setAttribute('role', 'menuitem');
+          row.tabIndex = -1;
+          row.setAttribute('aria-label', c.name + ', ' + STATUS_LABEL[c.status] + (here ? ', elegida' : ', a ' + km));
+          row.innerHTML = '<span class="dot" aria-hidden="true"></span><span></span><span class="km"></span>';
+          row.children[1].textContent = c.name;
+          row.children[2].textContent = km;
+          row.addEventListener('click', () => {
+            pendingFocus = j;
+            selectCity(c.id);
+          });
+          pinMenu.appendChild(row);
+        });
+        pinMenu.setAttribute('aria-label', 'Ciudades cercanas a ' + seed.name);
+        pinMenu.hidden = false;
+        menuSeed = i;
+        menuW = pinMenu.offsetWidth;
+        menuH = pinMenu.offsetHeight;
+        pinEls[i].setAttribute('aria-expanded', 'true');
+        positionPinMenu();
+        pinMenu.firstElementChild.focus({ preventScroll: true });
+      }
+
+      function closePinMenu(restoreFocus) {
+        if (menuSeed < 0) return;
+        const pin = pinEls[menuSeed];
+        menuSeed = -1;
+        pinMenu.hidden = true;
+        pinMenu.textContent = '';
+        if (pin.hasAttribute('aria-haspopup')) pin.setAttribute('aria-expanded', 'false');
+        if (restoreFocus && !pin.inert) pin.focus({ preventScroll: true });
+      }
+
+      function positionPinMenu() {
+        const pt = pinPts[menuSeed];
+        if (!pt) return;
+        let left = pt[0] + 18;
+        if (left + menuW > boxW - 4) left = pt[0] - 18 - menuW;
+        left = Math.max(4, left);
+        const top = Math.max(4, Math.min(pt[1] - 18, boxH - menuH - 4));
+        pinMenu.style.transform = `translate(${left.toFixed(1)}px, ${top.toFixed(1)}px)`;
+      }
+
+      pinMenu.addEventListener('keydown', e => {
+        const items = [...pinMenu.children];
+        const k = items.indexOf(document.activeElement);
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          const n = items.length;
+          items[(k + (e.key === 'ArrowDown' ? 1 : n - 1) + n) % n].focus();
+        } else if (e.key === 'Home' || e.key === 'End') {
+          e.preventDefault();
+          items[e.key === 'Home' ? 0 : items.length - 1].focus();
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          closePinMenu(true);
+        } else if (e.key === 'Tab') {
+          closePinMenu(false);
+        }
+      });
+      // Un toque fuera de la lista (y fuera de su pin) la cierra.
+      document.addEventListener('pointerdown', e => {
+        if (menuSeed < 0 || pinMenu.contains(e.target) || pinEls[menuSeed].contains(e.target)) return;
+        closePinMenu(false);
+      });
 
       function animate() {
         animId = requestAnimationFrame(animate);
@@ -1565,71 +1591,6 @@
         document.documentElement.classList.remove('is-arriving');
       }
 
-      // ========== AUDIO DRONE ==========
-      let audioCtx = null, droneStarted = false;
-      const droneNodes = [];
-
-      function initAudio() {
-        if (droneStarted) return;
-        if (videoRevealed) return; // don't start if video already played
-        droneStarted = true;
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-        const freqs = [65.41, 98.00, 130.81];
-        freqs.forEach((freq, i) => {
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc.type = i === 0 ? 'sine' : 'triangle';
-          osc.frequency.value = freq;
-          osc.detune.value = Math.sin(i * 1.7) * 3;
-          gain.gain.value = 0;
-          gain.gain.setTargetAtTime(i === 0 ? 0.06 : 0.03, audioCtx.currentTime + 1, 2);
-          osc.connect(gain).connect(audioCtx.destination);
-          osc.start();
-
-          const lfo = audioCtx.createOscillator();
-          const lfoGain = audioCtx.createGain();
-          lfo.frequency.value = 0.08 + i * 0.03;
-          lfoGain.gain.value = 0.015;
-          lfo.connect(lfoGain).connect(gain.gain);
-          lfo.start();
-
-          droneNodes.push({ osc, gain, lfo, lfoGain });
-        });
-
-        document.querySelector('.audio-indicator')?.classList.add('is-active');
-        document.querySelector('.audio-wave')?.classList.add('is-active');
-      }
-
-      function stopDrone() {
-        if (!audioCtx || droneNodes.length === 0) {
-          document.querySelector('.audio-indicator')?.classList.remove('is-active');
-          document.querySelector('.audio-wave')?.classList.remove('is-active');
-          return;
-        }
-        droneNodes.forEach(({ gain, lfo, lfoGain }) => {
-          gain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.5);
-          lfoGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.5);
-          setTimeout(() => {
-            try { lfo.stop(); lfo.disconnect(); } catch(e) {}
-            try { gain.disconnect(); } catch(e) {}
-          }, 1000);
-        });
-        droneNodes.length = 0;
-        document.querySelector('.audio-indicator')?.classList.remove('is-active');
-        document.querySelector('.audio-wave')?.classList.remove('is-active');
-      }
-
-      document.addEventListener('pointerdown', initAudio, { once: true });
-      document.addEventListener('keydown', initAudio, { once: true });
-
-      document.querySelector('.audio-toggle')?.addEventListener('click', function() {
-        const muted = this.classList.toggle('muted');
-        if (audioCtx) {
-          if (muted) audioCtx.suspend();
-          else audioCtx.resume();
-        }
-      });
     })();
   </script>
   <span id="globe-ready" hidden></span>
