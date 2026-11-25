@@ -1,549 +1,180 @@
-<!doctype html>
-<html lang="es">
+<!DOCTYPE html>
+<html lang="es" data-lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="color-scheme" content="dark" />
-  <meta name="description" content="Proof pack para Así se ve el centro: archivo documental silencioso de vida de centro, ruta Barranquilla, Bogotá y Cartagena." />
-  <title>Así se ve el centro. — Proof pack</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --matte: #050b10;
-      --ink: #0b1218;
-      --surface: #111a22;
-      --surface-2: #17222d;
-      --fg: #f1f5f8;
-      --muted: #92a2ae;
-      --dim: rgba(241, 245, 248, 0.2);
-      --line: rgba(241, 245, 248, 0.12);
-      --accent: #e06957;
-      --accent-soft: rgba(224, 105, 87, 0.18);
-      --gold: #7fa0af;
-      --font-display: "Montserrat", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-      --font-body: "Montserrat", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-      --font-mono: ui-monospace, "IBM Plex Mono", "JetBrains Mono", Menlo, monospace;
-    }
-
-    * { box-sizing: border-box; }
-    html { background: var(--matte); color: var(--fg); }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      background:
-        radial-gradient(ellipse at 18% 8%, rgba(224, 105, 87, 0.12), transparent 32%),
-        radial-gradient(ellipse at 74% 18%, rgba(127, 160, 175, 0.08), transparent 34%),
-        linear-gradient(180deg, rgba(5, 11, 16, 0.18), rgba(5, 11, 16, 0.92) 72%),
-        var(--ink);
-      color: var(--fg);
-      font-family: var(--font-body);
-      font-weight: 400;
-      -webkit-font-smoothing: antialiased;
-      text-rendering: geometricPrecision;
-    }
-
-    body::before,
-    body::after {
-      content: "";
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 20;
-    }
-
-    body::before {
-      opacity: 0.085;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-      background-size: 180px 180px;
-      mix-blend-mode: screen;
-      animation: grain 0.32s steps(3) infinite;
-    }
-
-    body::after {
-      opacity: 0.2;
-      background:
-        repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0, 0, 0, 0.18) 3px, rgba(0, 0, 0, 0.18) 4px),
-        radial-gradient(circle at 50% 28%, transparent 18%, rgba(3, 2, 1, 0.64) 100%);
-    }
-
-    a {
-      color: var(--fg);
-      text-underline-offset: 0.22em;
-      text-decoration-color: rgba(214, 74, 40, 0.76);
-    }
-    a:visited { color: #cdbfab; }
-    a:hover { color: #fff5e8; }
-
-    .shell {
-      position: relative;
-      z-index: 1;
-      width: min(1180px, calc(100% - 32px));
-      margin: 0 auto;
-    }
-
-    .chrome {
-      display: grid;
-      grid-template-columns: auto 1fr auto;
-      align-items: center;
-      gap: 16px;
-      padding: 22px 0;
-      font: 10px/1.4 var(--font-mono);
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: var(--muted);
-    }
-    .chrome strong { color: var(--fg); font-weight: 500; }
-    .chrome nav {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-      gap: 4px;
-    }
-    .chrome a {
-      min-height: 44px;
-      display: inline-flex;
-      align-items: center;
-      padding: 0 6px;
-    }
-    .rule { height: 1px; background: var(--line); }
-
-    .hero {
-      display: grid;
-      grid-template-columns: minmax(0, 0.95fr) minmax(360px, 1.05fr);
-      gap: clamp(28px, 5vw, 74px);
-      align-items: end;
-      min-height: calc(100vh - 88px);
-      padding: clamp(24px, 4vh, 46px) 0 64px;
-    }
-
-    .eyebrow {
-      margin: 0 0 18px;
-      font: 11px/1.4 var(--font-mono);
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--gold);
-    }
-
-    h1 {
-      margin: 0;
-      max-width: 760px;
-      font: 700 clamp(3.1rem, 9vw, 7.4rem)/0.9 var(--font-display);
-      letter-spacing: 0;
-    }
-    h1 em { color: var(--accent); font-style: normal; font-weight: 800; }
-
-    .dek {
-      max-width: 660px;
-      margin: 26px 0 0;
-      color: #d6cab9;
-      font-size: clamp(1.08rem, 1.8vw, 1.42rem);
-      line-height: 1.44;
-    }
-
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 30px;
-    }
-
-    .button {
-      min-height: 44px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      border: 1px solid rgba(234, 223, 208, 0.2);
-      padding: 12px 16px;
-      background: rgba(234, 223, 208, 0.04);
-      color: var(--fg);
-      font: 11px/1 var(--font-mono);
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      text-decoration: none;
-    }
-    .button.primary {
-      border-color: rgba(214, 74, 40, 0.52);
-      background: rgba(214, 74, 40, 0.14);
-    }
-
-    .proof-board {
-      position: relative;
-      border: 1px solid rgba(234, 223, 208, 0.14);
-      background: rgba(3, 2, 1, 0.38);
-      box-shadow: inset 0 0 48px rgba(214, 74, 40, 0.045);
-      overflow: hidden;
-    }
-
-    .proof-board img {
-      display: block;
-      width: 100%;
-      height: auto;
-      filter: saturate(0.9) contrast(1.04);
-    }
-
-    .proof-board figcaption {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 12px 14px;
-      border-top: 1px solid rgba(234, 223, 208, 0.12);
-      color: var(--muted);
-      font: 10px/1.4 var(--font-mono);
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-    }
-
-    section {
-      padding: clamp(58px, 9vw, 108px) 0;
-      border-top: 1px solid rgba(234, 223, 208, 0.1);
-    }
-
-    .section-head {
-      display: grid;
-      grid-template-columns: minmax(180px, 0.34fr) minmax(0, 0.66fr);
-      gap: clamp(20px, 5vw, 60px);
-      margin-bottom: 34px;
-    }
-
-    .kicker {
-      margin: 0;
-      color: var(--gold);
-      font: 11px/1.4 var(--font-mono);
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-    }
-
-    h2 {
-      margin: 0;
-      font: 600 clamp(2rem, 4vw, 4.2rem)/0.95 var(--font-display);
-      letter-spacing: 0;
-    }
-
-    .copy {
-      color: #d8cbbb;
-      font-size: 1.02rem;
-      line-height: 1.7;
-    }
-    .copy p { margin: 0 0 1em; }
-
-    .route {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1px;
-      background: rgba(234, 223, 208, 0.12);
-      border: 1px solid rgba(234, 223, 208, 0.12);
-    }
-
-    .city {
-      min-height: 300px;
-      display: grid;
-      align-content: space-between;
-      gap: 40px;
-      padding: clamp(20px, 3vw, 30px);
-      background:
-        linear-gradient(180deg, rgba(234, 223, 208, 0.035), rgba(234, 223, 208, 0.01)),
-        var(--surface);
-    }
-    .city:first-child { background: linear-gradient(180deg, rgba(214, 74, 40, 0.12), rgba(234, 223, 208, 0.01)), var(--surface); }
-    .city h3 {
-      margin: 0;
-      font: 600 clamp(1.6rem, 3vw, 3.1rem)/0.94 var(--font-display);
-      letter-spacing: 0;
-    }
-    .city .meta {
-      color: var(--muted);
-      font: 10px/1.5 var(--font-mono);
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-    }
-    .city p {
-      margin: 0;
-      color: #d7cab8;
-      line-height: 1.56;
-    }
-
-    .pack-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 1px;
-      background: rgba(234, 223, 208, 0.12);
-      border: 1px solid rgba(234, 223, 208, 0.12);
-    }
-
-    .pack-item {
-      min-height: 220px;
-      display: grid;
-      align-content: space-between;
-      padding: 22px;
-      background: rgba(23, 17, 14, 0.92);
-    }
-    .pack-item span {
-      color: var(--accent);
-      font: 10px/1 var(--font-mono);
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-    }
-    .pack-item h3 {
-      margin: 26px 0 12px;
-      font: 1.45rem/1.04 var(--font-display);
-    }
-    .pack-item p {
-      margin: 0;
-      color: var(--muted);
-      line-height: 1.5;
-    }
-
-    .reel-strip {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 8px;
-      padding: 8px;
-      border: 1px solid rgba(234, 223, 208, 0.12);
-      background: rgba(0, 0, 0, 0.24);
-    }
-    .frame {
-      aspect-ratio: 16 / 9;
-      border: 1px solid rgba(234, 223, 208, 0.12);
-      background:
-        linear-gradient(140deg, rgba(214, 74, 40, 0.18), transparent 38%),
-        radial-gradient(circle at 50% 48%, rgba(234, 223, 208, 0.14), transparent 34%),
-        linear-gradient(180deg, #20140f, #070403);
-      position: relative;
-      overflow: hidden;
-    }
-    .frame::after {
-      content: attr(data-label);
-      position: absolute;
-      left: 10px;
-      right: 10px;
-      bottom: 9px;
-      color: rgba(234, 223, 208, 0.78);
-      font: 9px/1.3 var(--font-mono);
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-    }
-
-    .downloads {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-    }
-    .download {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 18px;
-      min-height: 64px;
-      padding: 16px 18px;
-      border: 1px solid rgba(234, 223, 208, 0.14);
-      background: rgba(234, 223, 208, 0.035);
-      text-decoration: none;
-    }
-    .download span:first-child {
-      font: 12px/1.3 var(--font-mono);
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-    }
-    .download span:last-child { color: var(--accent); }
-
-    footer {
-      padding: 36px 0 44px;
-      color: var(--muted);
-      font: 10px/1.5 var(--font-mono);
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-    }
-
-    @keyframes grain { 0%, 100% { transform: translate(0, 0); } 33% { transform: translate(1px, -1px); } 66% { transform: translate(-1px, 1px); } }
-
-    @media (max-width: 900px) {
-      .hero,
-      .section-head {
-        grid-template-columns: 1fr;
-      }
-      .hero {
-        min-height: auto;
-        padding-top: 34px;
-      }
-      .route,
-      .pack-grid,
-      .downloads {
-        grid-template-columns: 1fr;
-      }
-      .city {
-        min-height: auto;
-        gap: 18px;
-      }
-      .reel-strip { grid-template-columns: 1fr 1fr; }
-      .chrome { grid-template-columns: 1fr; }
-      .chrome nav { justify-content: flex-start; }
-      .chrome .rule { display: none; }
-    }
-
-    @media (max-width: 520px) {
-      .shell { width: min(100% - 22px, 1180px); }
-      h1 { font-size: clamp(2.7rem, 15vw, 4.5rem); line-height: 0.94; }
-      h2 { line-height: 1.02; }
-      .proof-board figcaption { display: block; }
-      .pack-item, .city { padding: 18px; }
-      .reel-strip { grid-template-columns: 1fr; }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
-        animation-duration: 0.001ms !important;
-        animation-iteration-count: 1 !important;
-        scroll-behavior: auto !important;
-      }
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Así se ve el centro — Dossier</title>
+<meta name="description" content="Dossier para evaluadores de Así se ve el centro: archivo documental silencioso de la vida en los centros urbanos, con capítulos grabados en Barranquilla y Bogotá.">
+<link rel="canonical" href="https://nestorfernando3.github.io/asi-se-ve-el-centro/projects.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Así se ve el centro">
+<meta property="og:locale" content="es_CO">
+<meta property="og:locale:alternate" content="en_US">
+<meta property="og:title" content="Así se ve el centro — Dossier">
+<meta property="og:description" content="Archivo documental silencioso de la vida en los centros urbanos, construido ciudad por ciudad. Capítulos grabados en Barranquilla y Bogotá.">
+<meta property="og:url" content="https://nestorfernando3.github.io/asi-se-ve-el-centro/projects.html">
+<meta property="og:image" content="https://nestorfernando3.github.io/asi-se-ve-el-centro/assets/og-card.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Fotogramas de Barranquilla y Bogotá bajo el título Así se ve el centro.">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+<link rel="stylesheet" href="assets/editorial.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='5' fill='%23e06957'/%3E%3C/svg%3E">
+<script>
+  // Idioma elegido antes (comodidad de cada visitante); sin almacenamiento, español.
+  try { var l = localStorage.getItem('dossier-lang'); if (l === 'en' || l === 'es') document.documentElement.dataset.lang = l; } catch (e) {}
+</script>
 </head>
 <body>
-  <div class="shell">
-    <header class="chrome" aria-label="Proof pack navigation">
-      <strong>Así se ve el centro.</strong>
-      <div class="rule" aria-hidden="true"></div>
-      <nav aria-label="Navegación principal">
-        <a href="index.html">Atlas</a>
-        <span aria-hidden="true"> / </span>
-        <a href="#packet">Packet</a>
-      </nav>
-    </header>
 
-    <main>
-      <section class="hero" aria-labelledby="title">
-        <div>
-          <p class="eyebrow">Proof pack / paquete de financiación</p>
-          <h1 id="title">Así se ve el <em>centro.</em></h1>
-          <p class="dek">A silent documentary archive of downtown life, built city by city through fieldwork, interactive atlas chapters, and future installation screenings.</p>
-          <p class="dek">Un archivo documental silencioso de la vida en los centros urbanos, construido ciudad por ciudad.</p>
-          <div class="actions">
-            <a class="button primary" href="index.html">Open atlas</a>
-            <a class="button" href="#route">View route</a>
-            <a class="button" href="funding/one-page-treatment.md">Treatment</a>
-          </div>
-        </div>
-
-        <figure class="proof-board">
-          <img src="assets/proof/proof-pack-concept-board.png" alt="Concept board showing the proof pack direction across web page, treatment, installation mockup, and reel frames." />
-          <figcaption>
-            <span>Concept board / temporary visual north star</span>
-            <span>Barranquilla → Bogotá → Cartagena</span>
-          </figcaption>
-        </figure>
-      </section>
-
-      <section id="route" aria-labelledby="route-title">
-        <div class="section-head">
-          <p class="kicker">Route logic</p>
-          <h2 id="route-title">Three downtowns, three forms of public life.</h2>
-        </div>
-        <div class="route">
-          <article class="city">
-            <div>
-              <div class="meta">01 / origin / Caribbean port</div>
-              <h3>Barranquilla</h3>
-            </div>
-            <p>Origin chapter. The existing footage proves method, rhythm, and point of view: heat, commerce, waiting, street motion, and port-city memory.</p>
-          </article>
-          <article class="city">
-            <div>
-              <div class="meta">02 / counterpoint / Andean capital</div>
-              <h3>Bogotá</h3>
-            </div>
-            <p>Interior counterpoint. Altitude, bureaucracy, political center, dense pedestrian life, and a colder rhythm test the archive beyond the Caribbean.</p>
-          </article>
-          <article class="city">
-            <div>
-              <div class="meta">03 / contrast / tourism-facing coast</div>
-              <h3>Cartagena</h3>
-            </div>
-            <p>Tourism image versus lived downtown. The route asks what public life looks like when global postcard memory meets daily local movement.</p>
-          </article>
-        </div>
-      </section>
-
-      <section aria-labelledby="vision-title">
-        <div class="section-head">
-          <p class="kicker">Installation destination</p>
-          <h2 id="vision-title">Travel is not a perk. Travel is the production method.</h2>
-        </div>
-        <div class="copy">
-          <p>The website is proof, not the final form. Each trip produces one silent city chapter: footage, stills, route notes, and an atlas entry. The long-term object is a public archive that can live online, in a media lab, or as a projection room.</p>
-          <p>La obra no busca explicar la ciudad con entrevistas. La ciudad se interpreta a sí misma: luz, repetición, arquitectura, comercio, espera, calor, tránsito y vacío.</p>
-        </div>
-      </section>
-
-      <section id="packet" aria-labelledby="packet-title">
-        <div class="section-head">
-          <p class="kicker">Reviewer packet</p>
-          <h2 id="packet-title">Materials for foundations, residencies, and media labs.</h2>
-        </div>
-        <div class="pack-grid">
-          <article class="pack-item">
-            <span>01</span>
-            <div>
-              <h3>One-page treatment</h3>
-              <p>Title, logline, format, method, audience, why now.</p>
-            </div>
-          </article>
-          <article class="pack-item">
-            <span>02</span>
-            <div>
-              <h3>Artist statement</h3>
-              <p>Silent city method, downtown memory, personal origin.</p>
-            </div>
-          </article>
-          <article class="pack-item">
-            <span>03</span>
-            <div>
-              <h3>Route proposal</h3>
-              <p>Barranquilla, Bogotá, Cartagena as first fundable comparison.</p>
-            </div>
-          </article>
-          <article class="pack-item">
-            <span>04</span>
-            <div>
-              <h3>Budget + targets</h3>
-              <p>Travel, production, web archive, installation mockup, applications.</p>
-            </div>
-          </article>
-        </div>
-      </section>
-
-      <section aria-labelledby="reel-title">
-        <div class="section-head">
-          <p class="kicker">90-sec reel language</p>
-          <h2 id="reel-title">Barranquilla footage, route cards, no fake future footage.</h2>
-        </div>
-        <div class="reel-strip" aria-label="Silent reel frame language">
-          <div class="frame" data-label="00:00 title"></div>
-          <div class="frame" data-label="00:14 origin"></div>
-          <div class="frame" data-label="00:36 downtown rhythm"></div>
-          <div class="frame" data-label="01:04 route cards"></div>
-          <div class="frame" data-label="01:28 atlas"></div>
-        </div>
-      </section>
-
-      <section aria-labelledby="downloads-title">
-        <div class="section-head">
-          <p class="kicker">Source docs</p>
-          <h2 id="downloads-title">Bilingual text stays reusable.</h2>
-        </div>
-        <div class="downloads">
-          <a class="download" href="funding/one-page-treatment.md"><span>One-page treatment</span><span>MD</span></a>
-          <a class="download" href="funding/artist-statement.md"><span>Artist statement</span><span>MD</span></a>
-          <a class="download" href="funding/route-proposal.md"><span>Route proposal</span><span>MD</span></a>
-          <a class="download" href="assets/proof/proof-pack-concept-board.png"><span>Concept board</span><span>PNG</span></a>
-        </div>
-      </section>
-    </main>
-
-    <footer>
-      Public prototype for funder review. Root atlas remains the artwork; this page explains why the next trip exists.
-    </footer>
+<header class="site-bar">
+  <a class="brand" href="index.html">Así se ve el centro<em>.</em></a>
+  <nav class="site-nav" aria-label="Secciones">
+    <a href="index.html">Globo</a>
+    <a href="atlas-relativo.html">Atlas relativo</a>
+    <a href="sobre.html">Proyecto</a>
+  </nav>
+  <div class="site-context">
+    <div class="lang-switch" role="group" aria-label="Idioma / Language">
+      <button type="button" data-set-lang="es" aria-pressed="true">ES</button>
+      <button type="button" data-set-lang="en" aria-pressed="false">EN</button>
+    </div>
   </div>
+</header>
+
+<main class="page">
+
+  <section aria-labelledby="t-hero">
+    <span class="kicker" lang="es">Dossier para evaluadores</span>
+    <span class="kicker" lang="en">Reviewer dossier</span>
+    <h1 class="page-title" id="t-hero">Así se ve el centro<em>.</em></h1>
+    <div class="prose" style="margin-top:28px">
+      <p class="lede" lang="es">Un archivo documental silencioso de la vida en los centros urbanos, construido ciudad por ciudad, donde cada centro se convierte en un capítulo cinematográfico dentro de un atlas interactivo.</p>
+      <p class="lede" lang="en">A silent documentary archive of downtown life, built city by city, where each urban center becomes a cinematic chapter inside an interactive atlas.</p>
+    </div>
+    <div class="actions">
+      <a href="index.html" lang="es">Abrir el globo</a>
+      <a href="index.html" lang="en">Open the globe</a>
+      <a href="atlas-relativo.html" lang="es">Abrir el atlas relativo</a>
+      <a href="atlas-relativo.html" lang="en">Open the relative atlas</a>
+    </div>
+  </section>
+
+  <section aria-labelledby="t-frames">
+    <span class="kicker" lang="es">Material filmado</span>
+    <span class="kicker" lang="en">Footage</span>
+    <h2 class="section-title" id="t-frames" lang="es">Dos capítulos grabados</h2>
+    <h2 class="section-title" id="t-frames-en" lang="en">Two recorded chapters</h2>
+    <div class="frames">
+      <figure>
+        <img src="assets/posters/barranquilla-long.jpg" alt="Dos hombres sentados a la sombra de un árbol en el centro de Barranquilla, junto a un carrito de venta." loading="lazy">
+        <figcaption><b>Barranquilla</b> · Madrugada en el centro · 2:46</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/posters/barranquilla-short.jpg" alt="Un vendedor ambulante cruza una calle del centro de Barranquilla con escobas y mercancía." loading="lazy">
+        <figcaption><b>Barranquilla</b> · A Slice of centro · 1:20</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/posters/bogota-long.jpg" alt="Personas disfrazadas con trajes de colores caminan por una calle del centro de Bogotá." loading="lazy">
+        <figcaption><b>Bogotá</b> · Domingo en el centro · 1:59</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/posters/bogota-short.jpg" alt="Una persona con sombrero de cintas y pantalón verde camina junto a una reja en Bogotá." loading="lazy">
+        <figcaption><b>Bogotá</b> · A Slice of centro · 0:46</figcaption>
+      </figure>
+    </div>
+    <p class="note" lang="es">Fotogramas de las piezas publicadas. Cada capítulo tiene una pieza larga y un Short; se ven completos en el globo y en el atlas.</p>
+    <p class="note" lang="en">Stills from the published pieces. Each chapter has a long piece and a Short, both playable in full on the globe and the atlas.</p>
+  </section>
+
+  <section aria-labelledby="t-route">
+    <span class="kicker" lang="es">Primera ruta</span>
+    <span class="kicker" lang="en">First route</span>
+    <h2 class="section-title" id="t-route" lang="es">Tres centros, tres formas de vida pública</h2>
+    <h2 class="section-title" id="t-route-en" lang="en">Three downtowns, three forms of public life</h2>
+    <div class="route">
+      <article>
+        <span class="kicker state" lang="es">Grabado · origen</span>
+        <span class="kicker state" lang="en">Recorded · origin</span>
+        <h3>Barranquilla</h3>
+        <p lang="es">Origen del proyecto y primera prueba visual. Puerto Caribe, comercio, calor, espera, movimiento diario, memoria popular.</p>
+        <p lang="en">Project origin and first visual proof. Caribbean port life, commerce, heat, waiting, daily movement, popular memory.</p>
+      </article>
+      <article>
+        <span class="kicker state" lang="es">Grabado · Carrera Séptima, 23 de agosto de 2026</span>
+        <span class="kicker state" lang="en">Recorded · Carrera Séptima, 23 August 2026</span>
+        <h3>Bogotá</h3>
+        <p lang="es">Contrapunto interior: capital político-administrativa, escala metropolitana. Altura, densidad, burocracia, tránsito peatonal, vida pública en clima frío.</p>
+        <p lang="en">Interior counterpoint: political-administrative capital, metropolitan scale. Altitude, density, bureaucracy, pedestrian flow, public life in a colder climate.</p>
+      </article>
+      <article>
+        <span class="kicker state is-next" lang="es">Próximo capítulo</span>
+        <span class="kicker state is-next" lang="en">Next chapter</span>
+        <h3>Cartagena</h3>
+        <p lang="es">Contraste entre postal turística y vida local del centro: patrimonio, turismo, trabajo cotidiano, fachada global y ciudad vivida.</p>
+        <p lang="en">Contrast between tourist postcard and local downtown life: heritage, tourism, everyday work, global image and lived city.</p>
+      </article>
+    </div>
+  </section>
+
+  <section aria-labelledby="t-statement">
+    <span class="kicker" lang="es">Declaración de artista</span>
+    <span class="kicker" lang="en">Artist statement</span>
+    <h2 class="section-title" id="t-statement" lang="es">El centro como película silenciosa</h2>
+    <h2 class="section-title" id="t-statement-en" lang="en">Downtown as a silent film</h2>
+    <div class="prose" lang="es">
+      <p><em>Así se ve el centro</em> nace de mirar el centro como una película silenciosa. No quiero explicar la ciudad con entrevistas, subtítulos o una voz que ordene lo que debe sentirse. Quiero dejar que la ciudad actúe: cuerpos que cruzan, negocios que abren, buses que pasan, sombra, calor, espera, arquitectura, ruido visible.</p>
+      <p>Barranquilla es el punto de origen porque allí el proyecto ya encontró su ritmo. Desde ese primer capítulo, la obra se expande por comparación. Bogotá no repite Barranquilla; la contradice desde la altura, la densidad y la política. Cartagena no repite el Caribe; enfrenta la imagen turística con la vida diaria del centro.</p>
+      <p>El atlas es memoria pública. Cada viaje produce una pieza audiovisual, una entrada de archivo y material para una futura instalación. El objetivo no es hacer un mapa bonito. El objetivo es construir una forma de recordar cómo se ve, se mueve y se transforma el centro cuando nadie lo narra.</p>
+    </div>
+    <div class="prose" lang="en">
+      <p><em>Así se ve el centro</em> begins by seeing downtown as a silent film. I do not want to explain the city through interviews, subtitles, or a voice telling the viewer what to feel. I want the city to perform itself: bodies crossing, shops opening, buses passing, shadow, heat, waiting, architecture, visible noise.</p>
+      <p>Barranquilla is the origin because the project has already found its rhythm there. From that first chapter, the work expands through comparison. Bogotá does not repeat Barranquilla; it counters it through altitude, density, and politics. Cartagena does not repeat the Caribbean; it confronts the tourist image with daily downtown life.</p>
+      <p>The atlas is public memory. Each trip produces an audiovisual piece, an archive entry, and material for a future installation. The goal is not to make a beautiful map. The goal is to build a way of remembering how downtown looks, moves, and changes when nobody narrates it.</p>
+    </div>
+  </section>
+
+  <section aria-labelledby="t-method">
+    <span class="kicker" lang="es">Tratamiento</span>
+    <span class="kicker" lang="en">Treatment</span>
+    <h2 class="section-title" id="t-method" lang="es">Método, formato y audiencia</h2>
+    <h2 class="section-title" id="t-method-en" lang="en">Method, format and audience</h2>
+    <div class="prose" lang="es">
+      <p>El método es viajar a cada ciudad, filmar secuencias de centro sin entrevistas ni narración, editar un capítulo silencioso, publicarlo en el atlas y preparar fotogramas y reel para presentación institucional. El formato reúne un archivo web interactivo, un reel documental silencioso de 90 segundos y una instalación futura para proyección.</p>
+      <p>Los centros cambian más rápido que la memoria oficial. Este proyecto captura vida pública cotidiana antes de que sea reemplazada, pulida u olvidada, y se dirige a fundaciones culturales, residencias artísticas, laboratorios de medios, festivales documentales, programas de estudios urbanos y espectadores interesados en la ciudad latinoamericana.</p>
+    </div>
+    <div class="prose" lang="en">
+      <p>The method is to travel to each city, film downtown sequences without interviews or narration, edit one silent chapter, publish it in the atlas, and prepare stills and reel assets for institutional presentation. The format brings together an interactive web archive, a 90-second silent documentary reel, and a future installation-ready projection system.</p>
+      <p>Downtowns are changing faster than official memory can preserve. This project captures everyday public life before it is replaced, polished, or forgotten, and it speaks to cultural foundations, artist residencies, media labs, documentary festivals, urban studies programs, and viewers interested in Latin American city life.</p>
+    </div>
+  </section>
+
+  <footer class="page-foot">
+    <span lang="es">Concepción, realización y desarrollo: Néstor De León</span>
+    <span lang="en">Concept, direction and development: Néstor De León</span>
+    <a href="sobre.html" lang="es">Sobre el proyecto y contacto</a>
+    <a href="sobre.html" lang="en">About and contact (in Spanish)</a>
+  </footer>
+</main>
+
+<script>
+  (function () {
+    const root = document.documentElement;
+    const buttons = document.querySelectorAll('[data-set-lang]');
+    function set(lang) {
+      root.dataset.lang = lang;
+      root.lang = lang;
+      buttons.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.setLang === lang)));
+      try { localStorage.setItem('dossier-lang', lang); } catch (e) {}
+    }
+    buttons.forEach(b => b.addEventListener('click', () => set(b.dataset.setLang)));
+    set(root.dataset.lang || 'es');
+  })();
+</script>
 </body>
 </html>

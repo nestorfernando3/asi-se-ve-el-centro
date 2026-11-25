@@ -22,25 +22,25 @@ if [ -e "$OUT" ]; then
   fi
 fi
 
-mkdir -p "$OUT/funding"
+mkdir -p "$OUT"
 : > "$OUT/$MARK"
 cd "$ROOT"
 
 # Páginas públicas
-cp index.html atlas-relativo.html projects.html "$OUT/"
-# Recursos (CSS, JS, cartografía, librerías, imagen del proof pack)
+cp index.html atlas-relativo.html projects.html sobre.html "$OUT/"
+# Recursos (CSS, JS, cartografía, librerías, pósters, tarjeta para compartir)
 cp -R assets "$OUT/assets"
-# Paquete para evaluadores enlazado desde projects.html
-cp funding/one-page-treatment.md funding/artist-statement.md funding/route-proposal.md "$OUT/funding/"
+# El paquete para evaluadores vive dentro de projects.html: funding/ no se publica.
 
+# El concept board provisional ya no se enlaza: no se publica.
+rm -rf "$OUT/assets/proof"
 # Notas de trabajo dentro de assets y basura del sistema
 find "$OUT/assets" -name '*.md' -delete
 find "$OUT" -name '.DS_Store' -delete
 
 # Guardián: si algo interno se coló, se detiene antes de publicar.
 LEAK="$(find "$OUT" -type f \
-  | grep -E -i 'grant-tracker|budget|outreach|kcmo|funding-plan|superpowers|laboratorio|propuesta|/docs/|\.md$' \
-  | grep -v -E '/funding/(one-page-treatment|artist-statement|route-proposal)\.md$' || true)"
+  | grep -E -i 'funding|grant-tracker|budget|outreach|kcmo|superpowers|laboratorio|propuesta|/docs/|\.md$' || true)"
 if [ -n "$LEAK" ]; then
   echo "Error: archivos internos en el sitio armado:" >&2
   echo "$LEAK" >&2

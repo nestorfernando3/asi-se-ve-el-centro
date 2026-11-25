@@ -211,6 +211,10 @@ body::after {
 .vplay:hover span, .vplay:focus-visible span { transform: scale(1.08); }
 .vplay:focus-visible { outline-offset: -6px; }
 
+/* Ficha de la pieza bajo el visor */
+.vcredit { color: var(--muted); font: 11px/1.5 var(--font-mono); letter-spacing: .06em; }
+.vcredit b { color: var(--fg); font-weight: 500; }
+
 /* ── Lista de distancias: una tabla corta, no una botonera ── */
 .dist-list {
   display: flex;

@@ -4,7 +4,19 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="dark" />
-  <meta name="description" content="Mapa audiovisual interactivo para Así se ve el centro: pines de ciudad y visor de video de Barranquilla." />
+  <meta name="description" content="Archivo documental silencioso de la vida en los centros urbanos, ciudad por ciudad, desde Barranquilla. Globo interactivo con piezas de video.">
+  <link rel="canonical" href="https://nestorfernando3.github.io/asi-se-ve-el-centro/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Así se ve el centro">
+  <meta property="og:locale" content="es_CO">
+  <meta property="og:title" content="Así se ve el centro — Globo transmedia">
+  <meta property="og:description" content="Archivo documental silencioso de la vida en los centros urbanos, ciudad por ciudad, desde Barranquilla. Globo interactivo con piezas de video.">
+  <meta property="og:url" content="https://nestorfernando3.github.io/asi-se-ve-el-centro/">
+  <meta property="og:image" content="https://nestorfernando3.github.io/asi-se-ve-el-centro/assets/og-card.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Fotogramas de Barranquilla y Bogotá bajo el título Así se ve el centro.">
+  <meta name="twitter:card" content="summary_large_image">
   <title>Así se ve el centro. — Globo transmedia</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -592,6 +604,7 @@
       <nav class="site-nav" aria-label="Vistas del atlas">
         <a href="index.html" aria-current="page">Globo</a>
         <a href="atlas-relativo.html">Atlas relativo</a>
+        <a href="sobre.html">Proyecto</a>
       </nav>
       <span class="site-context">Barranquilla / ciudad origen</span>
     </header>
@@ -638,6 +651,7 @@
         </div>
         <div class="reel-switch" role="group" aria-label="Elegir pieza">
         </div>
+        <div class="vcredit" data-viewer-credit hidden></div>
         <blockquote class="city-quote viewer-quote" data-viewer-quote></blockquote>
         <div class="kicker" data-rail-title></div>
         <nav class="dist-list" aria-label="Ciudades por distancia"></nav>
@@ -663,7 +677,7 @@
       const cityRegistry = window.ATLAS_CITIES.map(c => ({
         id: c.id, name: c.name, country: c.country, lat: c.lat, lng: c.lon, status: c.status,
         description: c.quote || '', author: c.attrib || '',
-        video: c.video || null, poster: c.poster || null
+        video: c.video || null, poster: c.poster || null, credits: c.credits || null
       }));
       const STATUS_LABEL = { live: 'viva', next: 'próxima', future: 'futura' };
       const kmBetween = (a, b) => distKm({ lat: a.lat, lon: a.lng }, { lat: b.lat, lon: b.lng });
@@ -684,6 +698,7 @@
       const noteAuthor = document.querySelector('[data-note-author]');
       const noteDistance = document.querySelector('[data-note-distance]');
       const viewerQuote = document.querySelector('[data-viewer-quote]');
+      const viewerCredit = document.querySelector('[data-viewer-credit]');
       const activeCityLabel = document.querySelector('[data-active-city-label]');
       const reelSwitch = document.querySelector('.reel-switch');
       const cityRail = viewerShell.querySelector('.dist-list');
@@ -765,7 +780,7 @@
         viewerQuote.hidden = !city.description;
         viewerSlate.style.setProperty('--poster-glow', posterVars[0]);
         viewerSlate.style.setProperty('--poster-core', posterVars[1]);
-        viewerShell.classList.toggle('has-videos', CityVideo.render(videoSlot, reelSwitch, city));
+        viewerShell.classList.toggle('has-videos', CityVideo.render(videoSlot, reelSwitch, city, { creditEl: viewerCredit }));
         renderRuler(city);
         updatePinNames(city);
         updateActiveControls(cityId);

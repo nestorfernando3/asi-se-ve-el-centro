@@ -8,6 +8,12 @@
 
 ## Unreleased
 
+- Citas verificadas: 10 con fuente registrada en `cities.js` (campo `source`). La de Barranquilla no estaba en el «Romance de Barranquilla» y se reemplaza por sus primeros versos; se corrige «Mas hoy» en Cartagena y se completa la frase de Sandburg. Se retiran las de CDMX, Dakar y Mumbai, que no se sostenían.
+- Créditos por pieza en el visor (título, duración, realización; lugar y fecha cuando constan).
+- Tarjeta para compartir (`assets/og-card.jpg`, 1200 × 630, con fotogramas reales) y metadatos Open Graph y Twitter en todas las páginas.
+- `projects.html` rehecho como dossier bilingüe con el sistema visual del sitio: fotogramas propios en lugar del concept board provisional, Bogotá como capítulo grabado y los textos del paquete dentro de la página. `funding/` y el concept board dejan de publicarse.
+- Nueva página `sobre.html` (método, créditos y contacto por el portafolio), enlazada como «Proyecto» en la barra.
+
 - Video solo a pedido: la home ya no carga YouTube al abrir. Globo y atlas comparten un visor (`assets/atlas/video.js`) con póster local y botón Reproducir; el reproductor llega desde `youtube-nocookie.com` después del clic, con sonido, y las piezas se llaman igual en las dos vistas («Pieza larga» y «Short»). Cada pieza de Barranquilla y Bogotá tiene su póster local en `assets/posters/` (fotograma de la propia pieza, recortado sin franjas), enlazado desde `cities.js`.
 - Se retira el drone sonoro: no llegaba a sonar porque el video se cargaba antes, y competía con el audio de las piezas.
 - Pines agrupados en el globo: los que caen uno sobre otro (Colombia, Europa) se reúnen bajo el de más rango con la cuenta (+4) y una lista para elegir, navegable con teclado. Los pines ocultos detrás del globo o dentro de un grupo salen del orden de tabulación.

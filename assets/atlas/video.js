@@ -58,8 +58,10 @@
     opts = opts || {};
     const keys = city.video ? Object.keys(PIECES).filter(k => city.video[k]) : [];
     tabs.textContent = '';
+    const credit = opts.creditEl;
     if (!keys.length) {
       tabs.hidden = true;
+      if (credit) { credit.textContent = ''; credit.hidden = true; }
       frame.classList.remove('is-playing');
       return false;
     }
@@ -67,6 +69,17 @@
     if (opts.play) showPlayer(frame, city, key, false);
     else showPoster(frame, city, key, opts.onPlay);
     tabs.hidden = keys.length < 2;
+    if (credit) {
+      // Ficha de la pieza: título y duración; luego quién, dónde y cuándo, si constan.
+      const c = city.credits || {}, piece = c[key] || {};
+      const head = [piece.title, piece.duration].filter(Boolean).join(' · ');
+      const where = [c.place, c.date].filter(Boolean).join(', ');
+      const tail = [c.by && 'Realización: ' + c.by, where].filter(Boolean).join(' · ');
+      credit.textContent = '';
+      if (head) { const b = document.createElement('b'); b.textContent = head; credit.appendChild(b); }
+      if (tail) credit.append((head ? ' · ' : '') + tail);
+      credit.hidden = !head && !tail;
+    }
     keys.forEach(k => {
       const t = document.createElement('button');
       t.type = 'button';

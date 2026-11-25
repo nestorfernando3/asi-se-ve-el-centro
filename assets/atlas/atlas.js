@@ -278,7 +278,7 @@
   function renderFrame(city) {
     const frame = document.getElementById('p-frame');
     const tabs = document.getElementById('p-tabs');
-    if (window.CityVideo && CityVideo.render(frame, tabs, city)) return;
+    if (window.CityVideo && CityVideo.render(frame, tabs, city, { creditEl: document.getElementById('p-credit') })) return;
     frame.classList.remove('is-playing');
     frame.innerHTML = `<div class="soon">${city.status === 'next' ? 'En producción' : 'Ruta futura'}</div>`;
     tabs.hidden = true;
