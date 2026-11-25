@@ -13,17 +13,16 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  # Armar y subir en un trabajo, desplegar en otro: en un solo trabajo el despliegue
+  # a veces buscaba el paquete antes de que GitHub lo registrara («Found 0 artifacts»).
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Configure Pages
         uses: actions/configure-pages@v5
       # Solo se publica la lista blanca de scripts/build-site.sh, nunca la raíz:
@@ -31,9 +30,17 @@ jobs:
       - name: Build public site
         run: sh scripts/build-site.sh _site
       - name: Upload static site
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: _site
+
+  deploy:
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
