@@ -1,0 +1,563 @@
+/* Globo de la home (index.html). Tokens y componentes comunes en assets/site.css. */
+:root {
+  --loop: 12s;
+  --ink: var(--night);
+  --gold: #7fa0af;
+  --font-display: var(--font-sans);
+  --font-body: var(--font-sans);
+}
+
+* { box-sizing: border-box; }
+html, body { width: 100%; height: 100%; margin: 0; }
+body {
+  overflow: hidden;
+  background: var(--matte);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+}
+
+main {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    radial-gradient(ellipse at 50% 44%, rgba(127, 160, 175, 0.04) 0%, transparent 48%),
+    radial-gradient(ellipse at 50% 50%, transparent 28%, rgba(5, 11, 16, 0.82) 94%),
+    linear-gradient(180deg, rgba(5,11,16,0.48), transparent 18%, transparent 78%, rgba(5,11,16,0.58)),
+    var(--ink);
+}
+
+/* Grano de película y un resplandor cálido de horizonte detrás del globo. */
+main::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 42% 38% at 34% 52%, rgba(224,105,87,0.07), transparent 70%),
+    radial-gradient(ellipse 50% 46% at 34% 50%, rgba(111,194,196,0.06), transparent 72%);
+}
+.stage {
+  position: absolute;
+  inset: clamp(54px, 8vh, 86px) clamp(20px, 4vw, 62px) clamp(70px, 10vh, 104px);
+  z-index: 5;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 34vw);
+  gap: clamp(20px, 3.8vw, 58px);
+  align-items: center;
+}
+
+.atlas {
+  position: relative;
+  width: 100%;
+  min-height: min(76vh, 760px);
+  container-type: inline-size;
+}
+
+#globe-container {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  cursor: grab;
+  /* El dedo que baja o sube desplaza la página; el que va de lado gira el globo. */
+  touch-action: pan-y;
+}
+#globe-container:active {
+  cursor: grabbing;
+}
+#globe-container canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+/* Primera visita: el globo aparece con un fundido; de vuelta del atlas ya está ahí. */
+#globe-container canvas.is-born { animation: globeIn 700ms cubic-bezier(.22,1,.36,1) both; }
+@keyframes globeIn { from { opacity: 0; transform: scale(.985); } }
+
+.pin-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 3;
+  pointer-events: none;
+}
+.city-pin {
+  position: absolute;
+  /* Con ratón, 24 px: el punto bajo el cursor gana a sus vecinos. Táctil, 44 px. */
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  left: 0;
+  top: 0;
+  /* El bucle del globo escribe la posición en transform (sin reflow). */
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+  cursor: pointer;
+  isolation: isolate;
+  transition: filter 200ms ease, opacity 200ms ease;
+}
+.city-pin::before, .city-pin::after {
+  content: '';
+  pointer-events: none;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+.city-pin::before { transition: scale 200ms ease; }
+.city-pin::before {
+  width: 10px;
+  height: 10px;
+  background: rgba(241,245,248,0.78);
+  box-shadow: 0 0 0 1px rgba(3,2,1,0.85), 0 0 20px rgba(127,160,175,0.22);
+}
+.city-pin::after {
+  width: 26px;
+  height: 26px;
+  border: 1px solid rgba(127,160,175,0.34);
+  opacity: 0.8;
+  animation: pinPulse 3s ease-in-out infinite;
+}
+.city-pin.is-live::before {
+  background: var(--accent);
+  box-shadow: 0 0 0 1px rgba(3,2,1,0.9), 0 0 20px rgba(214,74,40,0.42), 0 0 40px rgba(214,74,40,0.12);
+}
+.city-pin.is-live::after { border-color: rgba(214,74,40,0.5); }
+.city-pin.is-selected::before {
+  width: 12px;
+  height: 12px;
+  background: var(--gold);
+  box-shadow:
+    0 0 0 1px rgba(3,2,1,0.9),
+    0 0 0 5px rgba(127,160,175,0.12),
+    0 0 28px rgba(127,160,175,0.34);
+}
+.city-pin.is-selected::after {
+  width: 36px;
+  height: 36px;
+  border-color: rgba(127,160,175,0.64);
+  animation-duration: 2.2s;
+}
+.city-pin.is-future::before { background: rgba(92,147,139,0.88); }
+.city-pin.is-next::before { background: rgba(241,228,200,0.9); }
+.city-pin.is-next::after { border-color: rgba(241,228,200,0.3); }
+.city-pin.is-future::after { border-color: rgba(92,147,139,0.28); }
+/* Los pines de Colombia casi se tocan y sus áreas de 44 px se solapan: el hover
+   no cambia el tamaño ni el orden del pin, o el cursor salta de uno a otro en
+   bucle. Solo crece el punto, que no altera el área sensible. */
+.city-pin:hover,
+.city-pin:focus-visible {
+  filter: brightness(1.3);
+  outline: none;
+}
+.city-pin:hover::before,
+.city-pin:focus-visible::before { scale: 1.3; }
+.city-pin:focus-visible::after { box-shadow: 0 0 0 3px rgba(241,245,248,0.24); }
+
+.pin-name {
+  position: absolute;
+  left: calc(50% + 2px);
+  top: calc(50% - 20px);
+  padding: 5px 7px;
+  color: rgba(241,245,248,0.74);
+  background: rgba(3,2,1,0.72);
+  border: 1px solid rgba(241,245,248,0.16);
+  font: 11px/1 var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 180ms ease, transform 180ms ease;
+  /* El rótulo no atrapa el puntero: tapa los pines vecinos. */
+  pointer-events: none;
+}
+.city-pin:hover .pin-name,
+.city-pin:focus-visible .pin-name,
+.city-pin.is-live .pin-name,
+.city-pin.is-selected .pin-name { opacity: 1; transform: translateY(0); }
+
+/* Ciudades que en pantalla caen una sobre otra: el pin de más rango las agrupa,
+   lleva la cuenta y abre una lista para elegir. */
+.pin-more {
+  position: absolute;
+  left: calc(50% + 5px);
+  top: calc(50% + 3px);
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border: 1px solid var(--line-strong);
+  border-radius: 9px;
+  background: var(--night);
+  color: var(--fg);
+  font: 600 11px/16px var(--font-mono);
+  text-align: center;
+  pointer-events: none;
+}
+.pin-more:empty { display: none; }
+.pin-menu {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 6;
+  width: 230px;
+  padding: 4px 10px;
+  background: rgba(11,18,24,0.97);
+  border: 1px solid var(--line-strong);
+  box-shadow: 0 18px 50px rgba(0,0,0,0.45);
+}
+.pin-menu[hidden] { display: none; }
+.pin-menu .dist-row { width: 100%; }
+.pin-menu .dist-row:last-child { border-bottom: 0; }
+.pin-menu .dist-row:focus-visible { outline-offset: -2px; }
+
+.headline {
+  position: absolute;
+  left: clamp(0px, 1vw, 18px);
+  bottom: clamp(8px, 3vh, 38px);
+  z-index: 2;
+  max-width: min(680px, 64vw);
+  /* Voz de calle: un rótulo, no un titular de revista. */
+  font-family: var(--font-street);
+  font-stretch: 62%;
+  font-variation-settings: 'wdth' 62;
+  font-weight: 800;
+  text-transform: uppercase;
+  line-height: 0.84;
+  letter-spacing: 0;
+  text-shadow: 0 2px 30px rgba(5,11,16,0.85);
+  text-wrap: balance;
+  pointer-events: none;
+  margin: 0;
+}
+.headline .line {
+  display: block;
+  opacity: 0;
+  transform: translateY(0.35em);
+  animation: signIn 900ms cubic-bezier(.2,.7,.2,1) 200ms both;
+}
+.headline .line { font-size: clamp(3.2rem, 8.4vw, 9.6rem); }
+.headline .line:last-child { animation-delay: .14s; }
+/* El único acento es el punto final: el mismo rojo del pin de Barranquilla. */
+.headline em {
+  display: inline-block;
+  width: .16em;
+  height: .16em;
+  margin-left: .05em;
+  border-radius: 50%;
+  background: var(--accent);
+  color: transparent;
+  font-style: normal;
+  overflow: hidden;
+  vertical-align: baseline;
+}
+
+.field-note {
+  position: absolute;
+  left: 0;
+  top: clamp(18px, 4vh, 54px);
+  z-index: 4;
+  width: min(360px, 42vw);
+  padding-left: 16px;
+  border-left: 1px solid rgba(127,160,175,0.52);
+  color: var(--fg);
+  pointer-events: none;
+}
+.field-note::before {
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: 1px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 18px rgba(127,160,175,0.34);
+}
+.note-kicker,
+.viewer-kicker {
+  font: 11px/1.45 var(--font-mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(127,160,175,0.82);
+}
+.note-title {
+  margin-top: 8px;
+  font: 400 clamp(26px, 3vw, 44px)/1 var(--font-chart-sc);
+  letter-spacing: 0.08em;
+  text-wrap: balance;
+}
+.field-note { text-shadow: 0 1px 18px rgba(5,11,16,0.95), 0 0 2px rgba(5,11,16,0.9); }
+.note-copy {
+  margin-top: 12px;
+  max-width: 34ch;
+  color: rgba(241,236,226,0.8);
+  font: italic 400 15px/1.5 var(--font-chart);
+}
+.note-author {
+  margin-top: 8px;
+  color: rgba(145,157,167,0.82);
+  font: 11px/1.45 var(--font-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.viewer {
+  position: relative;
+  align-self: stretch;
+  min-height: min(70vh, 720px);
+  display: grid;
+  align-content: center;
+  gap: 16px;
+  max-height: 100%;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.viewer-header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 14px;
+}
+.viewer-city {
+  font: 400 clamp(22px, 2.4vw, 34px)/1 var(--font-chart-sc);
+  letter-spacing: 0.08em;
+  text-align: right;
+}
+.viewer-frame {
+  position: relative;
+  justify-self: end;
+  width: min(100%, 390px);
+  height: clamp(330px, 46vh, 460px);
+  min-height: 330px;
+  border: 1px solid rgba(214,74,40,0.18);
+  box-shadow:
+    0 18px 60px rgba(0,0,0,0.38),
+    inset 0 0 0 1px rgba(255,255,255,0.02),
+    inset 0 0 40px rgba(214,74,40,0.04);
+  background:
+    linear-gradient(180deg, rgba(241,245,248,0.04), rgba(241,245,248,0.01)),
+    rgba(9,6,4,0.92);
+  overflow: hidden;
+}
+.viewer-frame::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(5,11,16,0.22), transparent 18%, transparent 76%, rgba(5,11,16,0.22)),
+    radial-gradient(circle at 50% 38%, transparent 28%, rgba(5,11,16,0.18));
+}
+
+.slate {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  align-content: end;
+  padding: 18px;
+  background:
+    linear-gradient(180deg, rgba(5,11,16,0.06), rgba(5,11,16,0.82)),
+    radial-gradient(circle at 28% 20%, var(--poster-glow, rgba(127,160,175,0.18)), transparent 36%);
+  color: var(--fg);
+  transition: opacity 260ms ease;
+  pointer-events: none;
+}
+.poster-art {
+  position: absolute;
+  inset: 12px 12px auto 12px;
+  height: 40%;
+  overflow: hidden;
+  border: 1px solid rgba(231,222,208,0.12);
+  background:
+    linear-gradient(135deg, rgba(241,245,248,0.08), transparent 38%),
+    radial-gradient(circle at 42% 34%, var(--poster-core, rgba(127,160,175,0.38)), transparent 16%),
+    radial-gradient(circle at 61% 47%, rgba(92,147,139,0.26), transparent 22%),
+    linear-gradient(165deg, rgba(5,11,16,0.10), rgba(5,11,16,0.76)),
+    var(--surface);
+}
+.poster-art::before {
+  content: '';
+  position: absolute;
+  inset: -18%;
+  background:
+    repeating-linear-gradient(18deg, transparent 0 22px, rgba(127,160,175,0.07) 23px, transparent 24px),
+    repeating-linear-gradient(102deg, transparent 0 34px, rgba(127,160,175,0.08) 35px, transparent 36px);
+  mask-image: radial-gradient(circle at 50% 45%, black 0 54%, transparent 70%);
+  transform: rotate(-4deg);
+}
+.poster-art::after {
+  content: '';
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  bottom: 18%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(241,245,248,0.44), transparent);
+  box-shadow:
+    0 -28px 0 rgba(241,245,248,0.08),
+    0 -54px 0 rgba(127,160,175,0.08),
+    0 26px 0 rgba(92,147,139,0.08);
+}
+.poster-city {
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  z-index: 2;
+  max-width: calc(100% - 28px);
+  color: rgba(241,245,248,0.84);
+  font: 700 clamp(18px, 1.6vw, 26px)/0.95 var(--font-display);
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+  display: none;
+}
+.slate-title {
+  font: 400 clamp(22px, 2.4vw, 30px)/1.1 var(--font-chart);
+  letter-spacing: 0;
+  max-width: 13ch;
+}
+.slate-meta {
+  margin-top: 8px;
+  color: rgba(145,157,167,0.82);
+  font: 11px/1.4 var(--font-mono);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+/* Visor: póster local y Reproducir (assets/atlas/video.js); YouTube entra tras el clic.
+   Las ciudades sin piezas muestran la pizarra con su estado. */
+.video-slot {
+  position: absolute;
+  inset: 12px;
+  z-index: 4;
+  border: 1px solid rgba(231,222,208,0.12);
+}
+.viewer:not(.has-videos) .video-slot,
+.viewer.has-videos .slate { display: none; }
+/* Mientras suena una pieza, la viñeta del marco no oscurece el video. */
+.viewer-frame:has(.is-playing)::before { opacity: 0; }
+/* El verso va en la nota de campo; en pantallas angostas, bajo el visor. */
+.viewer-quote { display: none; }
+
+.reel-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.viewer:not(.has-videos) .reel-switch { display: none; }
+.note-distance {
+  margin-top: 8px;
+  color: rgba(224,105,87,0.9);
+  font: 11px/1.45 var(--font-mono);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+.globe-legend { position: absolute; right: 0; bottom: clamp(8px, 3vh, 38px); z-index: 4; }
+
+/* Morfismo con el atlas: todo lo que no es el mundo se aparta. */
+.field-note, .headline, .viewer, .globe-legend, .pin-layer, .site-foot {
+  transition: opacity 420ms ease, transform 600ms cubic-bezier(.22,1,.36,1);
+}
+main.is-leaving .field-note, main.is-leaving .headline, main.is-leaving .viewer,
+main.is-leaving .globe-legend, main.is-leaving .pin-layer, main.is-leaving .site-foot,
+.is-arriving main .field-note, .is-arriving main .headline, .is-arriving main .viewer,
+.is-arriving main .globe-legend, .is-arriving main .pin-layer, .is-arriving main .site-foot {
+  opacity: 0;
+  transition-duration: 140ms;
+}
+main.is-leaving .viewer, .is-arriving main .viewer { transform: translateX(24px); }
+
+@keyframes pinPulse { 0%,100% { transform: translate(-50%, -50%) scale(0.78); opacity: 0.38; } 50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.84; } }
+@keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+/* El rótulo entra una vez y se queda: un letrero no parpadea. */
+@keyframes signIn {
+  from { opacity: 0; transform: translateY(0.18em); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (max-width: 920px) {
+  .stage { grid-template-columns: 1fr; inset: 56px 18px 72px; gap: 12px; }
+  .atlas { min-height: 54vh; }
+  .headline { bottom: 2vh; max-width: 82vw; }
+  .field-note { width: min(430px, 72vw); top: 10px; }
+  .note-title { font-size: clamp(25px, 5vw, 38px); }
+  .note-copy, .note-author { display: none; }
+  .viewer-quote { display: block; margin: 4px 0 10px; font-size: 14px; }
+  .viewer { position: absolute; right: 0; bottom: 0; width: min(42vw, 220px); min-height: 0; z-index: 20; gap: 8px; }
+  .viewer-header { display: none; }
+  .viewer-frame { width: 100%; height: auto; aspect-ratio: 9 / 13; min-height: 230px; }
+  .dist-list { max-height: 132px; }
+  .globe-legend { display: none; }
+  .pin-name { display: none; }
+}
+
+@media (max-width: 560px) {
+  body { overflow: auto; }
+  main { min-height: 100svh; height: auto; overflow: hidden; }
+  .stage {
+    position: relative;
+    inset: auto;
+    min-height: 100svh;
+    padding: 58px 14px 72px;
+  }
+  .atlas { min-height: 52svh; }
+  .field-note {
+    top: 8px;
+    width: min(310px, 82vw);
+  }
+  .headline {
+    left: 0;
+    bottom: 4px;
+    max-width: 76vw;
+  }
+  .viewer {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    width: 100%;
+    margin-top: 12px;
+  }
+  .viewer-header { display: grid; }
+  .viewer-frame {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 10;
+    min-height: 220px;
+  }
+  .slate-title { max-width: 16ch; }
+  .poster-art { height: 36%; }
+  .dist-list { max-height: none; }
+  .site-foot .rule { display: none; }
+}
+
+@media (pointer: coarse) {
+  .city-pin { width: 44px; height: 44px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .city-pin::after, #globe-container canvas.is-born,
+  .headline, .headline .line, .rec { animation: none !important; }
+  .headline .line { opacity: 1; transform: none; filter: none; }
+}
+
+/* Aviso cuando no hay WebGL (ver globe.js). */
+.globe-fallback {
+  max-width: 32ch;
+  margin: 0;
+  color: var(--muted);
+  font: italic 400 18px/1.5 var(--font-chart);
+  text-align: center;
+}
+.globe-fallback a { color: var(--fg); text-decoration-color: var(--accent); }

@@ -8,6 +8,14 @@
 
 ## Unreleased
 
+## 1.0 — 2026-11-25
+
+- Código y calidad: la home se reparte en `assets/globe/globe.js` y `globe.css` (`index.html` pasa de 1.600 a 120 líneas); estados, colores, sesión del morfismo y lista de distancias viven en `assets/atlas/shared.js`. Three.js r128 y las fuentes quedan alojadas en el repositorio: el sitio no hace peticiones externas al abrirse. Sin `document.write`.
+- Sin WebGL, la home avisa y ofrece el atlas relativo en vez de quedar vacía.
+- Versiones anteriores, marcos y concept board pasan a `archivo/`; se retira `land-110m.json`, duplicado.
+- Pruebas del registro de ciudades, revisión de enlaces del sitio armado y prueba de humo en Chromium; el flujo de Pages las corre antes de publicar y ahora publica desde `main`.
+- README y DESIGN reescritos sobre el código actual.
+
 - Citas verificadas: 10 con fuente registrada en `cities.js` (campo `source`). La de Barranquilla no estaba en el «Romance de Barranquilla» y se reemplaza por sus primeros versos; se corrige «Mas hoy» en Cartagena y se completa la frase de Sandburg. Se retiran las de CDMX, Dakar y Mumbai, que no se sostenían.
 - Créditos por pieza en el visor (título, duración, realización; lugar y fecha cuando constan).
 - Tarjeta para compartir (`assets/og-card.jpg`, 1200 × 630, con fotogramas reales) y metadatos Open Graph y Twitter en todas las páginas.

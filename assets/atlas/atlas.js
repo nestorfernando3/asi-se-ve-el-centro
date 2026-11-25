@@ -3,8 +3,8 @@
 (function () {
   const { R_EARTH, DEG, distKm, destPt, fmtKm } = window.AtlasGeo;
   const cities = window.ATLAS_CITIES;
-  const colors = { live: '#e06957', next: '#f1e4c8', future: '#63a9a1' }; // = estados en assets/site.css
-  const statusLabels = { live: 'viva', next: 'próxima', future: 'futura' };
+  const { STATUS_LABEL: statusLabels, MORPH_KEY, GEOM_KEY, readSession, writeSession, takeSession } = window.AtlasShared;
+  const colors = AtlasShared.statusColors(); // tokens --st-* de assets/site.css
   const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // ?city=<id> llega desde el globo: el atlas abre centrado en la ciudad elegida allí.
@@ -300,21 +300,12 @@
   }
 
   function buildRuler() {
-    const track = document.getElementById('r-track');
-    track.innerHTML = '';
-    cities.filter(c => c !== centerCity)
-      .map(c => ({ c, d: distKm(centerCity, c) }))
-      .sort((a, b) => a.d - b.d)
-      .forEach(({ c, d }) => {
-        const el = document.createElement('button');
-        el.type = 'button';
-        el.className = 'dist-row';
-        el.dataset.status = c.status;
-        el.setAttribute('aria-label', `Recentrar en ${c.name}, a ${fmtKm(d)} de ${centerCity.name}`);
-        el.innerHTML = `<span class="dot" aria-hidden="true"></span><span>${c.name}</span><span class="km">${fmtKm(d)}</span>`;
-        el.addEventListener('click', (e) => recenter(c, { keyboard: e.detail === 0 }));
-        track.appendChild(el);
-      });
+    AtlasShared.renderDistanceList(document.getElementById('r-track'), centerCity, cities, {
+      dist: c => distKm(centerCity, c),
+      fmt: fmtKm,
+      label: (c, d) => `Recentrar en ${c.name}, a ${fmtKm(d)} de ${centerCity.name}`,
+      onPick: (c, e) => recenter(c, { keyboard: e.detail === 0 })
+    });
   }
 
   // ===== LUPA DEL CENTRO =====
@@ -430,25 +421,17 @@
     land = topojson.feature(topo, topo.objects.land);
     document.getElementById('loading')?.remove();
   }
-  const fallback = () => {
-    document.getElementById('loading').textContent = 'Sin cartografía — mapa esquemático';
-    render();
-  };
-  // La cartografía llega por <script> (sincrónica, sirve también en file://);
-  // así el primer cuadro ya tiene costas y el morfismo desde el globo no parpadea.
-  if (window.LAND_110M) {
-    buildLand(window.LAND_110M);
-  } else if (location.protocol !== 'file:') {
-    fetch('assets/atlas/land-110m.json').then(r => r.json()).then(t => { buildLand(t); drawLupa(); render(); }).catch(fallback);
-  }
+  // La cartografía llega por <script> (assets/globe/land-110m.js, la misma del globo):
+  // sincrónica, sirve en file:// y el primer cuadro ya tiene costas. Sin ella, el
+  // mapa queda esquemático (anillos, rumbos y ciudades).
+  if (window.LAND_110M) buildLand(window.LAND_110M);
+  else document.getElementById('loading').textContent = 'Sin cartografía — mapa esquemático';
   drawLupa();
 
   // ===== MORFISMO GLOBO ⇄ ATLAS =====
   // El mismo mundo cambia de proyección: perspectiva vertical (la cámara de Three.js
   // del globo de la home, en su posición exacta de pantalla) mezclada con la
   // azimutal equidistante de este atlas.
-  const MORPH_KEY = 'atlas-morph';
-  const GEOM_KEY = 'globe-geom';
   const TILT_DEG = 0.65 * DEG; // inclinación máxima del globo de la home
   const azRaw = d3.geoAzimuthalEquidistantRaw;
   let morphT = 1, morphP = 2.9; // P = distancia de la cámara en radios terrestres
@@ -465,12 +448,6 @@
   const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
   const lerp = (a, b, t) => a + (b - a) * t;
 
-  function readJSON(store, key) {
-    try { return JSON.parse(store.getItem(key) || 'null'); } catch (e) { return null; }
-  }
-  function writeJSON(store, key, value) {
-    try { store.setItem(key, JSON.stringify(value)); } catch (e) { /* almacenamiento bloqueado */ }
-  }
 
   // Un cuadro del morfismo: t = 0 globo, t = 1 atlas.
   function morphFrame(t, from) {
@@ -519,8 +496,7 @@
   }
 
   // Llegada desde el globo: el primer cuadro reproduce el globo donde estaba.
-  const arrival = readJSON(sessionStorage, MORPH_KEY);
-  try { sessionStorage.removeItem(MORPH_KEY); } catch (e) { /* nada */ }
+  const arrival = takeSession(MORPH_KEY);
   if (arrival && arrival.dir === 'to-atlas' && Date.now() - arrival.at < 4000 && !REDUCED) {
     document.documentElement.classList.add('is-arriving');
     morphFrame(0, arrival);
@@ -543,10 +519,10 @@
       e.preventDefault();
       const target = 'index.html?city=' + encodeURIComponent(centerCity.id);
       const lat = Math.max(-TILT_DEG, Math.min(TILT_DEG, centerCity.lat));
-      writeJSON(sessionStorage, MORPH_KEY, { dir: 'to-globe', city: centerCity.id, at: Date.now() });
+      writeSession(MORPH_KEY, { dir: 'to-globe', city: centerCity.id, at: Date.now() });
       if (REDUCED) { location.href = target; return; }
       const rect = mapEl.getBoundingClientRect();
-      const g = readJSON(sessionStorage, GEOM_KEY);
+      const g = readSession(GEOM_KEY);
       const fits = g && Math.abs(g.vw - innerWidth) < 3 && Math.abs(g.vh - innerHeight) < 3;
       const P = fits ? g.P : 2.9;
       const to = {

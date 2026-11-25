@@ -1,9 +1,10 @@
 name: Deploy GitHub Pages
 
-# The repository's github-pages environment explicitly allows atlas-relativo.
+# Publica desde main (el entorno github-pages lo permite, igual que atlas-relativo).
 on:
   push:
-    branches: [atlas-relativo]
+    branches: [main]
+  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -12,13 +13,37 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  # Los despliegues van en fila; las comprobaciones de cada PR, aparte.
+  group: ${{ github.event_name == 'pull_request' && github.ref || 'pages-deploy' }}
   cancel-in-progress: false
 
 jobs:
+  # Control de calidad: si algo falla, no se publica.
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Unit tests (geo, registro de ciudades)
+        run: node --test test/*.test.js
+      - name: Syntax check
+        run: for f in assets/atlas/*.js assets/globe/globe.js scripts/check-site.js test/smoke.js; do node --check "$f"; done
+      - name: Build public site and check local links
+        run: sh scripts/build-site.sh _site && node scripts/check-site.js _site
+      - name: Smoke test in Chromium
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.49.1
+          npx playwright install --with-deps chromium
+          node test/smoke.js _site
+
   # Armar y subir en un trabajo, desplegar en otro: en un solo trabajo el despliegue
   # a veces buscaba el paquete antes de que GitHub lo registrara («Found 0 artifacts»).
   build:
+    needs: checks
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

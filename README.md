@@ -1,159 +1,104 @@
 # Así se ve el centro.
 
-> Transmedia project. Downtown visions from Colombian cities → the world.
-> Barranquilla is the origin point.
+Archivo documental silencioso de la vida en los centros urbanos, construido ciudad
+por ciudad desde Barranquilla. Cada centro es un capítulo con una pieza larga y un
+Short, dentro de un atlas interactivo.
 
-This repository contains two coexisting web experiences:
+- Sitio: <https://nestorfernando3.github.io/asi-se-ve-el-centro/>
+- Atlas relativo: <https://nestorfernando3.github.io/asi-se-ve-el-centro/atlas-relativo.html>
+- Dossier para evaluadores (ES/EN): <https://nestorfernando3.github.io/asi-se-ve-el-centro/projects.html>
 
-- `index.html` — the stable main experience, a rotating 3D globe.
-- `atlas-relativo.html` — the `atlas-relativo` branch experiment, an editorial
-  azimuthal map that lets each city become the centre. It does not replace
-  `main/index.html`.
+## Páginas
 
-A night-chart globe and a relative atlas share one visual system (`assets/site.css`) and one video viewer (`assets/atlas/video.js`): a local poster first, and YouTube's no-cookie player only after the visitor presses Play.
+| Página | Qué es |
+|---|---|
+| `index.html` | Globo 3D (Three.js): pines por ciudad, visor de piezas, distancias desde la ciudad elegida. |
+| `atlas-relativo.html` | Proyección azimutal equidistante centrada en cualquier ciudad, con anillos de distancia real y lupa de vecinos. |
+| `projects.html` | Dossier bilingüe para financiadores. |
+| `sobre.html` | Método, créditos y contacto. |
 
-🌐 **Public atlas (new):** [Atlas relativo](https://nestorfernando3.github.io/asi-se-ve-el-centro/atlas-relativo.html)
-🌐 **Stable site:** [nestorfernando3.github.io/asi-se-ve-el-centro](https://nestorfernando3.github.io/asi-se-ve-el-centro/)
-📁 **GitHub:** [github.com/nestorfernando3/asi-se-ve-el-centro](https://github.com/nestorfernando3/asi-se-ve-el-centro)
-🎞️ **Proof pack:** [`projects.html`](projects.html)
+Globo y atlas son el mismo mundo: al pasar de uno a otro, la proyección se transforma
+(morfismo) y la ciudad elegida viaja en `?city=<id>`.
 
-The deployed `atlas-relativo` branch exposes this direct public entry point:
-[Abrir Atlas relativo en GitHub Pages](https://nestorfernando3.github.io/asi-se-ve-el-centro/atlas-relativo.html).
-The source is available at [branch `atlas-relativo`](https://github.com/nestorfernando3/asi-se-ve-el-centro/tree/atlas-relativo).
-
----
-
-## Project structure
+## Estructura
 
 ```
-Así se ve el centro/
-├── index.html                         ← 🟢 GitHub Pages entry — interactive map (v3 unified)
-├── atlas-relativo.html                 ← editorial relative-atlas experiment
-├── README.md                          ← this file
-├── DESIGN.md                          ← visual system, colors, architecture, city registry
-├── projects.html                      ← funder-facing proof pack entry page
-├── funding/                           ← reviewer packet: treatment, artist statement, route (internal drafts are git-ignored)
-├── scripts/build-site.sh              ← assembles the public site (allowlist) for GitHub Pages
-├── assets/proof/                      ← temporary concept board + proof assets
-├── frames/                            ← device frames for multi-screen prototypes
-│   ├── iphone-15-pro.html             ← 390×844 with Dynamic Island
-│   ├── android-pixel.html             ← 412×900 with punch-hole
-│   ├── ipad-pro.html                  ← iPad Pro 11"
-│   ├── macbook.html                   ← MacBook Pro 14" with notch
-│   └── browser-chrome.html            ← macOS Safari window
-├── skills/motion-frames/
-│   ├── SKILL.md                       ← skill definition used to generate motion compositions
-│   └── example.html                   ← reference example output
-├── asi-se-ve-el-centro-hero.html      ← v1 — rotating rings + globe + headline (light editorial)
-├── asi-se-ve-el-centro-cinematic.html ← v2 — full cinematic: dark palette, grain, scanlines, 12s loop
-├── asi-se-ve-el-centro-atlas-hover.html ← v4 — multi-city cinematic atlas (pattern C, preview)
-└── asi-se-ve-el-centro-hover-map-v2.html ← v3 — source file for index.html
+assets/
+  site.css            tokens y componentes comunes (colores, tipografía, barra, listas, visor)
+  editorial.css       páginas de texto (dossier y «Sobre el proyecto»)
+  fonts/              Archivo e IM Fell en woff2, alojadas aquí
+  vendor/             three.js r128, d3, topojson-client
+  globe/              globo: globe.js, globe.css, land-110m.js (Natural Earth)
+  atlas/
+    cities.js         registro único de ciudades (lo leen globo y atlas)
+    geo.js            distancias y rumbos (con pruebas)
+    shared.js         estados, colores, sesión del morfismo, lista de distancias
+    video.js          visor: póster local y YouTube solo tras Reproducir
+    atlas.js          atlas relativo
+  posters/            fotograma de cada pieza
+  og-card.jpg         imagen para compartir (1200 × 630)
+scripts/
+  build-site.sh       arma _site/ con la lista blanca de lo publicable
+  check-site.js       revisa que los enlaces locales del sitio armado existan
+test/
+  geo.test.js, cities.test.js   pruebas unitarias (node --test)
+  smoke.js                      prueba de humo en Chromium (Playwright)
+archivo/              versiones anteriores, no se publican
 ```
 
----
+Lo interno (borradores de financiación, contactos, notas en `docs/`) está fuera de
+git y fuera del sitio; ver `.gitignore`.
 
-## How to use
+## Trabajar en local
 
-### View in browser
-Open most `.html` files directly in a browser. `atlas-relativo.html` also opens
-from `file://` using its schematic fallback; use a small local server when you
-want the full local TopoJSON cartography:
-
-```bash
-python3 -m http.server 8000
-```
-
-Then open `http://localhost:8000/atlas-relativo.html`.
-
-### 🌐 Live webapp
-**`index.html`** — served at [nestorfernando3.github.io/asi-se-ve-el-centro](https://nestorfernando3.github.io/asi-se-ve-el-centro/). Interactive globe with 18 city pins (pins that overlap on screen group into a pickable list), click-to-play video, and real distances from the chosen city.
-
-### Atlas relativo
-**`atlas-relativo.html`** — a no-build editorial map centred on Barranquilla by
-default. It includes 18 registered cities, real-distance rings, keyboard-accessible
-city controls, reduced-motion support, local D3/TopoJSON assets, and a video
-panel whose YouTube iframe is created only after an explicit play click.
-
-Run its focused checks with:
-
-```bash
-node --test test/geo.test.js
-node --check assets/atlas/atlas.js
-```
-
-### 🎞️ Funder proof pack
-**`projects.html`** — reviewer-facing page for grants, residencies, and media labs. It frames the project as a silent documentary archive, explains the Barranquilla → Bogotá → Cartagena route, and links to bilingual packet source docs in `funding/`.
-
-### Current active file (local)
-**`asi-se-ve-el-centro-hover-map-v2.html`** — world map with city pins. Hover Barranquilla's pin or the video panel to load and play the two YouTube pieces.
-
-### Best export file
-**`asi-se-ve-el-centro-cinematic.html`** — pure CSS animation, no JS motion, deterministic 12s loop. Feed to HyperFrames or any frame-grabber.
-
-### For prototypes across multiple devices
-Use the `frames/` device shells to show the composition inside an iPhone / Android / iPad / MacBook / browser frame:
-
-```html
-<iframe src="frames/iphone-15-pro.html?screen=asi-se-ve-el-centro-cinematic.html"
-  width="390" height="844"></iframe>
-```
-
----
-
-## How to iterate
-
-### Add a new city
-
-1. Produce a video (long, short, or both)
-2. Find map coordinates in the SVG (open file → inspect SVG viewBox 1000×560)
-3. Add a pin in `.pin-layer`:
-   ```html
-   <button class="city-pin" style="--x:XX%; --y:YY%;" aria-label="Ciudad">
-     <span>Ciudad · video</span>
-   </button>
-   ```
-4. Add the YouTube embed in `aside.viewer` (or in Pattern C layout per-column)
-5. Register the city in `DESIGN.md` under City registry
-
-### Switch visual direction
-Edit `:root` in any HTML file — color tokens, font stacks, and posture rules are at the top. See `DESIGN.md` → Color palette and Typography for the exact values.
-
-### Add responsive breakpoints
-Current breakpoints: 920px (tablet), 480px (mobile). The map collapses to single-column at tablet; viewer shrinks to overlay at mobile.
-
----
-
-## Dependencies
-
-Zero build dependencies. Every page is plain HTML+CSS+JS; the Atlas relativo
-experiment vendors D3, TopoJSON, and its land data under `assets/`. There is no
-automatic CDN request. YouTube embeds require internet only after the user
-chooses to play a video.
-
-## GitHub Pages deployment
-
-The workflow at [`.github/workflows/pages.yml`](.github/workflows/pages.yml)
-deploys the checked-out branch as a static GitHub Pages site on every push to
-`atlas-relativo`. To enable it once in the repository, choose
-**Settings → Pages → Source → GitHub Actions**. The workflow preserves the
-existing `index.html` entry point and exposes the experiment at
-`/atlas-relativo.html`.
-
-The workflow does not publish the repository root. `scripts/build-site.sh`
-copies an explicit allowlist into `_site/` (the three public pages, `assets/`
-and the reviewer packet in `funding/`) and stops the deploy if any internal
-file slips in. Draft budgets, grant trackers, outreach notes, `docs/` and old
-versions stay out of the site; most of them are also git-ignored. To preview
-exactly what will be published:
+Sin compilación. Para ver exactamente lo que se publica:
 
 ```bash
 sh scripts/build-site.sh && python3 -m http.server 8000 -d _site
 ```
 
----
+y abrir <http://localhost:8000/>.
 
-## Open Design
+Comprobaciones:
 
-These files were generated in [Open Design](https://opendesign.app). The `frames/` and `skills/` directories are copies of the tool's shared assets — keep them with the project so it remains self-contained.
+```bash
+node --test test/*.test.js
+```
 
-To re-import into Open Design: open the app, create a new project, and drop the HTML files into the project folder.
+```bash
+node scripts/check-site.js _site
+```
+
+La prueba de humo necesita Playwright (en CI se instala solo). En local, con Chrome:
+
+```bash
+npm install --no-save playwright-core@1.49.1 && CHROME_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" node test/smoke.js _site
+```
+
+## Añadir una ciudad
+
+1. Una entrada en `assets/atlas/cities.js` con `id`, `name`, `country`, `lat`, `lon`
+   y `status` (`live`, `next` o `future`). Aparece sola en el globo, el atlas y las listas.
+2. Si tiene piezas: `video` (IDs de YouTube), `poster` (fotogramas en `assets/posters/`)
+   y `credits` (título y duración de cada pieza; lugar y fecha si constan).
+3. Si lleva verso: `quote`, `attrib` y `source` (edición o URL estable). Solo citas
+   verificadas, breves y con atribución exacta.
+4. `node --test test/*.test.js` comprueba el esquema.
+
+## Publicación
+
+`.github/workflows/pages.yml` publica en GitHub Pages cada push a `main`: primero corre
+las pruebas, la revisión de enlaces y la prueba de humo; si pasan, arma `_site/` y lo
+despliega. En un pull request solo corren las comprobaciones.
+
+## Privacidad
+
+El sitio no hace peticiones externas al abrirse: fuentes, librerías y cartografía son
+locales. El reproductor de YouTube (dominio `youtube-nocookie.com`) se crea solo
+cuando el visitante pulsa Reproducir.
+
+## Créditos
+
+Concepción, realización y desarrollo: Néstor De León. Cartografía: Natural Earth
+(dominio público) vía world-atlas. Librerías: three.js, D3 y TopoJSON (licencias MIT
+e ISC). Fuentes: Archivo e IM Fell English (SIL Open Font License).

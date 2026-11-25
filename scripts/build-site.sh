@@ -32,8 +32,6 @@ cp index.html atlas-relativo.html projects.html sobre.html "$OUT/"
 cp -R assets "$OUT/assets"
 # El paquete para evaluadores vive dentro de projects.html: funding/ no se publica.
 
-# El concept board provisional ya no se enlaza: no se publica.
-rm -rf "$OUT/assets/proof"
 # Notas de trabajo dentro de assets y basura del sistema
 find "$OUT/assets" -name '*.md' -delete
 find "$OUT" -name '.DS_Store' -delete
